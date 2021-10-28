@@ -17,15 +17,14 @@ def fetch_data(site_list, start_dt, end_dt, outfile):
 def main():
     site_ids = ['01411390', '01463500', '01464040', '014670261', '01467059', '01467200',
     '01474500', '01474703', '01477050', '01482695', '01482800']
-
     start_dt = '2019-01-01'
     end_dt = '2019-12-31'
 
-    data_outfile = os.path.join('.', '01_fetch', 'out', '{site_num}_{start_dt}_{end_dt}.txt')
-    fetch_data(site_ids, start_dt, end_dt, data_outfile)
+    data_outfile_txt = os.path.join('.', '01_fetch', 'out', '{site_num}_{start_dt}_{end_dt}.txt')
+    fetch_data(site_ids, start_dt, end_dt, data_outfile_txt)
 
-    params_outfile = os.path.join('.', '01_fetch', 'out', 'params.txt')
-    fetch_params(params_outfile)
+    params_outfile_txt = os.path.join('.', '01_fetch', 'out', 'params.txt')
+    fetch_params(params_outfile_txt)
 
 if __name__ == '__main__':
     main()
