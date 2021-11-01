@@ -1,0 +1,79 @@
+import os
+import numpy as np
+import pandas as pd
+import re
+
+# get dictionary of all possible USGS site parameters
+def process_params_to_csv(raw_params_txt, params_outfile_csv):
+    '''process raw parameter text file into a csv file'''
+    params_df = pd.read_csv(raw_params_txt, comment='#', sep='\t', lineterminator='\n')
+    params_df.drop(index=0, inplace=True)
+    params_df.to_csv(params_outfile_csv)
+
+def process_data_to_csv(raw_datafiles, flags_to_drop):
+    '''
+    process raw data text files into clean csvs, including:
+        dropping unwanted flags
+        converting datetime column to datetime format
+        converting all data columns to numeric type
+        removing metadata columns so that only datetime and data columns remain 
+    '''
+    for raw_datafile in raw_datafiles:
+        # read in raw data as pandas df
+        df = pd.read_csv(raw_datafile, comment='#', sep='\t', lineterminator='\n', low_memory=False)
+        # drop first row which does not contain useful headers or data
+        df.drop(index=0, inplace=True)
+
+        # replace all flagged data we want to remove with NaN
+        flag_cols = [col for col in df.columns if re.match("[0-9]+_[0-9]+_[a-z]+$", col)]
+        for flag_col in flag_cols:
+            flag_data_col = flag_col[:-3]
+            df[flag_data_col] = np.where(df[flag_col].isin(flags_to_drop), np.nan, df[flag_data_col])
+
+        # drop site info and flag columns
+        df = df.drop(['agency_cd', 'site_no', 'tz_cd']+flag_cols, axis=1)
+
+        # convert datetime column to datetime type
+        df['datetime'] = df['datetime'].astype('datetime64')
+
+        # make all other columns numeric
+        cols = df.columns.drop('datetime')
+        df[cols] = df[cols].apply(pd.to_numeric, errors='coerce')
+
+        # (to be added in future) aggregate data to specific timestep?
+        # df = df.groupby([df['datetime'].dt.date])[cols].mean()
+
+        # save pre-processed data
+        data_outfile_csv = os.path.join('.', '02_munge', 'out', os.path.splitext(os.path.basename(raw_datafile))[0]+'.csv')
+        df.to_csv(data_outfile_csv, index=False)
+
+def main():
+    # process raw parameter data into csv
+    raw_params_txt = os.path.join('.', '01_fetch', 'out', 'params.txt')
+    params_outfile_csv = os.path.join('.', '02_munge', 'out', 'params.csv')
+    process_params_to_csv(raw_params_txt, params_outfile_csv)
+
+    # get list of raw data files to process
+    raw_datafiles = [os.path.join('.', '01_fetch', 'out', file) for file in os.listdir(os.path.join('.', '01_fetch', 'out'))]
+    raw_datafiles.remove(os.path.join('.', '01_fetch', 'out', 'params.txt'))
+
+    # determine which data flags we want to drop
+    # e     Value has been edited or estimated by USGS personnel and is write protected
+    # &     Value was computed from affected unit values
+    # E     Value was computed from estimated unit values.
+    # A     Approved for publication -- Processing and review completed.
+    # P     Provisional data subject to revision.
+    # <     The value is known to be less than reported value and is write protected.
+    # >     The value is known to be greater than reported value and is write protected.
+    # 1     Value is write protected without any remark code to be printed
+    # 2     Remark is write protected without any remark code to be printed
+    flags_to_drop = ['e', '&', 'E', 'P', '<', '>', '1', '2']
+
+    # (to be added in future) number of measurements required to consider daily average valid
+    # num_obs = 1
+
+    # process raw data files into csv
+    process_data_to_csv(raw_datafiles, flags_to_drop)
+
+if __name__ == '__main__':
+    main()
