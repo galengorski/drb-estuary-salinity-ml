@@ -48,10 +48,9 @@ def process_data_to_csv(raw_datafiles, flags_to_drop):
         # only keep daily averages where we have enough measurements
         df.where(prop_df.gt(prop_obs_required))
 
-
         # save pre-processed data
         data_outfile_csv = os.path.join('.', '02_munge', 'out', os.path.splitext(os.path.basename(raw_datafile))[0]+'.csv')
-        df.to_csv(data_outfile_csv, index=False)
+        df.to_csv(data_outfile_csv, index=True)
 
 def main():
     # process raw parameter data into csv
