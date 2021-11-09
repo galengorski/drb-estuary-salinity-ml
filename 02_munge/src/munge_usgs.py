@@ -40,12 +40,17 @@ def process_data_to_csv(raw_datafiles, flags_to_drop):
         cols = df.columns.drop('datetime')
         df[cols] = df[cols].apply(pd.to_numeric, errors='coerce')
 
-        # (to be added in future) aggregate data to specific timestep?
-        # df = df.groupby([df['datetime'].dt.date])[cols].mean()
+        # aggregate data to daily timestep
+        # get proportion of daily measurements available
+        prop_df = df.groupby([df['datetime'].dt.date]).count()[cols].div(df.groupby([df['datetime'].dt.date]).count()['datetime'], axis=0)
+        # calculate daily averages
+        df = df.groupby([df['datetime'].dt.date]).mean()
+        # only keep daily averages where we have enough measurements
+        df.where(prop_df.gt(prop_obs_required))
 
         # save pre-processed data
         data_outfile_csv = os.path.join('.', '02_munge', 'out', os.path.splitext(os.path.basename(raw_datafile))[0]+'.csv')
-        df.to_csv(data_outfile_csv, index=False)
+        df.to_csv(data_outfile_csv, index=True)
 
 def main():
     # process raw parameter data into csv
@@ -69,8 +74,9 @@ def main():
     # 2     Remark is write protected without any remark code to be printed
     flags_to_drop = ['e', '&', 'E', 'P', '<', '>', '1', '2']
 
-    # (to be added in future) number of measurements required to consider daily average valid
-    # num_obs = 1
+    # number of measurements required to consider daily average valid
+    # we will assume that we need half of the daily measurements
+    prop_obs_required = 0.5
 
     # process raw data files into csv
     process_data_to_csv(raw_datafiles, flags_to_drop)
