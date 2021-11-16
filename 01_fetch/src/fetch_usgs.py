@@ -8,17 +8,15 @@ def fetch_params(outfile, s3_client):
     print('fetcing parameter file and saving locally')
     urllib.request.urlretrieve(params_url, outfile)
     print('uploading to s3')
-    s3_client.upload_file(outfile, 'drb-estuary-salinity', '01_fetch_out/'+os.path.basename(outfile))
+    s3_client.upload_file(outfile, 'drb-estuary-salinity', '01_fetch/out/'+os.path.basename(outfile))
 
-def fetch_data(site_list, start_dt, end_dt, outfile, s3_client):
+def fetch_data(site_num, start_dt, end_dt, outfile, s3_client):
     '''fetch USGS NWIS data for locations in site_list (gets all parameters available)'''
-    for site_num in site_list:
-        data_url = f'https://waterservices.usgs.gov/nwis/iv?format=rdb&sites={site_num}&startDT={start_dt}&endDT={end_dt}'
-        outfile_formatted = outfile.format(start_dt=start_dt, end_dt=end_dt, site_num=site_num)
-        print(f'fetcing data for site {site_num} and saving locally')
-        urllib.request.urlretrieve(data_url, outfile_formatted)
-        print('uploading to s3')
-        s3_client.upload_file(outfile_formatted, 'drb-estuary-salinity', '01_fetch_out/'+os.path.basename(outfile_formatted))
+    data_url = f'https://waterservices.usgs.gov/nwis/iv?format=rdb&sites={site_num}&startDT={start_dt}&endDT={end_dt}'
+    print(f'fetcing data for site {site_num} and saving locally')
+    urllib.request.urlretrieve(data_url, outfile)
+    print('uploading to s3')
+    s3_client.upload_file(outfile, 'drb-estuary-salinity', '01_fetch/out/'+os.path.basename(outfile))
 
 def main():
     # start S3 session so that we can upload data
@@ -31,8 +29,9 @@ def main():
     end_dt = '2019-12-31'
 
     # fetch raw data files
-    data_outfile_txt = os.path.join('.', '01_fetch', 'out', '{site_num}_{start_dt}_{end_dt}.txt')
-    fetch_data(site_ids, start_dt, end_dt, data_outfile_txt, s3_client)
+    for site_num in site_ids:
+        data_outfile_txt = os.path.join('.', '01_fetch', 'out', '{site_num}_{start_dt}_{end_dt}.txt'.format(start_dt=start_dt, end_dt=end_dt, site_num=site_num))
+        fetch_data(site_num, start_dt, end_dt, data_outfile_txt, s3_client)
 
     # fetch parameter file
     params_outfile_txt = os.path.join('.', '01_fetch', 'out', 'params.txt')
