@@ -14,7 +14,7 @@ def process_params_to_csv(raw_params_txt, params_outfile_csv, s3_client):
     print('uploading to s3')
     s3_client.upload_file(params_outfile_csv, 'drb-estuary-salinity', '01_munge/out/'+os.path.basename(params_outfile_csv))
 
-def process_data_to_csv(raw_datafile, flags_to_drop, agg_level, s3_client):
+def process_data_to_csv(raw_datafile, flags_to_drop, agg_level, prop_obs_required, s3_client):
     '''
     process raw data text files into clean csvs, including:
         dropping unwanted flags
@@ -96,7 +96,7 @@ def main():
 
     # process raw data files into csv
     for raw_datafile in raw_datafiles:
-        process_data_to_csv(raw_datafile, flags_to_drop, agg_level, s3_client)
+        process_data_to_csv(raw_datafile, flags_to_drop, agg_level, prop_obs_required, s3_client)
 
 if __name__ == '__main__':
     main()
