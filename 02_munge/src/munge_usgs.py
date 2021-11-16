@@ -14,7 +14,7 @@ def process_params_to_csv(raw_params_txt, params_outfile_csv, s3_client):
     print('uploading to s3')
     s3_client.upload_file(params_outfile_csv, 'drb-estuary-salinity', '01_munge/out/'+os.path.basename(params_outfile_csv))
 
-def process_data_to_csv(raw_datafile, flags_to_drop, s3_client):
+def process_data_to_csv(raw_datafile, flags_to_drop, agg_level, s3_client):
     '''
     process raw data text files into clean csvs, including:
         dropping unwanted flags
@@ -44,12 +44,13 @@ def process_data_to_csv(raw_datafile, flags_to_drop, s3_client):
     cols = df.columns.drop('datetime')
     df[cols] = df[cols].apply(pd.to_numeric, errors='coerce')
 
-    # aggregate data to daily timestep
-    # get proportion of daily measurements available
-    prop_df = df.groupby([df['datetime'].dt.date]).count()[cols].div(df.groupby([df['datetime'].dt.date]).count()['datetime'], axis=0)
-    # calculate daily averages
-    df = df.groupby([df['datetime'].dt.date]).mean()
-    # only keep daily averages where we have enough measurements
+    # aggregate data to specified timestep
+    if agg_level == 'daily':
+        # get proportion of daily measurements available
+        prop_df = df.groupby([df['datetime'].dt.date]).count()[cols].div(df.groupby([df['datetime'].dt.date]).count()['datetime'], axis=0)
+        # calculate daily averages
+        df = df.groupby([df['datetime'].dt.date]).mean()
+    # only keep averages where we have enough measurements
     df.where(prop_df.gt(prop_obs_required))
 
     # save pre-processed data
@@ -85,13 +86,17 @@ def main():
     # 2     Remark is write protected without any remark code to be printed
     flags_to_drop = ['e', '&', 'E', 'P', '<', '>', '1', '2']
 
-    # number of measurements required to consider daily average valid
-    # we will assume that we need half of the daily measurements
+    # number of measurements required to consider average valid
+    # we will assume that we need half of the timestep measurements
     prop_obs_required = 0.5
+
+    # timestep to aggregate to
+    # options: daily
+    agg_level = 'daily'
 
     # process raw data files into csv
     for raw_datafile in raw_datafiles:
-        process_data_to_csv(raw_datafile, flags_to_drop, s3_client)
+        process_data_to_csv(raw_datafile, flags_to_drop, agg_level, s3_client)
 
 if __name__ == '__main__':
     main()
