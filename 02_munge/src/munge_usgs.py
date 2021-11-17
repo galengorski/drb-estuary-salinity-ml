@@ -12,7 +12,7 @@ def process_params_to_csv(raw_params_txt, params_outfile_csv, s3_client):
     params_df.drop(index=0, inplace=True)
     params_df.to_csv(params_outfile_csv)
     print('uploading to s3')
-    s3_client.upload_file(params_outfile_csv, 'drb-estuary-salinity', '01_munge/out/'+os.path.basename(params_outfile_csv))
+    s3_client.upload_file(params_outfile_csv, 'drb-estuary-salinity', '02_munge/out/'+os.path.basename(params_outfile_csv))
 
 def process_data_to_csv(raw_datafile, flags_to_drop, agg_level, prop_obs_required, s3_client):
     '''
