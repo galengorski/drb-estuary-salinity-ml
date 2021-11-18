@@ -76,7 +76,7 @@ def process_data_to_csv(raw_datafile, flags_to_drop, agg_level, prop_obs_require
 
 def main():
     # choose where you want to write your data outputs: local or S3
-    write_location = 'S3'
+    write_location = 'local'
     s3_client = prep_write_location(write_location)
 
     # process raw parameter data into csv
