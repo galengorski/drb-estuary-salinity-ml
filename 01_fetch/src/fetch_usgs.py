@@ -30,11 +30,11 @@ def main():
 
     # fetch raw data files
     for site_num in site_ids:
-        data_outfile_txt = os.path.join('.', '01_fetch', 'out', '{site_num}_{start_dt}_{end_dt}.txt'.format(start_dt=start_dt, end_dt=end_dt, site_num=site_num))
+        data_outfile_txt = os.path.join('.', '01_fetch', 'out', f'usgs_nwis_{site_num}.txt')
         fetch_data(site_num, start_dt, end_dt, data_outfile_txt, s3_client)
 
     # fetch parameter file
-    params_outfile_txt = os.path.join('.', '01_fetch', 'out', 'params.txt')
+    params_outfile_txt = os.path.join('.', '01_fetch', 'out', 'usgs_nwis_params.txt')
     fetch_params(params_outfile_txt, s3_client)
 
 if __name__ == '__main__':
