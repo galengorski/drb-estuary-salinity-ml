@@ -66,13 +66,13 @@ def main():
     s3_client = session.client('s3')
 
     # process raw parameter data into csv
-    raw_params_txt = os.path.join('.', '01_fetch', 'out', 'params.txt')
-    params_outfile_csv = os.path.join('.', '02_munge', 'out', 'params.csv')
+    raw_params_txt = os.path.join('.', '01_fetch', 'out', 'usgs_nwis_params.txt')
+    params_outfile_csv = os.path.join('.', '02_munge', 'out', 'usgs_nwis_params.csv')
     process_params_to_csv(raw_params_txt, params_outfile_csv, s3_client)
 
     # get list of raw data files to process
     raw_datafiles = [os.path.join('.', '01_fetch', 'out', file) for file in os.listdir(os.path.join('.', '01_fetch', 'out'))]
-    raw_datafiles.remove(os.path.join('.', '01_fetch', 'out', 'params.txt'))
+    raw_datafiles.remove(os.path.join('.', '01_fetch', 'out', 'usgs_nwis_params.txt'))
 
     # determine which data flags we want to drop
     # e     Value has been edited or estimated by USGS personnel and is write protected
