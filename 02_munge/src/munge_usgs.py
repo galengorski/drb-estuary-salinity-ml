@@ -10,24 +10,22 @@ def prep_write_location(write_location):
         cont = input("You are about to write to S3, and you may overwrite existing data. Are you sure you want to do this? (yes, no)")
         if cont=="no":
             sys.exit("Aborting data fetch.")
-        # start S3 session so that we can upload data
-        session = boto3.Session(profile_name='dev')
-        s3_client = session.client('s3')
-    else:
-        s3_client = None
+    # start S3 session so that we can upload data
+    session = boto3.Session(profile_name='dev')
+    s3_client = session.client('s3')
     return s3_client
 
-def process_params_to_csv(raw_params_txt, params_outfile_csv, s3_client):
+def process_params_to_csv(raw_params_txt, params_outfile_csv, write_location, s3_client):
     '''process raw parameter text file into a csv file'''
     print('processing parameter file and saving locally')
     params_df = pd.read_csv(raw_params_txt, comment='#', sep='\t', lineterminator='\n')
     params_df.drop(index=0, inplace=True)
     params_df.to_csv(params_outfile_csv)
-    if s3_client:
+    if write_location == 'S3':
         print('uploading to s3')
         s3_client.upload_file(params_outfile_csv, 'drb-estuary-salinity', '02_munge/out/'+os.path.basename(params_outfile_csv))
 
-def process_data_to_csv(raw_datafile, flags_to_drop, agg_level, prop_obs_required, s3_client):
+def process_data_to_csv(raw_datafile, flags_to_drop, agg_level, prop_obs_required, write_location, s3_client):
     '''
     process raw data text files into clean csvs, including:
         dropping unwanted flags
@@ -70,7 +68,7 @@ def process_data_to_csv(raw_datafile, flags_to_drop, agg_level, prop_obs_require
     data_outfile_csv = os.path.join('.', '02_munge', 'out', os.path.splitext(os.path.basename(raw_datafile))[0]+'.csv')
     df.to_csv(data_outfile_csv, index=True)
     
-    if s3_client:
+    if write_location == 'S3':
         print('uploading to s3')
         s3_client.upload_file(data_outfile_csv, 'drb-estuary-salinity', '02_munge/out/'+os.path.basename(data_outfile_csv))
 
@@ -82,7 +80,7 @@ def main():
     # process raw parameter data into csv
     raw_params_txt = os.path.join('.', '01_fetch', 'out', 'usgs_nwis_params.txt')
     params_outfile_csv = os.path.join('.', '02_munge', 'out', 'usgs_nwis_params.csv')
-    process_params_to_csv(raw_params_txt, params_outfile_csv, s3_client)
+    process_params_to_csv(raw_params_txt, params_outfile_csv, write_location, s3_client)
 
     # get list of raw data files to process
     raw_datafiles = [os.path.join('.', '01_fetch', 'out', file) for file in os.listdir(os.path.join('.', '01_fetch', 'out'))]
@@ -110,7 +108,7 @@ def main():
 
     # process raw data files into csv
     for raw_datafile in raw_datafiles:
-        process_data_to_csv(raw_datafile, flags_to_drop, agg_level, prop_obs_required, s3_client)
+        process_data_to_csv(raw_datafile, flags_to_drop, agg_level, prop_obs_required, write_location, s3_client)
 
 if __name__ == '__main__':
     main()
