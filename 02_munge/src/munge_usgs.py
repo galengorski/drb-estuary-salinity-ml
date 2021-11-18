@@ -17,8 +17,10 @@ def prep_write_location(write_location):
 
 def process_params_to_csv(raw_params_txt, params_outfile_csv, write_location, s3_client):
     '''process raw parameter text file into a csv file'''
+    print('reading raw parameter data from s3')
+    obj = s3_client.get_object(Bucket='drb-estuary-salinity', Key=raw_params_txt)
+    params_df = pd.read_csv(obj.get("Body"), comment='#', sep='\t', lineterminator='\n')
     print('processing parameter file and saving locally')
-    params_df = pd.read_csv(raw_params_txt, comment='#', sep='\t', lineterminator='\n')
     params_df.drop(index=0, inplace=True)
     params_df.to_csv(params_outfile_csv)
     if write_location == 'S3':
@@ -33,9 +35,12 @@ def process_data_to_csv(raw_datafile, flags_to_drop, agg_level, prop_obs_require
         converting all data columns to numeric type
         removing metadata columns so that only datetime and data columns remain 
     '''
-    print(f'processing {raw_datafile} and saving locally')
+    print(f'reading data from s3: {raw_datafile}')
+    obj = s3_client.get_object(Bucket='drb-estuary-salinity', Key=raw_datafile)
     # read in raw data as pandas df
-    df = pd.read_csv(raw_datafile, comment='#', sep='\t', lineterminator='\n', low_memory=False)
+    df = pd.read_csv(obj.get("Body"), comment='#', sep='\t', lineterminator='\n', low_memory=False)
+    
+    print(f'processing and saving locally')
     # drop first row which does not contain useful headers or data
     df.drop(index=0, inplace=True)
 
@@ -78,13 +83,12 @@ def main():
     s3_client = prep_write_location(write_location)
 
     # process raw parameter data into csv
-    raw_params_txt = os.path.join('.', '01_fetch', 'out', 'usgs_nwis_params.txt')
+    raw_params_txt = '01_fetch/out/usgs_nwis_params.txt'
     params_outfile_csv = os.path.join('.', '02_munge', 'out', 'usgs_nwis_params.csv')
     process_params_to_csv(raw_params_txt, params_outfile_csv, write_location, s3_client)
 
     # get list of raw data files to process
-    raw_datafiles = [os.path.join('.', '01_fetch', 'out', file) for file in os.listdir(os.path.join('.', '01_fetch', 'out'))]
-    raw_datafiles.remove(os.path.join('.', '01_fetch', 'out', 'usgs_nwis_params.txt'))
+    raw_datafiles = [obj['Key'] for obj in s3_client.list_objects_v2(Bucket='drb-estuary-salinity', Prefix='01_fetch/out/usgs_nwis_0')['Contents']]
 
     # determine which data flags we want to drop
     # e     Value has been edited or estimated by USGS personnel and is write protected
