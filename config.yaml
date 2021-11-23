@@ -1,0 +1,54 @@
+fetch_usgs.py:
+  # choose where you want to write your data outputs: local or S3
+  write_location: 'local'
+  # set name of AWS profile storing credentials for S3
+  aws_profile: 'dev'
+  # set AWS bucket to read/write to
+  s3_bucket: 'drb-estuary-salinity'
+
+  # usgs nwis sites we want to fetch data for
+  site_ids:
+    - '01411390'
+    - '01463500'
+    - '01464040'
+    - '014670261'
+    - '01467059'
+    - '01467200'
+    - '01474500'
+    - '01474703'
+    - '01477050'
+    - '01482695'
+    - '01482800'
+
+  # start and end dates for data fetch
+  # should be in the format 'YYYY-MM-DD'
+  start_dt: '2019-01-01'
+  end_dt: '2019-12-31'
+
+munge_usgs.py:
+  # choose where you want to write your data outputs: local or S3
+  write_location: 'local'
+  # set name of AWS profile storing credentials for S3
+  aws_profile: 'dev'
+  # set AWS bucket to read/write to
+  s3_bucket: 'drb-estuary-salinity'
+
+  # determine which data flags we want to drop  
+  flags_to_drop:
+    - 'e' # Value has been edited or estimated by USGS personnel and is write protected
+    - '&' # Value was computed from affected unit values
+    - 'E' # Value was computed from estimated unit values.
+    # - 'A' # Approved for publication -- Processing and review completed.
+    - 'P' # Provisional data subject to revision.
+    - '<' # The value is known to be less than reported value and is write protected.
+    - '>' # The value is known to be greater than reported value and is write protected.
+    - '1' # Value is write protected without any remark code to be printed
+    - '2' # Remark is write protected without any remark code to be printed
+    
+  # number of measurements required to consider average valid
+  # we will assume that we need half of the timestep measurements
+  prop_obs_required: 0.5
+
+  # timestep to aggregate to
+  # options: daily
+  agg_level: 'daily'
