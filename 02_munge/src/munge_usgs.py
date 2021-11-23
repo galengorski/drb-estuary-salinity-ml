@@ -2,20 +2,21 @@ import os
 import numpy as np
 import pandas as pd
 import re
+import utils
 
-def process_params_to_csv(raw_params_txt, params_outfile_csv, write_location, s3_client):
+def process_params_to_csv(raw_params_txt, params_outfile_csv, write_location, bucket, s3_client):
     '''process raw parameter text file into a csv file'''
     print('reading raw parameter data from s3')
-    obj = s3_client.get_object(Bucket='drb-estuary-salinity', Key=raw_params_txt)
+    obj = s3_client.get_object(Bucket=bucket, Key=raw_params_txt)
     params_df = pd.read_csv(obj.get("Body"), comment='#', sep='\t', lineterminator='\n')
     print('processing parameter file and saving locally')
     params_df.drop(index=0, inplace=True)
     params_df.to_csv(params_outfile_csv)
     if write_location == 'S3':
         print('uploading to s3')
-        s3_client.upload_file(params_outfile_csv, 'drb-estuary-salinity', '02_munge/out/'+os.path.basename(params_outfile_csv))
+        s3_client.upload_file(params_outfile_csv, bucket, '02_munge/out/'+os.path.basename(params_outfile_csv))
 
-def process_data_to_csv(raw_datafile, flags_to_drop, agg_level, prop_obs_required, write_location, s3_client):
+def process_data_to_csv(raw_datafile, flags_to_drop, agg_level, prop_obs_required, write_location, bucket, s3_client):
     '''
     process raw data text files into clean csvs, including:
         dropping unwanted flags
@@ -24,7 +25,7 @@ def process_data_to_csv(raw_datafile, flags_to_drop, agg_level, prop_obs_require
         removing metadata columns so that only datetime and data columns remain 
     '''
     print(f'reading data from s3: {raw_datafile}')
-    obj = s3_client.get_object(Bucket='drb-estuary-salinity', Key=raw_datafile)
+    obj = s3_client.get_object(Bucket=bucket, Key=raw_datafile)
     # read in raw data as pandas df
     df = pd.read_csv(obj.get("Body"), comment='#', sep='\t', lineterminator='\n', low_memory=False)
     
@@ -63,7 +64,7 @@ def process_data_to_csv(raw_datafile, flags_to_drop, agg_level, prop_obs_require
     
     if write_location == 'S3':
         print('uploading to s3')
-        s3_client.upload_file(data_outfile_csv, 'drb-estuary-salinity', '02_munge/out/'+os.path.basename(data_outfile_csv))
+        s3_client.upload_file(data_outfile_csv, bucket, '02_munge/out/'+os.path.basename(data_outfile_csv))
 
 def main():
     # import config
@@ -78,10 +79,10 @@ def main():
     # process raw parameter data into csv
     raw_params_txt = '01_fetch/out/usgs_nwis_params.txt'
     params_outfile_csv = os.path.join('.', '02_munge', 'out', 'usgs_nwis_params.csv')
-    process_params_to_csv(raw_params_txt, params_outfile_csv, write_location, s3_client)
+    process_params_to_csv(raw_params_txt, params_outfile_csv, write_location, s3_bucket, s3_client)
 
     # get list of raw data files to process
-    raw_datafiles = [obj['Key'] for obj in s3_client.list_objects_v2(Bucket='drb-estuary-salinity', Prefix='01_fetch/out/usgs_nwis_0')['Contents']]
+    raw_datafiles = [obj['Key'] for obj in s3_client.list_objects_v2(Bucket=s3_bucket, Prefix='01_fetch/out/usgs_nwis_0')['Contents']]
 
     # determine which data flags we want to drop
     flags_to_drop = config['flags_to_drop']
@@ -94,7 +95,7 @@ def main():
 
     # process raw data files into csv
     for raw_datafile in raw_datafiles:
-        process_data_to_csv(raw_datafile, flags_to_drop, agg_level, prop_obs_required, write_location, s3_client)
+        process_data_to_csv(raw_datafile, flags_to_drop, agg_level, prop_obs_required, write_location, s3_bucket, s3_client)
 
 if __name__ == '__main__':
     main()
