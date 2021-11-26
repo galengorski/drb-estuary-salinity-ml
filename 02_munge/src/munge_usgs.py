@@ -2,6 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import re
+import yaml
 import utils
 
 def process_params_to_csv(raw_params_txt, params_outfile_csv, write_location, bucket, s3_client):
@@ -15,8 +16,30 @@ def process_params_to_csv(raw_params_txt, params_outfile_csv, write_location, bu
     if write_location == 'S3':
         print('uploading to s3')
         s3_client.upload_file(params_outfile_csv, bucket, '02_munge/out/'+os.path.basename(params_outfile_csv))
+    return params_df
 
-def process_data_to_csv(raw_datafile, flags_to_drop, agg_level, prop_obs_required, write_location, bucket, s3_client):
+def process_to_timestep(df, cols, agg_level, prop_obs_required):
+    # aggregate data to specified timestep
+    if agg_level == 'daily':
+        # get proportion of measurements available for timestep
+        prop_df = df.groupby([df['datetime'].dt.date]).count()[cols].div(df.groupby([df['datetime'].dt.date]).count()['datetime'], axis=0)
+        # calculate averages for timestep
+        df = df.groupby([df['datetime'].dt.date]).mean()
+    # only keep averages where we have enough measurements
+    df.where(prop_df.gt(prop_obs_required), inplace=True)
+    return df
+
+def param_code_to_name(df, params_df):
+    for col in df.columns:
+        # get 5-digit parameter code from column name
+        code = col.split('_')[1]
+        # find the corresponding parameter name
+        name = params_df[params_df['parm_cd']==code]['parm_nm'].iloc[0]
+        # rename the column
+        df.rename(columns={col: name}, inplace=True)
+    return df 
+
+def process_data_to_csv(raw_datafile, params_df, flags_to_drop, agg_level, prop_obs_required, write_location, bucket, s3_client):
     '''
     process raw data text files into clean csvs, including:
         dropping unwanted flags
@@ -50,13 +73,10 @@ def process_data_to_csv(raw_datafile, flags_to_drop, agg_level, prop_obs_require
     df[cols] = df[cols].apply(pd.to_numeric, errors='coerce')
 
     # aggregate data to specified timestep
-    if agg_level == 'daily':
-        # get proportion of measurements available for timestep
-        prop_df = df.groupby([df['datetime'].dt.date]).count()[cols].div(df.groupby([df['datetime'].dt.date]).count()['datetime'], axis=0)
-        # calculate averages for timestep
-        df = df.groupby([df['datetime'].dt.date]).mean()
-    # only keep averages where we have enough measurements
-    df.where(prop_df.gt(prop_obs_required))
+    df = process_to_timestep(df, cols, agg_level, prop_obs_required)
+
+    # process parameter codes to names
+    df = param_code_to_name(df, params_df)
 
     # save pre-processed data
     data_outfile_csv = os.path.join('.', '02_munge', 'out', os.path.splitext(os.path.basename(raw_datafile))[0]+'.csv')
@@ -79,23 +99,19 @@ def main():
     # process raw parameter data into csv
     raw_params_txt = '01_fetch/out/usgs_nwis_params.txt'
     params_outfile_csv = os.path.join('.', '02_munge', 'out', 'usgs_nwis_params.csv')
-    process_params_to_csv(raw_params_txt, params_outfile_csv, write_location, s3_bucket, s3_client)
+    params_df = process_params_to_csv(raw_params_txt, params_outfile_csv, write_location, s3_bucket, s3_client)
 
     # get list of raw data files to process
     raw_datafiles = [obj['Key'] for obj in s3_client.list_objects_v2(Bucket=s3_bucket, Prefix='01_fetch/out/usgs_nwis_0')['Contents']]
-
     # determine which data flags we want to drop
     flags_to_drop = config['flags_to_drop']
-
     # number of measurements required to consider average valid
     prop_obs_required = config['prop_obs_required']
-
     # timestep to aggregate to
     agg_level = config['agg_level']
-
     # process raw data files into csv
     for raw_datafile in raw_datafiles:
-        process_data_to_csv(raw_datafile, flags_to_drop, agg_level, prop_obs_required, write_location, s3_bucket, s3_client)
+        process_data_to_csv(raw_datafile, params_df, flags_to_drop, agg_level, prop_obs_required, write_location, s3_bucket, s3_client)
 
 if __name__ == '__main__':
     main()
