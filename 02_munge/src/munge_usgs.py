@@ -16,6 +16,16 @@ def process_params_to_csv(raw_params_txt, params_outfile_csv, write_location, bu
         print('uploading to s3')
         s3_client.upload_file(params_outfile_csv, bucket, '02_munge/out/'+os.path.basename(params_outfile_csv))
 
+def process_to_timestep(df, agg_level, prop_obs_required):
+    # aggregate data to specified timestep
+    if agg_level == 'daily':
+        # get proportion of measurements available for timestep
+        prop_df = df.groupby([df['datetime'].dt.date]).count()[cols].div(df.groupby([df['datetime'].dt.date]).count()['datetime'], axis=0)
+        # calculate averages for timestep
+        df = df.groupby([df['datetime'].dt.date]).mean()
+    # only keep averages where we have enough measurements
+    df.where(prop_df.gt(prop_obs_required))
+
 def process_data_to_csv(raw_datafile, flags_to_drop, agg_level, prop_obs_required, write_location, bucket, s3_client):
     '''
     process raw data text files into clean csvs, including:
@@ -50,13 +60,7 @@ def process_data_to_csv(raw_datafile, flags_to_drop, agg_level, prop_obs_require
     df[cols] = df[cols].apply(pd.to_numeric, errors='coerce')
 
     # aggregate data to specified timestep
-    if agg_level == 'daily':
-        # get proportion of measurements available for timestep
-        prop_df = df.groupby([df['datetime'].dt.date]).count()[cols].div(df.groupby([df['datetime'].dt.date]).count()['datetime'], axis=0)
-        # calculate averages for timestep
-        df = df.groupby([df['datetime'].dt.date]).mean()
-    # only keep averages where we have enough measurements
-    df.where(prop_df.gt(prop_obs_required))
+    df = process_to_timestep(df, agg_level, prop_obs_required)
 
     # save pre-processed data
     data_outfile_csv = os.path.join('.', '02_munge', 'out', os.path.splitext(os.path.basename(raw_datafile))[0]+'.csv')
