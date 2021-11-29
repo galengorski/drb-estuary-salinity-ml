@@ -13,14 +13,14 @@ import os
 
 #%%
 def download_s3_to_local(s3_dir_prefix, local_outdir, file_id):
-    '''download data files from s3 bucket to local machine for
-    development
+    '''download data files from s3 bucket to local machine for development
     file_id - a file identifier substring that is contained within all 
     the file names you want to download. For example 'usgs_nwis' will 
     download all files with 'usgs_nwis' in the file name'''
     
     # after you have configured saml2aws, you can log in and create a new 
     # token by executing the following command:
+    # keep all of the s3 arguments hard coded as I don't see us changing them much
     subprocess.run(["saml2aws", "login", "--skip-prompt", "--role", "arn:aws:iam::807615458658:role/adfs-wma-developer"])
     
     # read in S3 credentials from ./.aws/credentials file
@@ -30,13 +30,10 @@ def download_s3_to_local(s3_dir_prefix, local_outdir, file_id):
     # end the name of the bucket you want to read/write to:
     s3_bucket = 'drb-estuary-salinity'
     
-    # define the local file path that you want to save this file to
+    # create the output file directory on your local
     os.makedirs(local_outdir, exist_ok=True)
-    
-    
-    # define a file prefix to look in your bucket for
 
-    # loop through all objects with this prefix and print
+    # loop through all objects with this prefix that contain .csv and file_id and download
     for obj in s3_client.list_objects_v2(Bucket=s3_bucket, Prefix=s3_dir_prefix)['Contents']:
         s3_fpath = obj['Key']
         if ".csv" and file_id not in s3_fpath:
