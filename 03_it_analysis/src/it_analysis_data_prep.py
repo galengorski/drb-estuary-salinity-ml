@@ -5,11 +5,11 @@ Created on Mon Nov 29 10:17:00 2021
 @author: ggorski
 """
 
-import boto3
+
 import pandas as pd
 import io
-import subprocess
 import os
+import utils
 
 #%%
 def download_s3_to_local(s3_dir_prefix, local_outdir, file_id):
@@ -21,12 +21,13 @@ def download_s3_to_local(s3_dir_prefix, local_outdir, file_id):
     # after you have configured saml2aws, you can log in and create a new 
     # token by executing the following command:
     # keep all of the s3 arguments hard coded as I don't see us changing them much
-    subprocess.run(["saml2aws", "login", "--skip-prompt", "--role", "arn:aws:iam::807615458658:role/adfs-wma-developer"])
+    # subprocess.run(["saml2aws", "login", "--skip-prompt", "--role", "arn:aws:iam::807615458658:role/adfs-wma-developer"])
     
     # read in S3 credentials from ./.aws/credentials file
     # assumes we are using a credential profile names 'dev'
-    session = boto3.Session(profile_name='dev')
-    s3_client = session.client('s3')
+    write_location = 'local'
+    aws_profile = 'dev'
+    s3_client = utils.prep_write_location(write_location, aws_profile)
     # end the name of the bucket you want to read/write to:
     s3_bucket = 'drb-estuary-salinity'
     

@@ -47,3 +47,6 @@ vignettes/*.pdf
 
 .vscode/
 __pycache__/
+
+# local scratch folder
+99_scratch/*
