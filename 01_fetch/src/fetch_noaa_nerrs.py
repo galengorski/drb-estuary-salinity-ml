@@ -37,7 +37,7 @@ def main():
     start_dt = '2019-01-01'
     end_dt = '2019-12-31'
 
-    data_outfile = os.path.join("fetch","out", "{product}_{station_id}_{start_dt}_{end_dt}.csv")
+    data_outfile = os.path.join("fetch","out", f"noaa_{product}_{station_id}.csv")
     fetch_noaa_nerrs_data(start_dt, end_dt, datum, station_id, time_zone, product, units, file_format, data_outfile)
 
     metadata_outfile = os.path.join("fetch","out", "metadata.csv")
