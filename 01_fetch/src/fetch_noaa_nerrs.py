@@ -12,7 +12,7 @@ def fetch_metadata(station_id, metadata_outfile):
     data = json.loads(text)
     nested_list = pd.json_normalize(data, record_path=['stations'])
     df = nested_list.stack().reset_index()
-    metadata = df.iloc[1:,1:].rename(columns={df.columns[1]:"NOAA NERRS metadata:",
+    metadata = df.iloc[1:,1:].rename(columns={df.columns[1]:"data_property",
                                               df.columns[2]:(station_id)}).replace(".self","", regex=True)
     metadata.to_csv(metadata_outfile, index=False)
 
