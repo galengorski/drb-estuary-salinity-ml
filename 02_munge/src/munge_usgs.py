@@ -34,7 +34,9 @@ def param_code_to_name(df, params_df):
         # get 5-digit parameter code from column name
         code = col.split('_')[1]
         # find the corresponding parameter name
-        name = params_df[params_df['parm_cd']==code]['parm_nm'].iloc[0]
+        full_name = params_df[params_df['parm_cd']==code]['parm_nm'].iloc[0]
+        # give it a shorter machine-readable name
+        name = full_name.split(',')[0].replace(' ', '_').lower()
         # rename the column
         df.rename(columns={col: name}, inplace=True)
     return df 
