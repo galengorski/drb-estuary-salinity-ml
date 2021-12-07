@@ -25,6 +25,16 @@ fetch_usgs.py:
   start_dt: '2019-01-01'
   end_dt: '2019-12-31'
 
+  params_to_process:
+    - '00060' # Discharge, cubic feet per second
+    - '00065' # Gage height, feet
+    - '00095' # Specific conductance, water, unfiltered, microsiemens per centimeter at 25 degrees Celsius
+    - '00010' # Temperature, water, degrees Celsius
+    - '72279' # Tidal elevation, NOS-averaged, NAVD88, feet
+    - '63680' # Turbidity, water, unfiltered, monochrome near infra-red LED light, 780-900 nm, detection angle 90 +-2.5 degrees, formazin nephelometric units (FNU)
+    - '00400' # pH, water, unfiltered, field, standard units
+
+
 munge_usgs.py:
   # choose where you want to write your data outputs: local or S3
   write_location: 'local'
