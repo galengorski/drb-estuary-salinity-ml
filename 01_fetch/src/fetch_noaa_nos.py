@@ -25,12 +25,32 @@ def main():
     station_id = '8551762'
     
     datum='MLLW'
+    ''' options:
+    HAT: Highest Astronomical Tide
+    MHHW: Mean Higher High Water
+    MHW: Mean High Water
+    DTL: Diurnal Tide Level
+    MTL: Mean Tide Level
+    MSL: Mean Sea Level
+    MLW: Mean Low Water 
+    MLLW: Mean Lower Low Water
+    LAT: Lowest Astronomical Tide
+    GT: Great Diurnal Range
+    MN: Mean Diurnal Range
+    DHQ: Mean Diurnal High Water Inequality
+    HWI: Greenwich High Water Interval
+    LWI: Greenwich Low Water Interval
+    Max Tide: Highest Observed Tide
+    Min Tide: Lowest Observed Tide
+    Station Datum: fixed base elevation at a tide station
+    National Tidal Datum Epoch: The specific 19-year period adopted by the National Ocean Service as the official time segment over which tide observations are taken and reduced to obtain mean values (e.g., mean lower low water, etc.) for tidal datums.'''
+    
     
     product = 'water_level'
     
     time_zone='GMT'
     
-    units='english'
+    units='metric'
     
     file_format='csv'
 
