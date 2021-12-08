@@ -45,19 +45,25 @@ def main():
     Station Datum: fixed base elevation at a tide station
     National Tidal Datum Epoch: The specific 19-year period adopted by the National Ocean Service as the official time segment over which tide observations are taken and reduced to obtain mean values (e.g., mean lower low water, etc.) for tidal datums.'''
     
-    
     product = 'water_level'
+    '''options: water_level, air_temperature, water_temperature, wind, air_pressure, air_gap, conductivity, visibility, humidity, salinity, hourly_height,
+    high_low, daily_mean, monthly_mean, one_minute_water_level, predictions, datums, currents, and currents_predictions.'''
     
     time_zone='GMT'
+    '''options:
+    gmt: Greenwich Mean Time
+    lst: Local Standard Time. The time local to the requested station.
+    lst_ldt: Local Standard/Local Daylight Time. The time local to the requested station.'''
     
     units='metric'
+    '''options: english and metric'''
     
     file_format='csv'
 
     start_dt = '20190101'
     end_dt = '20191231'
 
-    data_outfile = os.path.join("fetch","out", f"noaa_{product}_{station_id}.csv")
+    data_outfile = os.path.join("fetch","out", f"noaa_nos_{product}_{station_id}.csv")
     fetch_noaa_nerrs_data(start_dt, end_dt, datum, station_id, time_zone, product, units, file_format, data_outfile)
 
     metadata_outfile = os.path.join("fetch","out", "metadata.csv")
