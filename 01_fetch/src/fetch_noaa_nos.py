@@ -4,7 +4,7 @@ import numpy as np
 import urllib
 import requests, json
 
-def fetch_metadata(station_id, metadata_outfile):
+def fetch_metadata(station_id, metadata_outfile, bucket, write_file):
     '''fetch tides and currents metadata from NOAA NOS station'''
     metadata_url = f'https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/{station_id}/.json'
     response = requests.get(metadata_url)
@@ -15,13 +15,26 @@ def fetch_metadata(station_id, metadata_outfile):
     metadata = df.iloc[1:,1:].rename(columns={df.columns[1]:"data_property",
                                               df.columns[2]:(station_id)}).replace(".self","", regex=True)
     metadata.to_csv(metadata_outfile, index=False)
+    if write_location == 'S3':
+        print('uploading to s3')
+        s3_client.upload_file(metadata_outfile, bucket, '01_fetch/out/'+os.path.basename(metadata_outfile))
 
-def fetch_noaa_nos_data(start_dt, end_dt, datum, station_id, time_zone, product, units, file_format, data_outfile):
+def fetch_noaa_nos_data(start_dt, end_dt, datum, station_id, time_zone, product, units, file_format, data_outfile, bucket, write_file):
     '''fetch NOAA NOS data from select station. Change product argument for NOAA NOS data product. (ie. product = current for current data)'''
         data_url = f'"https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&application=NOS.COOPS.TAC.WL&begin_date={start_dt}&end_date={end_dt}&datum={datum}&station={station_id}&product={product}&time_zone={time_zone}&units={units}&interval=&format={file_format}"
     urllib.request.urlretrieve(data_url, data_outfile)
+    if write_location == 'S3':
+        print('uploading to s3')
+        s3_client.upload_file(data_outfile, bucket, '01_fetch/out/'+os.path.basename(data_outfile))
 
 def main():
+    write_location: 'S3'
+    '''choose where you want to write your data outputs: local or S3'''
+    aws_profile: 'dev'
+    '''set name of AWS profile storing credentials for S3'''
+    s3_bucket: 'drb-estuary-salinity'
+    '''set AWS bucket to read/write to'''
+  
     station_id = '8551762'
     
     datum='MLLW'
