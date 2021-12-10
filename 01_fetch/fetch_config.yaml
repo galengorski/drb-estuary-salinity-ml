@@ -1,0 +1,25 @@
+# choose where you want to write your data outputs: local or S3
+write_location: 'local'
+# set name of AWS profile storing credentials for S3
+aws_profile: 'dev'
+# set AWS bucket to read/write to
+s3_bucket: 'drb-estuary-salinity'
+
+# usgs nwis sites we want to fetch data for
+site_ids:
+  - '01411390' # Cape May Harbor at Cape May NJ
+  - '01463500' # Delaware River at Trenton NJ
+  - '01464040' # Delaware River at Marine Terminal at Trenton NJ
+  - '014670261' # Delaware River at Pennypack Woods PA
+  - '01467059' # Delaware River at Riverton NJ
+  - '01467200' # Delaware River at Penn's Landing, Philadelphia, PA
+  - '01474500' # Schuylkill River at Philadelphia, PA
+  - '01474703' # Delaware River at Fort Mifflin at Philadelphia, PA
+  - '01477050' # DELAWARE RIVER AT CHESTER PA
+  - '01482695' # C AND D CANAL NR DELAWARE CITY, DE
+  - '01482800' # Delaware River at Reedy Island Jetty, DE
+
+# start and end dates for data fetch
+# should be in the format 'YYYY-MM-DD'
+start_dt: '2019-01-01'
+end_dt: '2019-12-31'

@@ -23,8 +23,8 @@ def fetch_data(site_num, start_dt, end_dt, outfile, bucket, write_location, s3_c
 
 def main():
     # import config
-    with open("config.yaml", 'r') as stream:
-        config = yaml.safe_load(stream)['fetch_usgs.py']
+    with open("01_fetch/fetch_config.yaml", 'r') as stream:
+        config = yaml.safe_load(stream)
 
     # set up write location data outputs
     write_location = config['write_location']

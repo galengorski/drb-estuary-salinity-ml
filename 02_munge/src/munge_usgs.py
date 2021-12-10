@@ -41,7 +41,7 @@ def param_code_to_name(df, params_df):
         df.rename(columns={col: name}, inplace=True)
     return df 
 
-def process_data_to_csv(raw_datafile, params_df, flags_to_drop, agg_level, prop_obs_required, write_location, bucket, s3_client):
+def process_data_to_csv(raw_datafile, c, params_df, flags_to_drop, agg_level, prop_obs_required, write_location, bucket, s3_client):
     '''
     process raw data text files into clean csvs, including:
         dropping unwanted flags
@@ -77,6 +77,11 @@ def process_data_to_csv(raw_datafile, params_df, flags_to_drop, agg_level, prop_
     # aggregate data to specified timestep
     df = process_to_timestep(df, cols, agg_level, prop_obs_required)
 
+    # drop any columns that aren't in the list we want to use
+    for col in df.columns:
+        if col.split('_')[1] not in params_to_process:
+            df.drop(col, axis=1, inplace=True)
+
     # process parameter codes to names
     df = param_code_to_name(df, params_df)
 
@@ -90,8 +95,8 @@ def process_data_to_csv(raw_datafile, params_df, flags_to_drop, agg_level, prop_
 
 def main():
     # import config
-    with open("config.yaml", 'r') as stream:
-        config = yaml.safe_load(stream)['munge_usgs.py']
+    with open("02_munge/munge_config.yaml", 'r') as stream:
+        config = yaml.safe_load(stream)
 
     # set up write location data outputs
     write_location = config['write_location']
@@ -107,13 +112,15 @@ def main():
     raw_datafiles = [obj['Key'] for obj in s3_client.list_objects_v2(Bucket=s3_bucket, Prefix='01_fetch/out/usgs_nwis_0')['Contents']]
     # determine which data flags we want to drop
     flags_to_drop = config['flags_to_drop']
+    # determine which parameters we want to keep
+    params_to_process = config['params_to_process']
     # number of measurements required to consider average valid
     prop_obs_required = config['prop_obs_required']
     # timestep to aggregate to
     agg_level = config['agg_level']
     # process raw data files into csv
     for raw_datafile in raw_datafiles:
-        process_data_to_csv(raw_datafile, params_df, flags_to_drop, agg_level, prop_obs_required, write_location, s3_bucket, s3_client)
+        process_data_to_csv(raw_datafile, params_to_process, params_df, flags_to_drop, agg_level, prop_obs_required, write_location, s3_bucket, s3_client)
 
 if __name__ == '__main__':
     main()
