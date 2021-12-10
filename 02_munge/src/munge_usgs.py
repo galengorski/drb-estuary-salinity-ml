@@ -41,7 +41,7 @@ def param_code_to_name(df, params_df):
         df.rename(columns={col: name}, inplace=True)
     return df 
 
-def process_data_to_csv(raw_datafile, c, params_df, flags_to_drop, agg_level, prop_obs_required, write_location, bucket, s3_client):
+def process_data_to_csv(raw_datafile, params_to_process, params_df, flags_to_drop, agg_level, prop_obs_required, write_location, bucket, s3_client):
     '''
     process raw data text files into clean csvs, including:
         dropping unwanted flags
