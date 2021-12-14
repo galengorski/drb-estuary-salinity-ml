@@ -4,7 +4,7 @@ import numpy as np
 import urllib
 import requests, json
 
-def fetch_metadata(station_id, metadata_outfile, bucket, write_file):
+def fetch_metadata(station_id, metadata_outfile, bucket, write_location):
     '''fetch tides and currents metadata from NOAA NOS station'''
     metadata_url = f'https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/{station_id}/.json'
     response = requests.get(metadata_url)
