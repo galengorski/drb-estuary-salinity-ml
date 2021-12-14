@@ -19,7 +19,7 @@ def fetch_metadata(station_id, metadata_outfile, bucket, write_location):
         print('uploading to s3')
         s3_client.upload_file(metadata_outfile, bucket, '01_fetch/out/'+os.path.basename(metadata_outfile))
 
-def fetch_noaa_nos_data(start_dt, end_dt, datum, station_id, time_zone, product, units, file_format, data_outfile, bucket, write_file):
+def fetch_noaa_nos_data(start_dt, end_dt, datum, station_id, time_zone, product, units, file_format, data_outfile, bucket, write_location):
     '''fetch NOAA NOS data from select station. Change product argument for NOAA NOS data product. (ie. product = current for current data)'''
         data_url = f'"https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&application=NOS.COOPS.TAC.WL&begin_date={start_dt}&end_date={end_dt}&datum={datum}&station={station_id}&product={product}&time_zone={time_zone}&units={units}&interval=&format={file_format}"
     urllib.request.urlretrieve(data_url, data_outfile)
