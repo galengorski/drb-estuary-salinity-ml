@@ -28,12 +28,14 @@ def fetch_noaa_nos_data(start_dt, end_dt, datum, station_id, time_zone, product,
         s3_client.upload_file(data_outfile, bucket, '01_fetch/out/'+os.path.basename(data_outfile))
 
 def main():
-    write_location: 'S3'
     '''choose where you want to write your data outputs: local or S3'''
-    aws_profile: 'dev'
+    write_location: 'local'
     '''set name of AWS profile storing credentials for S3'''
-    s3_bucket: 'drb-estuary-salinity'
+    aws_profile: 'dev'
     '''set AWS bucket to read/write to'''
+    s3_bucket: 'drb-estuary-salinity'
+    '''set up AWS client'''
+    s3_client = utils.prep_write_location(write_location, aws_profile)
   
     station_id = '8551762'
     
