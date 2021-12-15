@@ -96,7 +96,7 @@ def process_data_to_csv(raw_datafile, params_to_process, params_df, flags_to_dro
 def main():
     # import config
     with open("02_munge/munge_config.yaml", 'r') as stream:
-        config = yaml.safe_load(stream)
+        config = yaml.safe_load(stream)['munge_usgs.py']
 
     # set up write location data outputs
     write_location = config['write_location']
