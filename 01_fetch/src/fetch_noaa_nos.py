@@ -3,8 +3,9 @@ import os
 import numpy as np
 import urllib
 import requests, json
+import utils
 
-def fetch_metadata(station_id, metadata_outfile, bucket, write_location):
+def fetch_metadata(station_id, metadata_outfile, bucket, write_location, s3_client):
     '''fetch tides and currents metadata from NOAA NOS station'''
     metadata_url = f'https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/{station_id}/.json'
     response = requests.get(metadata_url)
@@ -19,9 +20,12 @@ def fetch_metadata(station_id, metadata_outfile, bucket, write_location):
         print('uploading to s3')
         s3_client.upload_file(metadata_outfile, bucket, '01_fetch/out/'+os.path.basename(metadata_outfile))
 
-def fetch_noaa_nos_data(start_dt, end_dt, datum, station_id, time_zone, product, units, file_format, data_outfile, bucket, write_location):
-    '''fetch NOAA NOS data from select station. Change product argument for NOAA NOS data product. (ie. product = current for current data)'''
-    data_url = f'"https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&application=NOS.COOPS.TAC.WL&begin_date={start_dt}&end_date={end_dt}&datum={datum}&station={station_id}&product={product}&time_zone={time_zone}&units={units}&interval=&format={file_format}"
+def fetch_noaa_nos_data(start_dt, end_dt, datum, station_id, time_zone, product, units, file_format, data_outfile, bucket, write_location, s3_client):
+    '''fetch NOAA NOS data from select station. Change product argument for NOAA NOS data product.
+     (ie. product = current for current data)'''
+    data_url = f'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&application=NOS.COOPS.TAC.WL&begin_date=' \
+               f'{start_dt}&end_date={end_dt}&datum={datum}&station={station_id}&product={product}&time_zone=' \
+               f'{time_zone}&units={units}&interval=&format={file_format}'
     urllib.request.urlretrieve(data_url, data_outfile)
     if write_location == 'S3':
         print('uploading to s3')
@@ -29,15 +33,15 @@ def fetch_noaa_nos_data(start_dt, end_dt, datum, station_id, time_zone, product,
 
 def main():
     '''choose where you want to write your data outputs: local or S3'''
-    write_location: 'local'
+    write_location = 'local'
     '''set name of AWS profile storing credentials for S3'''
-    aws_profile: 'dev'
+    aws_profile = 'dev'
     '''set AWS bucket to read/write to'''
-    s3_bucket: 'drb-estuary-salinity'
+    s3_bucket = 'drb-estuary-salinity'
     '''set up AWS client'''
     s3_client = utils.prep_write_location(write_location, aws_profile)
 
-    station_id = '8551762'
+    station_id = '8573927'
 
     datum = 'MLLW'
     ''' options:
@@ -58,11 +62,13 @@ def main():
     Max Tide: Highest Observed Tide
     Min Tide: Lowest Observed Tide
     Station Datum: fixed base elevation at a tide station
-    National Tidal Datum Epoch: The specific 19-year period adopted by the National Ocean Service as the official time segment over which tide observations are taken and reduced to obtain mean values (e.g., mean lower low water, etc.) for tidal datums.'''
+    National Tidal Datum Epoch: The specific 19-year period adopted by the National Ocean Service as the official time
+     segment over which tide observations are taken and reduced to obtain mean values (e.g., mean lower low water, etc.) for tidal datums.'''
 
     product = 'water_level'
-    '''options: water_level, air_temperature, water_temperature, wind, air_pressure, air_gap, conductivity, visibility, humidity, salinity, hourly_height,
-    high_low, daily_mean, monthly_mean, one_minute_water_level, predictions, datums, currents, and currents_predictions.'''
+    '''options: water_level, air_temperature, water_temperature, wind, air_pressure, air_gap, conductivity, visibility,
+     humidity, salinity, hourly_height, high_low, daily_mean, monthly_mean, one_minute_water_level, predictions, datums,
+     currents, and currents_predictions.'''
 
     time_zone = 'GMT'
     '''options:
@@ -78,11 +84,15 @@ def main():
     start_dt = '20190101'
     end_dt = '20191231'
 
-    data_outfile = os.path.join("fetch", "out", f"noaa_nos_{product}_{station_id}.csv")
-    fetch_noaa_nerrs_data(start_dt, end_dt, datum, station_id, time_zone, product, units, file_format, data_outfile)
+    path = os.path.dirname('/01_fetch/out/')
+    os.path.isdir(path)
+    filename = f"noaa_nos_{product}_{station_id}.csv"
+    data_outfile = os.path.join('.', path + '/' + filename)
+    fetch_noaa_nos_data(start_dt, end_dt, datum, station_id, time_zone, product, units, file_format, data_outfile, s3_bucket, write_location, s3_client)
 
-    metadata_outfile = os.path.join("fetch", "out", "metadata.csv")
-    fetch_metadata(station_id, metadata_outfile)
+    metadata_filename = f"noaa_nos_metadata_{product}_{station_id}.csv"
+    metadata_outfile = os.path.join('.', path + '/' + metadata_filename)
+    fetch_metadata(station_id, metadata_outfile, s3_bucket, write_location, s3_client)
 
 
 if __name__ == '__main__':
