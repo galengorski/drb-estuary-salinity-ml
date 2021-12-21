@@ -11,6 +11,8 @@ import io
 import os
 import utils
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 #%%
 def download_s3_to_local(s3_dir_prefix, local_outdir, file_id):
@@ -124,3 +126,21 @@ def create_correlation_matrix(srcs_list_lagged, snks_list):
             col_snks = col_snks.append(sc_sk_corr)
         corrs[list(col_snks.columns)] = col_snks
     return corrs
+
+#%%
+def plot_heat_map(corrs, mask_threshold, date_start, date_end, save_location):
+    '''Takes in a correlation matrix and plots a heat map of correlations,
+    mask_threshold is a threshold where if abs(correlation) < threshold those
+    squares of the heatmap are masked out to highlight stronger correlation.'''
+    
+    mask = abs(corrs) < mask_threshold
+    plt.figure(figsize = (5,10))
+    cbar_kws = {"shrink":0.85,
+            'extendfrac':0.1,
+            'label': 'Correlation'
+           }
+    heatmap = sns.heatmap(corrs.transpose(), vmin = -1, vmax = 1, cbar = True, cmap='coolwarm', 
+                      annot = True, cbar_kws = cbar_kws, linewidth = 1, mask = mask.transpose())
+    plt.xticks(rotation=45,rotation_mode='anchor',ha = 'right')
+    heatmap.set_title('|Correlation| > '+str(mask_threshold)+'\n '+date_start+' - '+date_end, fontdict={'fontsize':14}, pad=12)
+    plt.savefig(save_location, bbox_inches = 'tight')
