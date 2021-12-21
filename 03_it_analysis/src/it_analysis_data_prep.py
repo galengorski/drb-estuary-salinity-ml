@@ -128,10 +128,11 @@ def create_correlation_matrix(srcs_list_lagged, snks_list):
     return corrs
 
 #%%
-def plot_heat_map(corrs, mask_threshold, date_start, date_end, save_location):
+def plot_heat_map(corrs, mask_threshold, date_start, date_end, save_location, save=False):
     '''Takes in a correlation matrix and plots a heat map of correlations,
     mask_threshold is a threshold where if abs(correlation) < threshold those
-    squares of the heatmap are masked out to highlight stronger correlation.'''
+    squares of the heatmap are masked out to highlight stronger correlation. save is
+    true/false whether it will save the plot to file, default false'''
     
     mask = abs(corrs) < mask_threshold
     plt.figure(figsize = (5,10))
@@ -143,4 +144,7 @@ def plot_heat_map(corrs, mask_threshold, date_start, date_end, save_location):
                       annot = True, cbar_kws = cbar_kws, linewidth = 1, mask = mask.transpose())
     plt.xticks(rotation=45,rotation_mode='anchor',ha = 'right')
     heatmap.set_title('|Correlation| > '+str(mask_threshold)+'\n '+date_start+' - '+date_end, fontdict={'fontsize':14}, pad=12)
-    plt.savefig(save_location, bbox_inches = 'tight')
+    if save:
+        plt.savefig(save_location, bbox_inches = 'tight')
+    else:
+        plt.show()
