@@ -44,37 +44,10 @@ def main():
     station_id = config['station_id']
 
     datum = config['datum']
-    # options:
-    # HAT: Highest Astronomical Tide
-    # MHHW: Mean Higher High Water
-    # MHW: Mean High Water
-    # DTL: Diurnal Tide Level
-    # MTL: Mean Tide Level
-    # MSL: Mean Sea Level
-    # MLW: Mean Low Water 
-    # MLLW: Mean Lower Low Water
-    # LAT: Lowest Astronomical Tide
-    # GT: Great Diurnal Range
-    # MN: Mean Diurnal Range
-    # DHQ: Mean Diurnal High Water Inequality
-    # HWI: Greenwich High Water Interval
-    # LWI: Greenwich Low Water Interval
-    # Max Tide: Highest Observed Tide
-    # Min Tide: Lowest Observed Tide
-    # Station Datum: fixed base elevation at a tide station
-    # National Tidal Datum Epoch: The specific 19-year period adopted by the National Ocean Service as the official time
-     # segment over which tide observations are taken and reduced to obtain mean values (e.g., mean lower low water, etc.) for tidal datums.
 
     product = config['product']
-    # options: water_level, air_temperature, water_temperature, wind, air_pressure, air_gap, conductivity, visibility,
-     # humidity, salinity, hourly_height, high_low, daily_mean, monthly_mean, one_minute_water_level, predictions, datums,
-     # currents, and currents_predictions.
 
     time_zone = config['time_zone']
-    # options:
-    # gmt: Greenwich Mean Time
-    # lst: Local Standard Time. The time local to the requested station.
-    # lst_ldt: Local Standard/Local Daylight Time. The time local to the requested station.
 
     units = config['units']
     # options: english and metric
