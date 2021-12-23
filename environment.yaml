@@ -72,3 +72,4 @@ dependencies:
   - matplotlib
   - joblib
   - tqdm
+  - snakemake-minimal
