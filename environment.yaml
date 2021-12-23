@@ -72,4 +72,3 @@ dependencies:
   - joblib
   - tqdm
   - snakemake-minimal
-prefix: C:\Users\asnyder\Anaconda3\envs\drb_estuary_salinity
