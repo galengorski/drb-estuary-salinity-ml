@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Nov 29 10:17:00 2021
+Created on Wed Dec 22 20:58:51 2021
 
 @author: ggorski
 """
 
-
-import pandas as pd
-import io
-import os
-import utils
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
+import pandas as pd
+import os
+import pickle
+import yaml
+import utils
 
-#%%
+
+###
 def download_s3_to_local(s3_dir_prefix, local_outdir, file_id):
     '''download data files from s3 bucket to local machine for development
     file_id - a file identifier substring that is contained within all 
@@ -40,7 +39,7 @@ def download_s3_to_local(s3_dir_prefix, local_outdir, file_id):
         s3_client.download_file(s3_bucket, s3_fpath, local_fpath)
         print(s3_fpath+' Downloaded to local')
 
-#%%
+###
 def select_sources(srcs, date_start, date_end):
     '''select the variables you are interested in examining, 
     srcs must be a list using the exact variable names,
@@ -74,7 +73,7 @@ def select_sources(srcs, date_start, date_end):
             continue
     return srcs_list
     
-#%%
+###
 def select_sinks(snks, date_start, date_end):
     '''This is a filler function, for now it is hard coded and very specific to
     the salt front location spreadsheet we have, but in the future it should look
@@ -95,7 +94,7 @@ def select_sinks(snks, date_start, date_end):
     snks_list[0].iloc[:,0] = snks_list[0].iloc[:,0].add(noise)
     snks_list[0].iloc[:,1] = snks_list[0].iloc[:,1].add(noise)
     return snks_list
-#%%
+###
 def lag_sources(n_lags, srcs_list):
     '''Takes in the list of sources called srcs_list in which each list item is a 
     dataframe of site variables, and creates lagged time series for all variables
@@ -112,39 +111,40 @@ def lag_sources(n_lags, srcs_list):
         srcs_list[s] = srcs_list[s].sort_index(axis=1)
     return srcs_list
 
-#%%
-def create_correlation_matrix(srcs_list_lagged, snks_list):
-    '''Takes in the lagged sources and calculates the correlation between them and the
-    sinks. Pearson correlation is used'''
-    corrs = pd.DataFrame()
-    for sc in range(len(srcs_list_lagged)):
-        col_snks = pd.DataFrame()
-        for sk in range(len(snks_list)):
-            sc_sk_corr = srcs_list_lagged[sc].apply(lambda s: snks_list[sk].corrwith(s))
-            #print(sc_sk_corr)
-            #corrs.append(sc_sk_corr)
-            col_snks = col_snks.append(sc_sk_corr)
-        corrs[list(col_snks.columns)] = col_snks
-    return corrs
-
-#%%
-def plot_heat_map(corrs, mask_threshold, date_start, date_end, save_location, save=False):
-    '''Takes in a correlation matrix and plots a heat map of correlations,
-    mask_threshold is a threshold where if abs(correlation) < threshold those
-    squares of the heatmap are masked out to highlight stronger correlation. save is
-    true/false whether it will save the plot to file, default false'''
+def main():
+    # import config
+    with open("03_it_analysis/it_analysis_data_prep_config.yaml", 'r') as stream:
+        config = yaml.safe_load(stream)['it_analysis_data_prep.py']
+        
+    #select the sources
+    srcs = config['srcs']
+    #select the sinks
+    snks = config['snks']
+    #start date for analysis
+    date_start = config['date_start']
+    #end date for analysis
+    date_end = config['date_end']
+    #number of lag days to consider for sources
+    n_lags = config['n_lags']
+    #generate the sources data
+    srcs_list = select_sources(srcs, date_start, date_end)    
+    #generate the sinks data
+    snks_list = select_sinks(snks, date_start, date_end)
+    #lag the sources
+    srcs_list_lagged = lag_sources(n_lags, srcs_list)
+    #output file
+    out_dir = config['out_dir']
+    #create out directory if it doesn't already exist
+    os.makedirs(out_dir, exist_ok = False)
+    #write snks_list to file 
+    snks_file = open(out_dir+'snks', "wb")
+    pickle.dump(snks_list, snks_file)
+    snks_file.close()
+    #write srcs_list_lagged to file 
+    srcs_file = open(out_dir+'srcs_lagged', "wb")
+    pickle.dump(srcs_list_lagged, srcs_file)
+    srcs_file.close()
     
-    mask = abs(corrs) < mask_threshold
-    plt.figure(figsize = (5,10))
-    cbar_kws = {"shrink":0.85,
-            'extendfrac':0.1,
-            'label': 'Correlation'
-           }
-    heatmap = sns.heatmap(corrs.transpose(), vmin = -1, vmax = 1, cbar = True, cmap='coolwarm', 
-                      annot = True, cbar_kws = cbar_kws, linewidth = 1, mask = mask.transpose())
-    plt.xticks(rotation=45,rotation_mode='anchor',ha = 'right')
-    heatmap.set_title('|Correlation| > '+str(mask_threshold)+'\n '+date_start+' - '+date_end, fontdict={'fontsize':14}, pad=12)
-    if save:
-        plt.savefig(save_location, bbox_inches = 'tight')
-    else:
-        plt.show()
+        
+if __name__ == '__main__':
+    main()
