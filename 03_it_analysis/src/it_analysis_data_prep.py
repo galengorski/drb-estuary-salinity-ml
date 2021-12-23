@@ -81,7 +81,7 @@ def select_sinks(snks, date_start, date_end):
     
     snks_list = list()
 
-    sf_loc = pd.read_csv('99_scratch/drb_estuary_salinity_scratch/data/saltfront.csv', index_col = 'datetime')
+    sf_loc = pd.read_csv('methods_exploration/data/saltfront.csv', index_col = 'datetime')
     sf_loc.index = pd.to_datetime(sf_loc.index)
     sf_loc = sf_loc[date_start:date_end]
     #we'll make snks_list a list of df here they are both 2019, but these could be different model runs 
@@ -135,7 +135,7 @@ def main():
     #output file
     out_dir = config['out_dir']
     #create out directory if it doesn't already exist
-    os.makedirs(out_dir, exist_ok = False)
+    os.makedirs(out_dir, exist_ok = True)
     #write snks_list to file 
     snks_file = open(out_dir+'snks', "wb")
     pickle.dump(snks_list, snks_file)
