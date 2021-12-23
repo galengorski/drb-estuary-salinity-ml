@@ -1,5 +1,6 @@
 name: drb_estuary_salinity
 channels:
+  - anaconda
   - defaults
 dependencies:
   - typing_extensions==3.10.0.2=pyh06a4308_0
