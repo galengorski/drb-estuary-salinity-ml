@@ -45,8 +45,12 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
+# VS Code files
 .vscode/
 __pycache__/
+
+# Snakemake files
+.snakemake/
 
 # local scratch folder
 99_scratch/*
