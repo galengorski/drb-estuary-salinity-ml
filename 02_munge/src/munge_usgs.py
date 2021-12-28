@@ -22,7 +22,9 @@ def process_to_timestep(df, cols, agg_level, prop_obs_required):
     # aggregate data to specified timestep
     if agg_level == 'daily':
         # get proportion of measurements available for timestep
-        prop_df = df.groupby([df['datetime'].dt.date]).count()[cols].div(df.groupby([df['datetime'].dt.date]).count()['datetime'], axis=0)
+        expected_measurements = df.groupby([df['datetime'].dt.date]).count().mode()[cols].loc[0]
+        observed_measurements = df.groupby([df['datetime'].dt.date]).count()[cols].loc[:]
+        prop_df = observed_measurements / expected_measurements
         # calculate averages for timestep
         df = df.groupby([df['datetime'].dt.date]).mean()
     # only keep averages where we have enough measurements
