@@ -66,7 +66,6 @@ def main():
     path = os.path.dirname('/01_fetch/out/')
     metadata_filename = f"noaa_nos_metadata_{products}_{station_id}.csv"
     metadata_outfile = os.path.join('.', path + '/' + metadata_filename)
-    metadata_outfile = os.path.join('.' + '/' + metadata_filename)
     fetch_metadata(station_id, metadata_outfile, s3_bucket, write_location, s3_client)
 
 
