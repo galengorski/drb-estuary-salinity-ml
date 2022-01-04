@@ -21,7 +21,7 @@ def fetch_metadata(station_id, metadata_outfile, bucket, write_location, s3_clie
 
 def fetch_noaa_nos_data(start_dt, end_dt, datum, station_id, time_zone, product, units, file_format, data_outfile, bucket, write_location, s3_client):
     for products in product:
-        data_url = f'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&application=NOS.COOPS.TAC.WL&begin_date=' \
+        data_url = f'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?begin_date=' \
                    f'{start_dt}&end_date={end_dt}&datum={datum}&station={station_id}&product={products}&time_zone=' \
                    f'{time_zone}&units={units}&interval=&format={file_format}'
         data_outfile_formatted = data_outfile.format(products=products, station_id=station_id)
