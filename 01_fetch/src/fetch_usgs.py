@@ -11,7 +11,7 @@ def fetch_site_info(site_num, outfile):
     print(f'fetcing site info for site {site_num} and saving locally')
     urllib.request.urlretrieve(site_url, outfile)
 
-def process_site_info_to_df(raw_site_info_txt, site_info_outfile_csv,  s3_bucket, write_location, s3_client):
+def process_site_info_to_csv(raw_site_info_txt, site_info_outfile_csv,  s3_bucket, write_location, s3_client):
     '''
     process raw site info text file into a csv file,
     return minimum date of measured data (for any parameter) as start date for site
@@ -89,7 +89,7 @@ def main():
         site_info_outfile_txt = os.path.join('.', '01_fetch', 'out', 'metadata', f'usgs_nwis_site_info_{site_num}.txt')
         fetch_site_info(site_num, site_info_outfile_txt)
         site_info_outfile_csv = os.path.join('.', '01_fetch', 'out', 'metadata', f'usgs_nwis_site_info_{site_num}.csv')
-        start_dt = process_site_info_to_df(site_info_outfile_txt, site_info_outfile_csv,  s3_bucket, write_location, s3_client)
+        start_dt = process_site_info_to_csv(site_info_outfile_txt, site_info_outfile_csv,  s3_bucket, write_location, s3_client)
         end_dt = datetime.datetime.today().strftime("%Y-%m-%d")
 
         # start and end dates for data fetch
