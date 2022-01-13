@@ -59,12 +59,12 @@ def main():
 
     path = os.path.dirname('/01_fetch/out/')
     os.path.isdir(path)
-    filename = "noaa_nos_{products}_{station_id}.csv"
+    filename = "noaa_nos_{station_id}_{products}.csv"
     data_outfile = os.path.join('.', path + '/' + filename)
     fetch_noaa_nos_data(start_dt, end_dt, datum, station_id, time_zone, product, units, file_format, data_outfile, s3_bucket, write_location, s3_client)
 
     path = os.path.dirname('/01_fetch/out/')
-    metadata_filename = f"noaa_nos_metadata_{products}_{station_id}.csv"
+    metadata_filename = f"noaa_nos_metadata_{station_id}_{products}.csv"
     metadata_outfile = os.path.join('.', path + '/' + metadata_filename)
     fetch_metadata(station_id, metadata_outfile, s3_bucket, write_location, s3_client)
 
