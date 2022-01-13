@@ -1,4 +1,6 @@
-make_correlation_matrix.py:
+make_heatmap_matrix.py:
+    #metric to calculate
+    metric: 'mutual information'
     #lagged sources from file
     srcs_lagged_pickle: '03_it_analysis/out/srcs_proc_lagged'
     #sinks from file

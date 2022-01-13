@@ -1,12 +1,13 @@
 plot_heat_map.py:
+    metric: 'mutualinformation'
     #matrix to plot
-    matrix: '03_it_analysis/out/corr_matrix'
+    matrix: '03_it_analysis/out/heatmap_matrix'
     #mask threshold
-    mask_threshold: 0.25
+    mask_threshold: 0.05
     #dates for analysis
     date_start: '01-01-2019'
     date_end: '12-31-2019'
     #save location
-    save_location: '03_it_analysis/out/correlation_heatmap.png'
+    save_location: '03_it_analysis/out/'
     #save? true/false
     save: True

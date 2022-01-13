@@ -94,6 +94,22 @@ def select_sinks(snks, date_start, date_end):
     snks_list[0].iloc[:,0] = snks_list[0].iloc[:,0].add(noise)
     snks_list[0].iloc[:,1] = snks_list[0].iloc[:,1].add(noise)
     return snks_list
+
+###
+def save_sources_sinks(srcs_list, snks_list, out_dir):
+    #create out directory if it doesn't already exist
+    os.makedirs(out_dir, exist_ok = True)
+    #write snks_list to file 
+    snks_file = open(out_dir+'snks', "wb")
+    pickle.dump(snks_list, snks_file)
+    snks_file.close()
+    #write srcs_list_lagged to file 
+    srcs_file = open(out_dir+'srcs', "wb")
+    pickle.dump(srcs_list, srcs_file)
+    srcs_file.close()
+    print('sinks and sources saved to file')
+
+
 ###
 def lag_sources(n_lags, srcs_list):
     '''Takes in the list of sources called srcs_list in which each list item is a 
@@ -110,12 +126,50 @@ def lag_sources(n_lags, srcs_list):
         #sort the varaibles for ease of plotting
         srcs_list[s] = srcs_list[s].sort_index(axis=1)
     return srcs_list
+###
+def create_preprocess_yaml(srcs_list, snks_list):
+    '''Generates a yaml file (hard coded as 03_it_analysis/it_analysis_preprocess_config.yaml
+    that contains every source and sink variable. The idea is that the yaml file will be edited
+    with the preprocessing steps to take for each variable'''
+    
+    #read in the sources column headers
+    site_var_srcs_list = list()
+    for sr in range(len(srcs_list)): 
+        site_var_srcs_list.append(list(srcs_list[sr].columns))
+    site_var_srcs = [item for sublist in site_var_srcs_list for item in sublist]
+    
+    #convert sources to dictionary
+    src_vals = []
+    for s in range(len(site_var_srcs)):
+        src_vals.extend([["none"]])
+    
+    #read in the sinks column headers
+    site_var_snks_list = list()
+    for sk in range(len(snks_list)): 
+        site_var_snks_list.append(list(snks_list[sk].columns))
+    site_var_snks = [item for sublist in site_var_snks_list for item in sublist]
+    
+    #convert sinks to dictionary
+    snk_vals = []
+    for s in range(len(site_var_snks)):
+        snk_vals.extend([["none"]])
+    
+    #zip into dictionary for neat writing to yaml file add in the n_lags as that will be used
+    #in the next step
+    srcs_snks_dict = {'it_analysis_preprocess.py':
+                 {'sources': dict(zip(site_var_srcs, src_vals)),
+                 'sinks': dict(zip(site_var_snks, snk_vals)),
+                 'n_lags': 1,
+                 'out_dir': '03_it_analysis/out/'}}
+    
+    f = open('03_it_analysis/it_analysis_preprocess_config.yaml', 'w')
+    f.write(yaml.dump(srcs_snks_dict))
+    f.close()
 
 def main():
-    # import config
+    #import config
     with open("03_it_analysis/it_analysis_data_prep_config.yaml", 'r') as stream:
         config = yaml.safe_load(stream)['it_analysis_data_prep.py']
-        
     #select the sources
     srcs = config['srcs']
     #select the sinks
@@ -125,25 +179,18 @@ def main():
     #end date for analysis
     date_end = config['date_end']
     #number of lag days to consider for sources
-    n_lags = config['n_lags']
+    #n_lags = config['n_lags']
     #generate the sources data
     srcs_list = select_sources(srcs, date_start, date_end)    
     #generate the sinks data
     snks_list = select_sinks(snks, date_start, date_end)
-    #lag the sources
-    srcs_list_lagged = lag_sources(n_lags, srcs_list)
+    #generate the yaml file for the preprocessing steps
+    create_preprocess_yaml(srcs_list, snks_list)
+    #lag the sources (EDIT -- This will be moved to post pre-processing)
+    #srcs_list_lagged = lag_sources(n_lags, srcs_list) (EDIT -- This will be moved to post pre-processing)
     #output file
     out_dir = config['out_dir']
-    #create out directory if it doesn't already exist
-    os.makedirs(out_dir, exist_ok = True)
-    #write snks_list to file 
-    snks_file = open(out_dir+'snks', "wb")
-    pickle.dump(snks_list, snks_file)
-    snks_file.close()
-    #write srcs_list_lagged to file 
-    srcs_file = open(out_dir+'srcs_lagged', "wb")
-    pickle.dump(srcs_list_lagged, srcs_file)
-    srcs_file.close()
+    save_sources_sinks(srcs_list, snks_list, out_dir)
     
         
 if __name__ == '__main__':

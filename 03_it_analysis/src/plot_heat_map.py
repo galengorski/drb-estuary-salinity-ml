@@ -10,7 +10,7 @@ import pickle
 import seaborn as sns
 import yaml
 
-def plot_heat_map(matrix, mask_threshold, date_start, date_end, save_location, save=False):
+def plot_heat_map(matrix, mask_threshold, metric, date_start, date_end, save_location, save=False):
     '''Takes in a correlation matrix and plots a heat map of correlations,
     mask_threshold is a threshold where if abs(correlation) < threshold those
     squares of the heatmap are masked out to highlight stronger correlation. save is
@@ -18,17 +18,18 @@ def plot_heat_map(matrix, mask_threshold, date_start, date_end, save_location, s
 
     with open(matrix, 'rb') as mat:
         matrix_plot = pickle.load(mat)
-    
+        
     mask = abs(matrix_plot) < mask_threshold
     plt.figure(figsize = (5,10))
     cbar_kws = {"shrink":0.85,
             'extendfrac':0.1,
-            'label': 'Correlation'
+            'label': metric
            }
-    heatmap = sns.heatmap(matrix_plot.transpose(), vmin = -1, vmax = 1, cbar = True, cmap='coolwarm', 
+    heatmap = sns.heatmap(matrix_plot.transpose(), vmin = 0, vmax = 1, cbar = True, cmap='coolwarm', 
                       annot = True, cbar_kws = cbar_kws, linewidth = 1, mask = mask.transpose())
     plt.xticks(rotation=45,rotation_mode='anchor',ha = 'right')
-    heatmap.set_title('|Correlation| > '+str(mask_threshold)+'\n '+date_start+' - '+date_end, fontdict={'fontsize':14}, pad=12)
+    plt.yticks(rotation = 'horizontal')
+    heatmap.set_title('|'+metric+'| > '+str(mask_threshold)+'\n '+date_start+' - '+date_end, fontdict={'fontsize':14}, pad=12)
     if save:
         plt.savefig(save_location, bbox_inches = 'tight')
     else:
@@ -43,10 +44,11 @@ def main():
     mask_threshold = config['mask_threshold']
     date_start = config['date_start']
     date_end = config['date_end']
-    save_location = config['save_location']
+    metric = config['metric']
+    save_location = config['save_location']+str(metric)+'.png'
     save = config['save']
     
-    plot_heat_map(matrix, mask_threshold, date_start, date_end, save_location, save)
+    plot_heat_map(matrix, mask_threshold, metric, date_start, date_end, save_location, save)
     
 if __name__ == '__main__':
     main()
