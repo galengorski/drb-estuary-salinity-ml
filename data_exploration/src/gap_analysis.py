@@ -51,7 +51,7 @@ def gap_analysis_calc(source, var_dfs):
                 var_site_gap_df.loc[year, 'gap_max_days'] = gaps.max().days if pd.notna(gaps.max().days) else 0
                 var_site_gap_df.to_csv(os.path.join('data_exploration', 'out', f'{source}_{var}_{site}_gap_analysis.csv'))
             metric_dfs[var][site]= var_site_gap_df
-    return metric_dfs
+    return metric_dfs, metrics
 
 def plot_gap_analysis(source, metric_dfs, site_colors):
     for var, data_by_site in metric_dfs.items():
