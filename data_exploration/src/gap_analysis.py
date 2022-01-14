@@ -85,7 +85,7 @@ def main():
         config = yaml.safe_load(stream)['gap_analysis.py']
     # read in data source we want to do gap analysis for
     source = config['source']
-os.makdirs('data_exploration/out/', exist_ok  = True)
+    os.makdirs('data_exploration/out/', exist_ok  = True)
     # fetch site data and compile into nested dictionary of dataframes
     var_dfs = compile_data(nwis_var_names, source)
 
