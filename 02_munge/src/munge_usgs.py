@@ -70,6 +70,9 @@ def process_data_to_csv(raw_datafile, params_to_process, params_df, flags_to_dro
     for col in df.columns:
         if col.split('_')[1] not in params_to_process:
             df.drop(col, axis=1, inplace=True)
+    
+    # drop any columns with no data
+    df.dropna(axis=1, inplace=True)
 
     # process parameter codes to names
     df = param_code_to_name(df, params_df)
