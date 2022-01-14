@@ -94,7 +94,7 @@ def main():
 
     # plot gap metrics per variable
     site_colors = config[f'{source}_site_colors']
-    plot_gap_analysis(source, metric_dfs, site_colors)
+    plot_gap_analysis(source, metric_dfs, metrics, site_colors)
 
 if __name__ == '__main__':
     main()
