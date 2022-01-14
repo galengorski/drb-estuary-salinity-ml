@@ -1,6 +1,8 @@
 import sys
 import boto3
 import subprocess
+import pandas as pd
+import os
 
 def prep_write_location(write_location, aws_profile):
     if write_location=='S3':
