@@ -87,7 +87,7 @@ def main():
     source = config['source']
     os.makdirs('data_exploration/out/', exist_ok  = True)
     # fetch site data and compile into nested dictionary of dataframes
-    var_dfs = compile_data(nwis_var_names, source)
+    var_dfs = compile_data(var_names, source)
 
     # calculate gap metrics per site variable combo
     metric_dfs = gap_analysis_calc(source, var_dfs)
