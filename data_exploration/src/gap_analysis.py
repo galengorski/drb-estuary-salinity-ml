@@ -90,7 +90,7 @@ def main():
     var_dfs = compile_data(var_names, source)
 
     # calculate gap metrics per site variable combo
-    metric_dfs = gap_analysis_calc(source, var_dfs)
+    metric_dfs, metrics = gap_analysis_calc(source, var_dfs)
 
     # plot gap metrics per variable
     site_colors = config[f'{source}_site_colors']
