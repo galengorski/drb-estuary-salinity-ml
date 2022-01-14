@@ -53,7 +53,7 @@ def gap_analysis_calc(source, var_dfs):
             metric_dfs[var][site]= var_site_gap_df
     return metric_dfs, metrics
 
-def plot_gap_analysis(source, metric_dfs, site_colors):
+def plot_gap_analysis(source, metric_dfs, metrics, site_colors):
     for var, data_by_site in metric_dfs.items():
         plot_df = pd.DataFrame()
         fig, axs = plt.subplots(4, sharex=True, figsize=(8,8))
