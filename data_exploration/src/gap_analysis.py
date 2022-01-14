@@ -2,7 +2,7 @@ import os
 import yaml
 import utils
 import pandas as pd
-import datetime
+import datetime as dt
 import matplotlib.pyplot as plt
 
 def compile_data(nwis_var_names, source):
