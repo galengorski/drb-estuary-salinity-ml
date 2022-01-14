@@ -45,7 +45,7 @@ def gap_analysis_calc(source, var_dfs):
                 # year_df.dropna(inplace=True)
                 var_site_gap_df.loc[year, 'p_coverage'] = year_df.count()/365                
                 deltas = year_df.dropna().index.to_series().diff()[1:]
-                gaps = deltas[deltas > datetime.timedelta(days=1)]
+                gaps = deltas[deltas > dt.timedelta(days=1)]
                 var_site_gap_df.loc[year, 'n_gaps'] = len(gaps)
                 var_site_gap_df.loc[year, 'gap_median_days'] = gaps.median().days if pd.notna(gaps.median().days) else 0
                 var_site_gap_df.loc[year, 'gap_max_days'] = gaps.max().days if pd.notna(gaps.max().days) else 0
