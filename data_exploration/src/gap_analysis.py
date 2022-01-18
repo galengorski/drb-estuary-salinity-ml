@@ -27,6 +27,9 @@ def compile_data(nwis_var_names, source):
     return var_dfs
 
 def gap_analysis_calc(source, var_dfs):
+    # make output directory if it doesn't exist
+    os.makedirs(os.path.join('data_exploration', 'out', 'gap_analysis_csvs'), exist_ok  = True)
+    # define metric names that we will calculate
     metrics = ['p_coverage', 'n_gaps', 'gap_median_days', 'gap_max_days']
     gap_template_df = pd.DataFrame(columns=metrics)
     metric_dfs = {}
@@ -50,13 +53,13 @@ def gap_analysis_calc(source, var_dfs):
                 var_site_gap_df.loc[year, 'n_gaps'] = len(gaps)
                 var_site_gap_df.loc[year, 'gap_median_days'] = gaps.median().days if pd.notna(gaps.median().days) else 0
                 var_site_gap_df.loc[year, 'gap_max_days'] = gaps.max().days if pd.notna(gaps.max().days) else 0
-                # make output directory if it doesn't exist
-                os.makedirs(os.path.join('data_exploration', 'out', 'gap_analysis_csvs'), exist_ok  = True)
                 var_site_gap_df.to_csv(os.path.join('data_exploration', 'out', 'gap_analysis_csvs', f'{source}_{var}_{site}_gap_analysis.csv'))
             metric_dfs[var][site]= var_site_gap_df
     return metric_dfs, metrics
 
 def plot_gap_analysis(source, metric_dfs, metrics, site_colors):
+    # make output directory if it doesn't exist
+    os.makedirs(os.path.join('data_exploration', 'out', 'gap_analysis_plots'), exist_ok  = True)
     for var, data_by_site in metric_dfs.items():
         print(f'plotting metrics for {var}')
         plot_df = pd.DataFrame()
@@ -72,8 +75,6 @@ def plot_gap_analysis(source, metric_dfs, metrics, site_colors):
         handles, labels = axs[0].get_legend_handles_labels()
         fig.legend(handles, labels, bbox_to_anchor=(1.15,0.9), loc='upper right')
         fig.suptitle(var)
-        # make output directory if it doesn't exist
-        os.makedirs(os.path.join('data_exploration', 'out', 'gap_analysis_plots'), exist_ok  = True)
         save_path = os.path.join('data_exploration', 'out', 'gap_analysis_plots', f'{source}_{var}_gap_analysis_plot.png')
         fig.savefig(save_path, bbox_inches = 'tight')
 
