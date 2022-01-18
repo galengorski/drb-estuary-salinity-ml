@@ -47,7 +47,11 @@ def gap_analysis_calc(source, var_dfs):
             for year in years:
                 year_df = df[df.index.year==year][site]
                 # year_df.dropna(inplace=True)
-                var_site_gap_df.loc[year, 'p_coverage'] = year_df.count()/365                
+                if year == datetime.datetime.today().year:
+                    elapsed_days = datetime.datetime.today().timetuple().tm_yday
+                else:
+                    elapsed_days = (datetime.datetime(year+1, 1, 1, 0, 0) - datetime.datetime(year, 1, 1, 0, 0)).days
+                var_site_gap_df.loc[year, 'p_coverage'] = year_df.count()/elapsed_days                
                 deltas = year_df.dropna().index.to_series().diff()[1:]
                 gaps = deltas[deltas > dt.timedelta(days=1)]
                 var_site_gap_df.loc[year, 'n_gaps'] = len(gaps)
