@@ -49,7 +49,9 @@ def gap_analysis_calc(source, var_dfs):
                 var_site_gap_df.loc[year, 'n_gaps'] = len(gaps)
                 var_site_gap_df.loc[year, 'gap_median_days'] = gaps.median().days if pd.notna(gaps.median().days) else 0
                 var_site_gap_df.loc[year, 'gap_max_days'] = gaps.max().days if pd.notna(gaps.max().days) else 0
-                var_site_gap_df.to_csv(os.path.join('data_exploration', 'out', f'{source}_{var}_{site}_gap_analysis.csv'))
+                # make output directory if it doesn't exist
+                os.makdirs(os.path.join('data_exploration', 'out', 'gap_analysis_csvs'), exist_ok  = True)
+                var_site_gap_df.to_csv(os.path.join('data_exploration', 'out', 'gap_analysis_csvs', f'{source}_{var}_{site}_gap_analysis.csv'))
             metric_dfs[var][site]= var_site_gap_df
     return metric_dfs, metrics
 
@@ -68,7 +70,9 @@ def plot_gap_analysis(source, metric_dfs, metrics, site_colors):
         handles, labels = axs[0].get_legend_handles_labels()
         fig.legend(handles, labels, bbox_to_anchor=(1.15,0.9), loc='upper right')
         fig.suptitle(var)
-        save_path = os.path.join('data_exploration', 'out', f'{source}_{var}_gap_analysis_plot.png')
+        # make output directory if it doesn't exist
+        os.makdirs(os.path.join('data_exploration', 'out', 'gap_analysis_plots'), exist_ok  = True)
+        save_path = os.path.join('data_exploration', 'out', 'gap_analysis_plots', f'{source}_{var}_gap_analysis_plot.png')
         fig.savefig(save_path, bbox_inches = 'tight')
 
 def main():
@@ -85,7 +89,8 @@ def main():
         config = yaml.safe_load(stream)['gap_analysis.py']
     # read in data source we want to do gap analysis for
     source = config['source']
-    os.makdirs('data_exploration/out/', exist_ok  = True)
+    # make output directory if it doesn't exist
+    os.makdirs(os.path.join('data_exploration', 'out'), exist_ok  = True)
     # fetch site data and compile into nested dictionary of dataframes
     var_dfs = compile_data(var_names, source)
 
