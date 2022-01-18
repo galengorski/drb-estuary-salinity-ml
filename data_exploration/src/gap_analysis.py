@@ -27,10 +27,14 @@ def compile_data(nwis_var_names, source):
     return var_dfs
 
 def gap_analysis_calc(source, var_dfs):
+    # make output directory if it doesn't exist
+    os.makedirs(os.path.join('data_exploration', 'out', 'gap_analysis_csvs'), exist_ok  = True)
+    # define metric names that we will calculate
     metrics = ['p_coverage', 'n_gaps', 'gap_median_days', 'gap_max_days']
     gap_template_df = pd.DataFrame(columns=metrics)
     metric_dfs = {}
     for var, df in var_dfs.items():
+        print(f'calculating metrics for {var}')
         df.dropna(axis=0, how='all', inplace=True)
         if df.empty:
             continue
@@ -49,12 +53,15 @@ def gap_analysis_calc(source, var_dfs):
                 var_site_gap_df.loc[year, 'n_gaps'] = len(gaps)
                 var_site_gap_df.loc[year, 'gap_median_days'] = gaps.median().days if pd.notna(gaps.median().days) else 0
                 var_site_gap_df.loc[year, 'gap_max_days'] = gaps.max().days if pd.notna(gaps.max().days) else 0
-                var_site_gap_df.to_csv(os.path.join('data_exploration', 'out', f'{source}_{var}_{site}_gap_analysis.csv'))
+                var_site_gap_df.to_csv(os.path.join('data_exploration', 'out', 'gap_analysis_csvs', f'{source}_{var}_{site}_gap_analysis.csv'))
             metric_dfs[var][site]= var_site_gap_df
     return metric_dfs, metrics
 
 def plot_gap_analysis(source, metric_dfs, metrics, site_colors):
+    # make output directory if it doesn't exist
+    os.makedirs(os.path.join('data_exploration', 'out', 'gap_analysis_plots'), exist_ok  = True)
     for var, data_by_site in metric_dfs.items():
+        print(f'plotting metrics for {var}')
         plot_df = pd.DataFrame()
         fig, axs = plt.subplots(4, sharex=True, figsize=(8,8))
         i=0
@@ -68,7 +75,7 @@ def plot_gap_analysis(source, metric_dfs, metrics, site_colors):
         handles, labels = axs[0].get_legend_handles_labels()
         fig.legend(handles, labels, bbox_to_anchor=(1.15,0.9), loc='upper right')
         fig.suptitle(var)
-        save_path = os.path.join('data_exploration', 'out', f'{source}_{var}_gap_analysis_plot.png')
+        save_path = os.path.join('data_exploration', 'out', 'gap_analysis_plots', f'{source}_{var}_gap_analysis_plot.png')
         fig.savefig(save_path, bbox_inches = 'tight')
 
 def main():
@@ -85,7 +92,8 @@ def main():
         config = yaml.safe_load(stream)['gap_analysis.py']
     # read in data source we want to do gap analysis for
     source = config['source']
-    os.makdirs('data_exploration/out/', exist_ok  = True)
+    # make output directory if it doesn't exist
+    os.makedirs(os.path.join('data_exploration', 'out'), exist_ok  = True)
     # fetch site data and compile into nested dictionary of dataframes
     var_dfs = compile_data(var_names, source)
 
