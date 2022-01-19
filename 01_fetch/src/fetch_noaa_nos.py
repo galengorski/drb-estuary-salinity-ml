@@ -17,7 +17,7 @@ def fetch_metadata(station_id, metadata_outfile, bucket, write_location, s3_clie
     metadata.to_csv(metadata_outfile, index=False)
     if write_location == 'S3':
         print('uploading to s3')
-        s3_client.upload_file(metadata_outfile, bucket, '01_fetch/out/'+os.path.basename(metadata_outfile))
+        s3_client.upload_file(metadata_outfile, bucket, '01_fetch/out/metadata/'+os.path.basename(metadata_outfile))
 
 def fetch_noaa_nos_data(start_dt, end_dt, datum, station_id, time_zone, product, units, file_format, data_outfile, bucket, write_location, s3_client):
     for products in product:
@@ -63,9 +63,10 @@ def main():
     data_outfile = os.path.join('.', path + '/' + filename)
     fetch_noaa_nos_data(start_dt, end_dt, datum, station_id, time_zone, product, units, file_format, data_outfile, s3_bucket, write_location, s3_client)
 
-    path = os.path.dirname('/01_fetch/out/')
-    metadata_filename = f"noaa_nos_metadata_{station_id}_{products}.csv"
-    metadata_outfile = os.path.join('.', path + '/' + metadata_filename)
+    metadata_path = os.path.dirname('/01_fetch/out/metadata/')
+    os.path.isdir(metadata_path)
+    metadata_filename = f"noaa_nos_metadata_{station_id}.csv"
+    metadata_outfile = os.path.join('.', metadata_path + '/' + metadata_filename)
     fetch_metadata(station_id, metadata_outfile, s3_bucket, write_location, s3_client)
 
 
