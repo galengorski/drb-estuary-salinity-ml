@@ -26,6 +26,13 @@ def compile_data(nwis_var_names, source):
             var_dfs[var][site_id] = site_data_df[var]
     return var_dfs
 
+def add_year_start_end(df, year):
+    date_ny = f'{year+1}-01-01'
+    df[date_ny] = np.nan
+    if f'{year}-01-01' not in df.index:
+        df[f'{year}-01-01'] = np.nan
+    return df.sort_index()
+
 def gap_analysis_calc(source, var_dfs):
     # make output directory if it doesn't exist
     os.makedirs(os.path.join('data_exploration', 'out', 'gap_analysis_csvs'), exist_ok  = True)
@@ -52,8 +59,15 @@ def gap_analysis_calc(source, var_dfs):
                 else:
                     elapsed_days = (datetime.datetime(year+1, 1, 1, 0, 0) - datetime.datetime(year, 1, 1, 0, 0)).days
                 var_site_gap_df.loc[year, 'p_coverage'] = year_df.count()/elapsed_days                
-                deltas = year_df.dropna().index.to_series().diff()[1:]
+                # drop all nan values so that we can calculate gaps using indices
+                delta_data = year_df.dropna()
+                # add back first day of year and first day of subsequent year to capture
+                # gaps at start/end of year
+                delta_data = add_year_start_end(delta_data, year)
+                # calculate the length of all data gaps
+                deltas = delta_data.index.to_series().diff()[1:]
                 gaps = deltas[deltas > dt.timedelta(days=1)]
+                # populate metrics related to gaps
                 var_site_gap_df.loc[year, 'n_gaps'] = len(gaps)
                 var_site_gap_df.loc[year, 'gap_median_days'] = gaps.median().days if pd.notna(gaps.median().days) else 0
                 var_site_gap_df.loc[year, 'gap_max_days'] = gaps.max().days if pd.notna(gaps.max().days) else 0
