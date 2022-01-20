@@ -1,7 +1,0 @@
-make_correlation_matrix.py:
-    #lagged sources from file
-    srcs_lagged_pickle: '03_it_analysis/out/srcs_lagged'
-    #sinks from file
-    snks_list_pickle: '03_it_analysis/out/snks'
-    #directory to save the correlation matrix
-    out_dir: '03_it_analysis/out/'
