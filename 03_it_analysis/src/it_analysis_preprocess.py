@@ -53,78 +53,91 @@ def apply_preprocessing_functions(var_list, source_sink, out_dir):
 
     #assert (source_sink == 'sources'|source_sink == 'sinks'),'variable source_sink must be set to "sources" or "sinks"'
     #import config
-    with open("03_it_analysis/it_analysis_preprocess_config.yaml", 'r') as stream:
-        config = yaml.safe_load(stream)['it_analysis_preprocess.py']
-        if source_sink == 'sources':
-            pre_process_steps = config['sources']
-        else:
-            pre_process_steps = config['sinks']
-
-        #get the functions of class pre_proc_func
-        ppf = globals()['pre_proc_func']()
-        
-        #save_dir = "03_it_analysis/out/"
+    with open("03_it_analysis/it_analysis_data_prep_config.yaml", 'r') as stream:
+        config = yaml.safe_load(stream)['it_analysis_data_prep.py']['preprocess_steps']
+    
+    #get the functions of class pre_proc_func
+    ppf = globals()['pre_proc_func']()
+    
     #make an ouptut directory for the histograms
     os.makedirs(out_dir+'preproces_plots', exist_ok=True)
     
-    #make new empty list of processed source data
-    data_proc_list = []
-    #for each entry in the list, likely each site
-    for var_num, var_data in enumerate(var_list):
-        print(var_num)
-        #create a new data frame with the same structure as the raw data
-        var_proc_df = pd.DataFrame().reindex_like(var_list[var_num])
-        #for each variable in that dataframe
-        for var in list(var_proc_df.columns):
-            #select that variable from the config file
-            #if it says do nothing then
-            if pre_process_steps[var][0] == 'none':
-                #create histogram of raw data
-                plt.hist(var_list[var_num][var])
-                plt.ylabel('Count')
-                plt.title(var + ' Raw')
-                plt.savefig(out_dir+'preproces_plots/' +var + '_Raw.png', bbox_inches = 'tight')
-                #plt.show()
-                plt.close()
+    #make empty dictionary to store processed data, one entry for each metric
+    processed_dict = dict.fromkeys(config.keys())
+    
+    #for each metric
+    for n_metric, metric in enumerate(config.keys()):
+        print(n_metric, metric)
+        
+        #select the steps for the sources and sinks        
+        if source_sink == 'sources':
+            pre_process_steps = config[metric]['sources']
+        else:
+            pre_process_steps = config[metric]['sinks']
+    
+        #make new empty list of processed source data
+        data_proc_list = []
+        #for each entry in the list, likely each site
+        for site_num, site_data in enumerate(var_list):
+            print(site_num, site_data)
+            #create a new data frame with the same structure as the raw data
+            var_proc_df = pd.DataFrame().reindex_like(var_list[site_num])
+            
+            #for each preprocessing key
+            for pp_key in list(pre_process_steps.keys()):
+                print(pre_process_steps[pp_key])
+                cols = list(var_proc_df.columns)
+                #ucn is the unique column name
+                #find the ucn that contains the pp_key, should only be one per var_list[site_num]
+                ucn = [string for string in cols if pp_key in string][0]
                 
-                #store the variable's data
-                raw_data = var_list[var_num][var].copy()
-                var_proc_df[var] = raw_data
-                print('nothing to do here')
-            else:
-                #if there are preprocessing steps to do
-                #store the data in temp data
-                temp_data = var_list[var_num][var].copy()
-                
-                #create histogram of raw data
-                plt.hist(temp_data)
-                plt.ylabel('Count')
-                plt.title(var + ' Raw')
-                plt.savefig(out_dir+'preproces_plots/' +var + '_0_Raw.png', bbox_inches = 'tight')
-                #plt.show()
-                plt.close()
-                
-                #for each preprocessing step for that variable
-                for count,value in enumerate(pre_process_steps[var]):
-                    #apply the function
-                    func = getattr(ppf,value)
-                    temp_data = func(temp_data)
-                    
-                    #create histogram
-                    plt.hist(temp_data)
+                #if the preprocess step is set to 'none' create a histogram of the raw data
+                if pre_process_steps[pp_key][0] == 'none':
+                    #create histogram of raw data
+                    plt.hist(var_list[site_num][ucn])
                     plt.ylabel('Count')
-                    plt.title(var + ' ' + value + ' step ' + str(count+1)+ '/'+ str(len(pre_process_steps[var])))
-                    plt.savefig(out_dir+'preproces_plots/' +var + '_'+str(count+1)+' '+ value+'.png', bbox_inches = 'tight')
+                    plt.title(ucn + ' Raw')
+                    plt.savefig(out_dir+'preproces_plots/' +ucn + '_Raw.png', bbox_inches = 'tight')
                     #plt.show()
                     plt.close()
                     
                     #store the variable's data
-                    var_proc_df[var] = temp_data
-                    print("apply: "+value)
-        
-        #add the processed data into the processed list
-        data_proc_list.append(var_proc_df)
-    return(data_proc_list)
+                    raw_data = var_list[site_num][ucn].copy()
+                    var_proc_df[ucn] = raw_data
+                    print('nothing to do here')
+                else:
+                    #if there are preprocessing steps to do
+                    #store the data in temp data
+                    temp_data = var_list[site_num][ucn].copy()
+                    
+                    #create histogram of raw data
+                    plt.hist(temp_data)
+                    plt.ylabel('Count')
+                    plt.title(ucn + ' Raw')
+                    plt.savefig(out_dir+'preproces_plots/' +ucn + '_0_Raw.png', bbox_inches = 'tight')
+                    #plt.show()
+                    plt.close()
+                    
+                    #for each preprocessing step for that variable
+                    for count,value in enumerate(pre_process_steps[pp_key]):
+                        #apply the function
+                        func = getattr(ppf,value)
+                        temp_data = func(temp_data)
+                        
+                        #create histogram
+                        plt.hist(temp_data)
+                        plt.ylabel('Count')
+                        plt.title(ucn + ' ' + value + ' step ' + str(count+1)+ '/'+ str(len(pre_process_steps[pp_key])))
+                        plt.savefig(out_dir+'preproces_plots/' +ucn + '_'+str(count+1)+' '+ value+'.png', bbox_inches = 'tight')
+                        #plt.show()
+                        plt.close()
+                        
+                        #store the variable's data
+                        var_proc_df[ucn] = temp_data
+                        print("apply: "+value)
+            data_proc_list.append(var_proc_df)
+        processed_dict[metric] = data_proc_list
+    return(processed_dict)
 ###
 def save_proc_sources_sinks(srcs_proc_list, snks_proc_list, out_dir):
     #create out directory if it doesn't already exist
