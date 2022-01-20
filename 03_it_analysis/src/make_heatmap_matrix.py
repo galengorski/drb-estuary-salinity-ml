@@ -12,7 +12,7 @@ import yaml
 
 
 ###
-def create_correlation_matrix(srcs_lagged_pickle, snks_list_pickle):
+def create_correlation_matrix(srcs_lagged_pickle, snks_list_pickle, out_dir):
     '''Takes in the lagged sources and calculates the correlation between them and the
     sinks. Pearson correlation is used'''
     with open(srcs_lagged_pickle, 'rb') as src:
@@ -31,10 +31,15 @@ def create_correlation_matrix(srcs_lagged_pickle, snks_list_pickle):
             sc_sk_corr = srcs_list_lagged_corr[sc].apply(lambda s: snks_list_corr[sk].corrwith(s))
             col_snks = col_snks.append(sc_sk_corr)
         corrs[list(col_snks.columns)] = col_snks
-    return corrs 
+        
+        #save correlation matrix
+        corr_matrix_save = open(out_dir+'corr_matrix', "wb")
+        pickle.dump(corrs, corr_matrix_save)
+        corr_matrix_save.close()
+    
 
 ###
-def create_mutual_information_matrix(srcs_lagged_pickle, snks_list_pickle):
+def create_mutual_information_matrix(srcs_lagged_pickle, snks_list_pickle ,out_dir):
     '''Takes in the lagged sources and calculates the mutual information between them and the
     sinks. mutual information is used'''
     bins  = [11,11,11]
@@ -76,7 +81,11 @@ def create_mutual_information_matrix(srcs_lagged_pickle, snks_list_pickle):
     
     mi_mat = pd.concat(a_list, axis = 1)     
     
-    return mi_mat
+    #save mutual information matrix
+    mi_matrix_save = open(out_dir+'mi_matrix', "wb")
+    pickle.dump(mi_mat, mi_matrix_save)
+    mi_matrix_save.close()
+
 
 ###
 def main():
@@ -92,19 +101,11 @@ def main():
     out_dir = config['out_dir']
     
     #create correlation matrix
-    corr_matrix = create_correlation_matrix(srcs_lagged_pickle, snks_list_pickle)
+    create_correlation_matrix(srcs_lagged_pickle, snks_list_pickle, out_dir)
     #create mutual information matrix
-    mi_matrix = create_mutual_information_matrix(srcs_lagged_pickle, snks_list_pickle)
+    create_mutual_information_matrix(srcs_lagged_pickle, snks_list_pickle, out_dir)
     
-    #save correlation matrix
-    corr_matrix_save = open(out_dir+'corr_matrix', "wb")
-    pickle.dump(corr_matrix, corr_matrix_save)
-    corr_matrix_save.close()
-    
-    #save mutual information matrix
-    mi_matrix_save = open(out_dir+'mi_matrix', "wb")
-    pickle.dump(mi_matrix, mi_matrix_save)
-    mi_matrix_save.close()
+
         
         
 if __name__ == '__main__':
