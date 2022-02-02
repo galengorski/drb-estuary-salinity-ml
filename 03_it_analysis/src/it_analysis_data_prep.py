@@ -152,45 +152,7 @@ def lag_sources(n_lags, srcs_list):
             site_list[s] = site_list[s].sort_index(axis=1)
         srcs_list_metrics[key] = site_list
     return srcs_list_metrics
-###
-# def create_preprocess_yaml(srcs_list, snks_list):
-#     '''Generates a yaml file (hard coded as 03_it_analysis/it_analysis_preprocess_config.yaml
-#     that contains every source and sink variable. The idea is that the yaml file will be edited
-#     with the preprocessing steps to take for each variable'''
-    
-#     #read in the sources column headers
-#     site_var_srcs_list = list()
-#     for sr in range(len(srcs_list)): 
-#         site_var_srcs_list.append(list(srcs_list[sr].columns))
-#     site_var_srcs = [item for sublist in site_var_srcs_list for item in sublist]
-    
-#     #convert sources to dictionary
-#     src_vals = []
-#     for s in range(len(site_var_srcs)):
-#         src_vals.extend([["none"]])
-    
-#     #read in the sinks column headers
-#     site_var_snks_list = list()
-#     for sk in range(len(snks_list)): 
-#         site_var_snks_list.append(list(snks_list[sk].columns))
-#     site_var_snks = [item for sublist in site_var_snks_list for item in sublist]
-    
-#     #convert sinks to dictionary
-#     snk_vals = []
-#     for s in range(len(site_var_snks)):
-#         snk_vals.extend([["none"]])
-    
-#     #zip into dictionary for neat writing to yaml file add in the n_lags as that will be used
-#     #in the next step
-#     srcs_snks_dict = {'it_analysis_preprocess.py':
-#                  {'sources': dict(zip(site_var_srcs, src_vals)),
-#                  'sinks': dict(zip(site_var_snks, snk_vals)),
-#                  'n_lags': 1,
-#                  'out_dir': '03_it_analysis/out/'}}
-    
-#     f = open('03_it_analysis/it_analysis_preprocess_config.yaml', 'w')
-#     f.write(yaml.dump(srcs_snks_dict))
-#     f.close()
+
 
 ###
 class pre_proc_func:
@@ -361,8 +323,7 @@ def main():
     date_end = config['date_end']
     #select
     
-    #number of lag days to consider for sources
-    n_lags = config['n_lags']
+
     #generate the sources data
     srcs_list, srcs_list_historical = select_sources(srcs, date_start, date_end)    
     #generate the sinks data
@@ -373,7 +334,8 @@ def main():
     srcs_proc = apply_preprocessing_functions(srcs_list, srcs_list_historical, 'sources', out_dir)
     #process the sinks
     snks_proc = apply_preprocessing_functions(snks_list, snks_list_historical, 'sinks', out_dir)
-
+    #number of lag days to consider for sources
+    n_lags = config['n_lags']
     #lag the sources
     srcs_list_lagged = lag_sources(n_lags, srcs_proc)
     out_dir = config['out_dir']
