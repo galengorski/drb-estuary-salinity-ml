@@ -35,10 +35,10 @@ it_analysis_data_prep.py:
                 7_day_salt_front:
                     - none
     #date range of interest
-    date_start: '2019-01-01'
+    date_start: '2000-01-01'
     date_end: '2019-12-31'
     #number of lags to analyze
-    n_lags: 7
+    n_lags: 4
     #where to write the sinks and lagged sources as binary pickle files
     out_dir: '03_it_analysis/out/'
     

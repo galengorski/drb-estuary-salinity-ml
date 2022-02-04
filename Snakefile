@@ -31,16 +31,9 @@ rule it_analysis_data_prep:
         expand("02_munge/out/usgs_nwis_{site}.csv", site=config["fetch_usgs.py"]["site_ids"]),
     output:
         "03_it_analysis/it_analysis_preprocess_config.yaml",
-        "03_it_analysis/out/srcs",
+        "03_it_analysis/out/srcs_proc",
         "03_it_analysis/out/snks"
     shell:
         "python -m 03_it_analysis.src.it_analysis_data_prep"
 
-rule it_analysis_preprocess:
-    input:
-        "03_it_analysis/out/srcs",
-        "03_it_analysis/out/snks"
-    output:
-        "logfile.log"
-    shell:
-        "python -m 03_it_analysis.src.it_analysis_preprocess.py"
+

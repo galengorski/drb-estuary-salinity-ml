@@ -252,7 +252,7 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
     ppf = globals()['pre_proc_func']()
     
     #make an ouptut directory for the histograms
-    os.makedirs(out_dir+'preproces_plots', exist_ok=True)
+    os.makedirs(out_dir+'preprocess_plots', exist_ok=True)
     
     #make empty dictionary to store processed data, one entry for each metric
     processed_dict = dict.fromkeys(config.keys())
@@ -323,7 +323,7 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
                         func = getattr(ppf,value)
                         
                         if value == 'remove_seasonal_signal':
-                            print('got the right function')
+                            #print('got the right function')
                             temp_data = func(temp_data, temp_data_historical)
                         else:
                             temp_data = func(temp_data)
