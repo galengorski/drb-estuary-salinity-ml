@@ -1,6 +1,8 @@
 import sys
 import boto3
 import subprocess
+import pandas as pd
+import os
 
 def prep_write_location(write_location, aws_profile):
     if write_location=='S3':
@@ -16,3 +18,13 @@ def prep_write_location(write_location, aws_profile):
     session = boto3.Session(profile_name=aws_profile)
     s3_client = session.client('s3')
     return s3_client
+
+def usgs_nwis_param_code_to_name(code):
+    '''process usgs nwis parameter code to machine+human-readable name string'''
+    # read in parameter metadata df
+    params_df = pd.read_csv(os.path.join('.', '01_fetch', 'out', 'metadata', 'usgs_nwis_params.csv'), dtype={"parm_cd":"string"})
+    # find the corresponding parameter name
+    full_name = params_df[params_df['parm_cd']==code]['parm_nm'].iloc[0]
+    # give it a shorter machine-readable name
+    name = full_name.split(',')[0].replace(' ', '_').lower()
+    return name
