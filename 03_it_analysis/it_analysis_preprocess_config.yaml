@@ -1,0 +1,22 @@
+it_analysis_preprocess.py:
+  n_lags: 5
+  out_dir: 03_it_analysis/out/
+  sinks:
+    Corrected_7d_average:
+    - standardize
+    - normalize
+    Corrected_7d_average_Model_A:
+    - none
+    Daily_River_Mile_Corrected:
+    - none
+    Daily_River_Mile_Corrected_Model_A:
+    - none
+  sources:
+    discharge_01463500:
+    - standardize
+    discharge_01474500:
+    - none
+    specific_conductance_01463500:
+    - none
+    specific_conductance_01474500:
+    - none

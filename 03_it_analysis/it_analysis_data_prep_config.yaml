@@ -1,0 +1,44 @@
+it_analysis_data_prep.py:
+    #the sources to be analyzed
+    srcs: 
+        - 'discharge'
+        - 'specific_conductance'
+    #the sinks to be analyzed, this will likely be the salt front location
+    snks:
+        - 'Daily_salt_front'
+        - '7_day_salt_front'
+    preprocess_steps:
+        mutual_information:
+            sources:
+                discharge:
+                    - remove_seasonal_signal
+                    - normalize
+                specific_conductance:
+                    - remove_seasonal_signal
+                    - normalize
+            sinks:
+                Daily_salt_front:
+                    - remove_seasonal_signal
+                    - normalize
+                7_day_salt_front:
+                    - remove_seasonal_signal
+                    - normalize
+        correlation:
+            sources:
+                discharge:
+                    - none
+                specific_conductance:
+                    - none
+            sinks:
+                Daily_salt_front:
+                    - none
+                7_day_salt_front:
+                    - none
+    #date range of interest
+    date_start: '2000-01-01'
+    date_end: '2019-12-31'
+    #number of lags to analyze
+    n_lags: 4
+    #where to write the sinks and lagged sources as binary pickle files
+    out_dir: '03_it_analysis/out/'
+    
