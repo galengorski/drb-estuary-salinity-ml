@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Dec 22 20:58:51 2021
+#Created on Wed Dec 22 20:58:51 2021
+#@author: ggorski
 
-@author: ggorski
-"""
+
 import datetime
 import matplotlib.pyplot as plt
 import numpy as np
@@ -292,7 +291,7 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
                     ax2.hist(var_list[site_num][ucn])
                     ax2.set_ylabel('Count')
                     ax1.set_title(ucn+'_Raw')
-                    fig.savefig(out_dir+'preproces_plots/' +ucn + '_Raw.png', bbox_inches = 'tight')
+                    fig.savefig(out_dir+'preprocess_plots/' +ucn + '_Raw.png', bbox_inches = 'tight')
                     #plt.show()
                     plt.close()
                     
@@ -313,7 +312,7 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
                     ax2.hist(temp_data)
                     ax2.set_ylabel('Count')
                     ax1.set_title(ucn + ' Raw')
-                    fig.savefig(out_dir+'preproces_plots/' +ucn + '_0_Raw.png', bbox_inches = 'tight')
+                    fig.savefig(out_dir+'preprocess_plots/' +ucn + '_0_Raw.png', bbox_inches = 'tight')
                     #plt.show()
                     plt.close()
                     
@@ -335,7 +334,7 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
                         ax2.hist(temp_data)
                         ax2.set_ylabel('Count')
                         ax1.set_title(ucn + '_' + value + '_step ' + str(count+1)+ '/'+ str(len(pre_process_steps[pp_key])))
-                        fig.savefig(out_dir+'preproces_plots/' +ucn + '_'+str(count+1)+' '+ value+'.png', bbox_inches = 'tight')
+                        fig.savefig(out_dir+'preprocess_plots/' +ucn + '_'+str(count+1)+' '+ value+'.png', bbox_inches = 'tight')
                         #plt.show()
                         plt.close()
                         
