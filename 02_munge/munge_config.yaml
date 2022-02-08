@@ -22,7 +22,7 @@ munge_usgs.py:
     
   # number of measurements required to consider average valid
   # we will assume that we need half of the timestep measurements
-  prop_obs_required: 0.5
+  prop_obs_required: 0.05
 
   # timestep to aggregate to
   # options: daily
