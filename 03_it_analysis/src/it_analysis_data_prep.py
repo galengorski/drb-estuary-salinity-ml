@@ -289,7 +289,7 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
                 ax2.hist(var_list[site_num][ucn])
                 ax2.set_ylabel('Count')
                 ax1.set_title(ucn+'_Raw')
-                fig.savefig(out_dir+'preprocess_plots/' +ucn + '_Raw.png', bbox_inches = 'tight')
+                fig.savefig(out_dir+'preprocess_plots/' +ucn + '_raw.png', bbox_inches = 'tight')
                 #plt.show()
                 plt.close()
 
@@ -305,6 +305,7 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
                     temp_data_historical = var_list_historical[site_num][ucn].copy()
                     
                     #for each preprocessing step for that variable
+                    fname = os.path.join(out_dir, 'preprocess_plots', ucn)
                     for count,value in enumerate(pre_process_steps[pp_key]):
                         #apply the function
                         func = getattr(ppf,value)
@@ -322,7 +323,8 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
                         ax2.hist(temp_data)
                         ax2.set_ylabel('Count')
                         ax1.set_title(ucn + '_' + value + '_step ' + str(count+1)+ '/'+ str(len(pre_process_steps[pp_key])))
-                        fig.savefig(out_dir+'preprocess_plots/' +ucn + '_'+str(count+1)+'_'+ value+'.png', bbox_inches = 'tight')
+                        fname = fname+'_'+ value
+                        fig.savefig(fname+'.png', bbox_inches = 'tight')
                         #plt.show()
                         plt.close()
                         
