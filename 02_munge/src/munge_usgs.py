@@ -30,7 +30,19 @@ def param_code_to_name(df, params_df):
         df.rename(columns={col: name}, inplace=True)
     return df 
 
-def process_data_to_csv(raw_datafile, params_to_process, params_df, flags_to_drop, agg_level, prop_obs_required, write_location, s3_bucket, s3_client):
+def read_data(raw_datafile, read_location, s3_bucket):
+    if read_location == 'local':
+        print(f'reading data from local: {raw_datafile}')
+        # read in raw data as pandas df
+        df = pd.read_csv(raw_datafile, comment='#', sep='\t', lineterminator='\n', low_memory=False)
+    elif read_location == 'S3':
+        print(f'reading data from s3: {raw_datafile}')
+        obj = s3_client.get_object(Bucket=s3_bucket, Key=raw_datafile)
+        # read in raw data as pandas df
+        df = pd.read_csv(obj.get("Body"), comment='#', sep='\t', lineterminator='\n', low_memory=False)
+    return df
+
+def process_data_to_csv(raw_datafile, params_to_process, params_df, flags_to_drop, agg_level, prop_obs_required, read_location, write_location, s3_bucket, s3_client):
     '''
     process raw data text files into clean csvs, including:
         dropping unwanted flags
@@ -38,10 +50,8 @@ def process_data_to_csv(raw_datafile, params_to_process, params_df, flags_to_dro
         converting all data columns to numeric type
         removing metadata columns so that only datetime and data columns remain 
     '''
-    print(f'reading data from s3: {raw_datafile}')
-    obj = s3_client.get_object(Bucket=s3_bucket, Key=raw_datafile)
-    # read in raw data as pandas df
-    df = pd.read_csv(obj.get("Body"), comment='#', sep='\t', lineterminator='\n', low_memory=False)
+    # read in data file
+    df = read_data(raw_datafile, read_location, s3_bucket)
     
     print(f'processing and saving locally')
     # drop first row which does not contain useful headers or data
@@ -90,6 +100,9 @@ def main():
     with open("02_munge/munge_config.yaml", 'r') as stream:
         config = yaml.safe_load(stream)['munge_usgs.py']
 
+    # check where to read data inputs from
+    read_location = config['read_location']
+
     # set up write location data outputs
     write_location = config['write_location']
     s3_client = utils.prep_write_location(write_location, config['aws_profile'])
@@ -110,7 +123,7 @@ def main():
     agg_level = config['agg_level']
     # process raw data files into csv
     for raw_datafile in raw_datafiles:
-        process_data_to_csv(raw_datafile, params_to_process, params_df, flags_to_drop, agg_level, prop_obs_required, write_location, s3_bucket, s3_client)
+        process_data_to_csv(raw_datafile, params_to_process, params_df, flags_to_drop, agg_level, prop_obs_required, read_location, write_location, s3_bucket, s3_client)
 
 if __name__ == '__main__':
     main()
