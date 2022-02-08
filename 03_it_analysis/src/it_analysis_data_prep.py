@@ -283,18 +283,17 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
                 ucn = [string for string in cols if pp_key in string][0]
                 
                 #if the preprocess step is set to 'none' create a histogram of the raw data
-                if pre_process_steps[pp_key][0] == 'none':
-                    #create histogram of raw data
-                    fig, (ax1, ax2) = plt.subplots(2)
-                    ax1.plot(var_list[site_num].index, var_list[site_num][ucn])
-                    ax1.set_ylabel(ucn)
-                    ax2.hist(var_list[site_num][ucn])
-                    ax2.set_ylabel('Count')
-                    ax1.set_title(ucn+'_Raw')
-                    fig.savefig(out_dir+'preprocess_plots/' +ucn + '_Raw.png', bbox_inches = 'tight')
-                    #plt.show()
-                    plt.close()
-                    
+                fig, (ax1, ax2) = plt.subplots(2)
+                ax1.plot(var_list[site_num].index, var_list[site_num][ucn])
+                ax1.set_ylabel(ucn)
+                ax2.hist(var_list[site_num][ucn])
+                ax2.set_ylabel('Count')
+                ax1.set_title(ucn+'_Raw')
+                fig.savefig(out_dir+'preprocess_plots/' +ucn + '_Raw.png', bbox_inches = 'tight')
+                #plt.show()
+                plt.close()
+
+                if pre_process_steps[pp_key][0] == 'none':                    
                     #store the variable's data
                     raw_data = var_list[site_num][ucn].copy()
                     var_proc_df[ucn] = raw_data
@@ -304,17 +303,6 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
                     #store the data in temp data
                     temp_data = var_list[site_num][ucn].copy()
                     temp_data_historical = var_list_historical[site_num][ucn].copy()
-                    
-                    #create histogram of raw data
-                    fig, (ax1, ax2) = plt.subplots(2)
-                    ax1.plot(var_list[site_num].index, temp_data)
-                    ax1.set_ylabel(ucn)
-                    ax2.hist(temp_data)
-                    ax2.set_ylabel('Count')
-                    ax1.set_title(ucn + ' Raw')
-                    fig.savefig(out_dir+'preprocess_plots/' +ucn + '_0_Raw.png', bbox_inches = 'tight')
-                    #plt.show()
-                    plt.close()
                     
                     #for each preprocessing step for that variable
                     for count,value in enumerate(pre_process_steps[pp_key]):
@@ -334,7 +322,7 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
                         ax2.hist(temp_data)
                         ax2.set_ylabel('Count')
                         ax1.set_title(ucn + '_' + value + '_step ' + str(count+1)+ '/'+ str(len(pre_process_steps[pp_key])))
-                        fig.savefig(out_dir+'preprocess_plots/' +ucn + '_'+str(count+1)+' '+ value+'.png', bbox_inches = 'tight')
+                        fig.savefig(out_dir+'preprocess_plots/' +ucn + '_'+str(count+1)+'_'+ value+'.png', bbox_inches = 'tight')
                         #plt.show()
                         plt.close()
                         
