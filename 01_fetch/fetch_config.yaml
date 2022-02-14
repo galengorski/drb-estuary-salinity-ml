@@ -50,7 +50,7 @@ fetch_noaa_nos.py:
   # Station Datum: fixed base elevation at a tide station
   # National Tidal Datum Epoch: The specific 19-year period adopted by the National Ocean Service as the official time
   # segment over which tide observations are taken and reduced to obtain mean values (e.g., mean lower low water, etc.) for tidal datums.
-  datum: 'MLLW'
+  datum: 'MSL'
 
   # options: water_level, air_temperature, water_temperature, wind, air_pressure, air_gap, conductivity, visibility,
   # humidity, salinity, hourly_height, high_low, daily_mean, monthly_mean, one_minute_water_level, predictions, datums,
