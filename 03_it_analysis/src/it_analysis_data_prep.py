@@ -288,7 +288,8 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
                 ax1.set_ylabel(ucn)
                 ax2.hist(var_list[site_num][ucn])
                 ax2.set_ylabel('Count')
-                ax1.set_title(ucn+'_Raw')
+                plt.suptitle(ucn)
+                ax1.set_title('raw')
                 fig.savefig(out_dir+'preprocess_plots/' +ucn + '_raw.png', bbox_inches = 'tight')
                 #plt.show()
                 plt.close()
@@ -322,7 +323,12 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
                         ax1.set_ylabel(ucn)
                         ax2.hist(temp_data)
                         ax2.set_ylabel('Count')
-                        ax1.set_title(ucn + '_' + value + '_step ' + str(count+1)+ '/'+ str(len(pre_process_steps[pp_key])))
+                        plt.suptitle(ucn)
+                        if count==0:
+                            pltsubt = value
+                        else:                            
+                            pltsubt = pltsubt+', '+ value
+                        ax1.set_title(pltsubt)
                         fname = fname+'_'+ value
                         fig.savefig(fname+'.png', bbox_inches = 'tight')
                         #plt.show()
