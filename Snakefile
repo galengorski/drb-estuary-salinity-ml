@@ -6,6 +6,7 @@ rule all:
     input:
         "03_it_analysis/out/srcs_proc_lagged",
         "03_it_analysis/out/snks_proc"
+
 rule fetch_usgs_nwis:
     input:
         "01_fetch/fetch_config.yaml"
