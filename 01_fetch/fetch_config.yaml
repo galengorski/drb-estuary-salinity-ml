@@ -27,12 +27,9 @@ fetch_noaa_nos.py:
   aws_profile: 'dev'
   #set AWS bucket to read/write to
   s3_bucket: 'drb-estuary-salinity'
-  #set up AWS client
-  s3_client: utils.prep_write_location(write_location, aws_profile)
 
   station_id: '8573927'
 
-  datum: 'MLLW'
   # options:
   # HAT: Highest Astronomical Tide
   # MHHW: Mean Higher High Water
@@ -53,22 +50,25 @@ fetch_noaa_nos.py:
   # Station Datum: fixed base elevation at a tide station
   # National Tidal Datum Epoch: The specific 19-year period adopted by the National Ocean Service as the official time
   # segment over which tide observations are taken and reduced to obtain mean values (e.g., mean lower low water, etc.) for tidal datums.
+  datum: 'MLLW'
 
-  product: 'water_level'
   # options: water_level, air_temperature, water_temperature, wind, air_pressure, air_gap, conductivity, visibility,
   # humidity, salinity, hourly_height, high_low, daily_mean, monthly_mean, one_minute_water_level, predictions, datums,
   # currents, and currents_predictions.
+  products: 
+      - 'water_level'
 
-  time_zone: 'GMT'
   # options:
   # gmt: Greenwich Mean Time
   # lst: Local Standard Time. The time local to the requested station.
   # lst_ldt: Local Standard/Local Daylight Time. The time local to the requested station.
+  time_zone: 'GMT'
 
-  units: 'metric'
   # options: english and metric
+  units: 'metric'
 
-  file_format: 'csv'
+  # options: csv, json, xml
+  file_format: 'json'
 
-  start_dt: '20190101'
-  end_dt: '20191231'
+  start_year: '2019'
+  end_year: '2019'
