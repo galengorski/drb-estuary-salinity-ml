@@ -22,6 +22,7 @@ def fetch_metadata(station_id, metadata_outfile, bucket, write_location, s3_clie
         s3_client.upload_file(metadata_outfile, bucket, '01_fetch/out/metadata/'+os.path.basename(metadata_outfile))
 
 def fetch_noaa_nos_data(start_year, end_year, datum, station_id, time_zone, product, units, file_format, data_outfile, bucket, write_location, s3_client):
+    print(f'Fetching data for station {station_id}')
     for product in products:
         i=0
         # we can only fetch up to 31 days at a time from this source, so loop through data month by month
@@ -31,7 +32,6 @@ def fetch_noaa_nos_data(start_year, end_year, datum, station_id, time_zone, prod
                 end_dt = start_dt + relativedelta(months=1) - datetime.timedelta(days=1)
                 start_dt_str = start_dt.strftime("%Y%m%d")
                 end_dt_str = end_dt.strftime("%Y%m%d")
-                print(f'Fetching data for {start_dt_str} to {end_dt_str}')
                 data_url = f'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?begin_date=' \
                         f'{start_dt_str}&end_date={end_dt_str}&station={station_id}&product={product}&datum={datum}&time_zone=' \
                         f'{time_zone}&units={units}&format={file_format}'
@@ -61,7 +61,7 @@ def main():
     s3_client = utils.prep_write_location(write_location, config['aws_profile'])
     s3_bucket = config['s3_bucket']
 
-    station_id = config['station_id']
+    station_ids = config['station_ids']
 
     datum = config['datum']
 
@@ -77,13 +77,14 @@ def main():
     start_year = config['start_year']
     end_year = config['end_year']
 
-    filename = "noaa_nos_{station_id}_{products}.csv"
-    data_outfile = os.path.join('.', '01_fetch', 'out', filename)
-    fetch_noaa_nos_data(start_year, end_year, datum, station_id, time_zone, products, units, file_format, data_outfile, s3_bucket, write_location, s3_client)
+    for station_id in station_ids:
+        filename = "noaa_nos_{station_id}_{products}.csv"
+        data_outfile = os.path.join('.', '01_fetch', 'out', filename)
+        fetch_noaa_nos_data(start_year, end_year, datum, station_id, time_zone, products, units, file_format, data_outfile, s3_bucket, write_location, s3_client)
 
-    metadata_filename = f"noaa_nos_metadata_{station_id}.csv"
-    metadata_outfile = os.path.join('.', '01_fetch', 'out', 'metadata', metadata_filename)
-    fetch_metadata(station_id, metadata_outfile, s3_bucket, write_location, s3_client)
+        metadata_filename = f"noaa_nos_metadata_{station_id}.csv"
+        metadata_outfile = os.path.join('.', '01_fetch', 'out', 'metadata', metadata_filename)
+        fetch_metadata(station_id, metadata_outfile, s3_bucket, write_location, s3_client)
 
 
 if __name__ == '__main__':
