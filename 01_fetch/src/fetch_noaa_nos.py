@@ -36,20 +36,27 @@ def fetch_noaa_nos_data(start_year, end_year, datum, station_id, time_zone, prod
                         f'{start_dt_str}&end_date={end_dt_str}&station={station_id}&product={product}&datum={datum}&time_zone=' \
                         f'{time_zone}&units={units}&format={file_format}'
                 data_json = requests.get(data_url).json()
-                # if we are on first iteration for fetching product, overwrite df with data
-                if i==0:
-                    data_df = pd.DataFrame(data_json['data'])
-                # otherwise, append the new month of data to the df
-                else:
-                    data_df = data_df.append(pd.DataFrame(data_json['data']))
-                i+=1
-        # save dataframe as a csv
-        data_outfile_formatted = data_outfile.format(products=product, station_id=station_id)
-        data_df.to_csv(data_outfile_formatted, index=False)
-        if write_location == 'S3':
-            print('uploading to s3')
-            s3_client.upload_file(data_outfile_formatted, bucket, '01_fetch/out/'+os.path.basename(data_outfile_formatted))
-
+                try:
+                    # if we are on first iteration for fetching product, overwrite df with data
+                    if i==0:
+                        data_df = pd.DataFrame(data_json['data'])
+                    # otherwise, append the new month of data to the df
+                    else:
+                        data_df = data_df.append(pd.DataFrame(data_json['data']))
+                    i+=1
+                except:
+                    continue
+        try:
+            # save dataframe as a csv
+            data_outfile_formatted = data_outfile.format(product=product, station_id=station_id)
+            data_df.to_csv(data_outfile_formatted, index=False)
+            if write_location == 'S3':
+                print('uploading to s3')
+                s3_client.upload_file(data_outfile_formatted, bucket, '01_fetch/out/'+os.path.basename(data_outfile_formatted))
+            # delete the data_df before we move to the next product
+            del data_df
+        except:
+            continue
 
 def main():
     # import config
@@ -78,7 +85,7 @@ def main():
     end_year = config['end_year']
 
     for station_id in station_ids:
-        filename = "noaa_nos_{station_id}_{products}.csv"
+        filename = "noaa_nos_{station_id}_{product}.csv"
         data_outfile = os.path.join('.', '01_fetch', 'out', filename)
         fetch_noaa_nos_data(start_year, end_year, datum, station_id, time_zone, products, units, file_format, data_outfile, s3_bucket, write_location, s3_client)
 
