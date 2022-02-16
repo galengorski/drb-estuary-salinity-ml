@@ -7,16 +7,16 @@ import utils
 
 def process_to_timestep(df, cols, agg_level, prop_obs_required):
     # aggregate data to specified timestep
-    if agg_level == 'daily':
-        # get proportion of measurements available for timestep
-        expected_measurements = df.groupby([df['datetime'].dt.date]).count().mode()[cols].loc[0]
-        observed_measurements = df.groupby([df['datetime'].dt.date]).count()[cols].loc[:]
-        prop_df = observed_measurements / expected_measurements
-        # calculate averages for timestep
-        df = df.groupby([df['datetime'].dt.date]).mean()
+    # get proportion of measurements available for timestep
+    expected_measurements = df.resample(agg_level, on='datetime').count().mode()[cols].loc[0]
+    observed_measurements = df.resample(agg_level, on='datetime').count()[cols].loc[:]
+    prop_df = observed_measurements / expected_measurements
+    # calculate averages for timestep
+    df = df.resample(agg_level, on='datetime').mean()
     # only keep averages where we have enough measurements
     df.where(prop_df.gt(prop_obs_required), inplace=True)
     return df
+
 
 def param_code_to_name(df, params_df):
     for col in df.columns:

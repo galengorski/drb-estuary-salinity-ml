@@ -25,8 +25,9 @@ munge_usgs.py:
   prop_obs_required: 0.05
 
   # timestep to aggregate to
-  # options: daily
-  agg_level: 'daily'
+  # options come from data offsets found here:
+  # https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html
+  agg_level: 'D'
 
   # list of parameters to keep in processed data
   params_to_process:
