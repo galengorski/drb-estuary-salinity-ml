@@ -1,8 +1,9 @@
 import os
 import numpy as np
 import pandas as pd
-import re
 import boto3
+import yaml
+import utils
 
 def read_data(raw_datafile, read_location, s3_bucket):
     if read_location == 'local':
@@ -14,18 +15,6 @@ def read_data(raw_datafile, read_location, s3_bucket):
         obj = s3_client.get_object(Bucket=s3_bucket, Key=raw_datafile)
         # read in raw data as pandas df
         df = pd.read_csv(obj.get("Body"))
-    return df
-
-def process_to_timestep(df, cols, agg_level, prop_obs_required):
-    # aggregate data to specified timestep
-    # get proportion of measurements available for timestep
-    expected_measurements = df.resample(agg_level, on='datetime').count().mode()[cols].loc[0]
-    observed_measurements = df.resample(agg_level, on='datetime').count()[cols].loc[:]
-    prop_df = observed_measurements / expected_measurements
-    # calculate averages for timestep
-    df = df.resample(agg_level, on='datetime').mean()
-    # only keep averages where we have enough measurements
-    df.where(prop_df.gt(prop_obs_required), inplace=True)
     return df
 
 def process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_var, agg_level, prop_obs_required, read_location, write_location, s3_bucket, s3_client):
@@ -81,7 +70,7 @@ def process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_v
     combined_df[cols] = combined_df[cols].apply(pd.to_numeric, errors='coerce')
 
     # aggregate data to specified timestep
-    combined_df = process_to_timestep(combined_df, cols, agg_level, prop_obs_required)
+    combined_df = utils.process_to_timestep(combined_df, cols, agg_level, prop_obs_required)
 
     # drop any columns with no data
     combined_df.dropna(axis=1, how='all', inplace=True)

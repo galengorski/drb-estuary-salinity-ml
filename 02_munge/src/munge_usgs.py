@@ -5,19 +5,6 @@ import re
 import yaml
 import utils
 
-def process_to_timestep(df, cols, agg_level, prop_obs_required):
-    # aggregate data to specified timestep
-    # get proportion of measurements available for timestep
-    expected_measurements = df.resample(agg_level, on='datetime').count().mode()[cols].loc[0]
-    observed_measurements = df.resample(agg_level, on='datetime').count()[cols].loc[:]
-    prop_df = observed_measurements / expected_measurements
-    # calculate averages for timestep
-    df = df.resample(agg_level, on='datetime').mean()
-    # only keep averages where we have enough measurements
-    df.where(prop_df.gt(prop_obs_required), inplace=True)
-    return df
-
-
 def param_code_to_name(df, params_df):
     for col in df.columns:
         # get 5-digit parameter code from column name
@@ -64,7 +51,7 @@ def process_data_to_csv(raw_datafile, params_to_process, params_df, flags_to_dro
     df[cols] = df[cols].apply(pd.to_numeric, errors='coerce')
 
     # aggregate data to specified timestep
-    df = process_to_timestep(df, cols, agg_level, prop_obs_required)
+    df = utils.process_to_timestep(df, cols, agg_level, prop_obs_required)
 
     # drop any columns that aren't in the list we want to use
     for col in df.columns:
