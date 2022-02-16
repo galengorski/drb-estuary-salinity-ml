@@ -54,3 +54,6 @@ __pycache__/
 
 # local scratch folder
 99_scratch/*
+
+# pycharm files
+.idea/
