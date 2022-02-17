@@ -8,7 +8,6 @@ anaconda
 docker
 spyder-notebook
 certifi
-openssl
 xarray
 torchvision
 pytorch
