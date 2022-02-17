@@ -14,5 +14,4 @@ torchaudio
 ipympl
 plotly
 seaborn
-TEpython_ParallelNAN2
 utils
