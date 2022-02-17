@@ -5,7 +5,7 @@ import datetime
 from dateutil.relativedelta import relativedelta
 import requests, json
 import utils
-
+import yaml
 def fetch_metadata(station_id, metadata_outfile, bucket, write_location, s3_client):
     '''fetch tides and currents metadata from NOAA NOS station'''
     metadata_url = f'https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/{station_id}/.json'
