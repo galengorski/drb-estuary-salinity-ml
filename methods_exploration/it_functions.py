@@ -19,8 +19,8 @@ import numpy as np
 def calc2Dpdf(M,nbins = 11):
     '''calculates the 3 pdfs, one for x, one for y and a joint pdf for x and y 
     M: a numpy array of shape (nobs, 2) where nobs is the number of observations
-    this assumes that the data are arrange such that the first column is the source and
-    the second column is the sink.
+    this assumes that the data are arrange such that the first column is the source (x) and
+    the second column is the sink (y).
     nbins: is the number of bins used for estimating the pdf with a default of 11'''
     
     counts, binEdges = np.histogramdd(M,bins=nbins)
@@ -34,7 +34,8 @@ def calc2Dpdf(M,nbins = 11):
 
 
 def calcEntropy(pdf):
-    '''calculate the entropy from a the pdf'''
+    '''calculate the entropy from the pdf
+    here n_0 is used to indicate that all values are non-zero'''
     
     pdf_n_0 = pdf[pdf>0]
     log2_pdf_n_0 = np.log2(pdf_n_0)
@@ -68,15 +69,16 @@ def calcMI_shuffled(M, nbins = 11):
     the second column is the sink.
     nbins: is the number of bins used for estimating the pdf with a default of 11
     the mutual information is normalized by the entropy of the sink
-    returns a numpy array the same size and shape as M, but with the order shuffled'''
+    returns a single MI value for a numpy array the same size and shape as M, 
+    but with the order shuffled'''
     
     Mss = np.ones(np.shape(M))*np.nan # Initialize
     
     for n in range(np.shape(M)[1]): # Columns are shuffled separately
-        notnans = np.argwhere(~np.isnan(M[:,n]))
-        R = np.random.rand(np.shape(notnans)[0],1) #np.random.rand(5,1)
+        n_nans = np.argwhere(~np.isnan(M[:,n]))
+        R = np.random.rand(np.shape(n_nans)[0],1)
         I = np.argsort(R,axis=0)
-        Mss[notnans[:,0],n] = M[notnans[I[:],0],n].reshape(np.shape(M[notnans[I[:],0],n])[0],)
+        Mss[n_nans[:,0],n] = M[n_nans[I[:],0],n].reshape(np.shape(M[n_nans[I[:],0],n])[0],)
     MI_shuff = calcMI(Mss, nbins = 11)
     return MI_shuff
     
@@ -94,6 +96,6 @@ def calcMI_crit(M, nbins = 11, alpha = 0.05, numiter = 1000, ncores = 2):
     MIss = Parallel(n_jobs=ncores)(delayed(calcMI_shuffled)(M, nbins) for ii in range(numiter))
     MIss = np.sort(MIss)
     #print(MIss)
-    MIcrit = MIss[round((1-alpha)*numiter)] # develop a histogram and peak the 95% quantile significance level with alpha = 0.05
+    MIcrit = MIss[round((1-alpha)*numiter)] 
     return(MIcrit)
 
