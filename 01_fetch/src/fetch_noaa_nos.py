@@ -1,6 +1,5 @@
 import pandas as pd
 import os
-import numpy as np
 import urllib
 import requests, json
 import utils
@@ -18,80 +17,58 @@ def fetch_metadata(station_id, metadata_outfile, bucket, write_location, s3_clie
     metadata.to_csv(metadata_outfile, index=False)
     if write_location == 'S3':
         print('uploading to s3')
-        s3_client.upload_file(metadata_outfile, bucket, '01_fetch/out/'+os.path.basename(metadata_outfile))
+        s3_client.upload_file(metadata_outfile, bucket, '01_fetch/out/metadata/'+os.path.basename(metadata_outfile))
 
 def fetch_noaa_nos_data(start_dt, end_dt, datum, station_id, time_zone, product, units, file_format, data_outfile, bucket, write_location, s3_client):
-    '''fetch NOAA NOS data from select station. Change product argument for NOAA NOS data product.
-     (ie. product = current for current data)'''
-    data_url = f'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&application=NOS.COOPS.TAC.WL&begin_date=' \
-               f'{start_dt}&end_date={end_dt}&datum={datum}&station={station_id}&product={product}&time_zone=' \
-               f'{time_zone}&units={units}&interval=&format={file_format}'
-    urllib.request.urlretrieve(data_url, data_outfile)
-    if write_location == 'S3':
-        print('uploading to s3')
-        s3_client.upload_file(data_outfile, bucket, '01_fetch/out/'+os.path.basename(data_outfile))
+    for products in product:
+        data_url = f'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?begin_date=' \
+                   f'{start_dt}&end_date={end_dt}&station={station_id}&product={products}&datum={datum}&time_zone=' \
+                   f'{time_zone}&units={units}&format={file_format}'
+        data_outfile_formatted = data_outfile.format(products=products, station_id=station_id)
+        try:
+            urllib.request.urlretrieve(data_url, data_outfile_formatted)
+        except: urllib.error.HTTPError
+        if write_location == 'S3':
+            print('uploading to s3')
+            s3_client.upload_file(data_outfile_formatted, bucket, '01_fetch/out/'+os.path.basename(data_outfile_formatted))
+
 
 def main():
-    '''choose where you want to write your data outputs: local or S3'''
-    write_location = 'local'
-    '''set name of AWS profile storing credentials for S3'''
-    aws_profile = 'dev'
-    '''set AWS bucket to read/write to'''
-    s3_bucket = 'drb-estuary-salinity'
-    '''set up AWS client'''
-    s3_client = utils.prep_write_location(write_location, aws_profile)
+    # import config
+    with open("01_fetch/fetch_config.yaml", 'r') as stream:
+        config = yaml.safe_load(stream)['fetch_noaa_nos.py']
+        
+    #choose where you want to write location for data outputs
+    write_location = config['write_location']
+    s3_client = utils.prep_write_location(write_location, config['aws_profile'])
+    s3_bucket = config['s3_bucket']
 
-    station_id = '8573927'
+    station_id = config['station_id']
 
-    datum = 'MLLW'
-    ''' options:
-    HAT: Highest Astronomical Tide
-    MHHW: Mean Higher High Water
-    MHW: Mean High Water
-    DTL: Diurnal Tide Level
-    MTL: Mean Tide Level
-    MSL: Mean Sea Level
-    MLW: Mean Low Water 
-    MLLW: Mean Lower Low Water
-    LAT: Lowest Astronomical Tide
-    GT: Great Diurnal Range
-    MN: Mean Diurnal Range
-    DHQ: Mean Diurnal High Water Inequality
-    HWI: Greenwich High Water Interval
-    LWI: Greenwich Low Water Interval
-    Max Tide: Highest Observed Tide
-    Min Tide: Lowest Observed Tide
-    Station Datum: fixed base elevation at a tide station
-    National Tidal Datum Epoch: The specific 19-year period adopted by the National Ocean Service as the official time
-     segment over which tide observations are taken and reduced to obtain mean values (e.g., mean lower low water, etc.) for tidal datums.'''
+    datum = config['datum']
 
-    product = 'water_level'
-    '''options: water_level, air_temperature, water_temperature, wind, air_pressure, air_gap, conductivity, visibility,
-     humidity, salinity, hourly_height, high_low, daily_mean, monthly_mean, one_minute_water_level, predictions, datums,
-     currents, and currents_predictions.'''
+    product = config['product']
 
-    time_zone = 'GMT'
-    '''options:
-    gmt: Greenwich Mean Time
-    lst: Local Standard Time. The time local to the requested station.
-    lst_ldt: Local Standard/Local Daylight Time. The time local to the requested station.'''
+    time_zone = config['time_zone']
 
-    units = 'metric'
-    '''options: english and metric'''
+    units = config['units']
+    # options: english and metric
 
-    file_format = 'csv'
+    file_format = config['file_format']
 
-    start_dt = '20190101'
-    end_dt = '20191231'
+    start_dt = config['start_dt']
+    end_dt = config['end_dt']
 
     path = os.path.dirname('/01_fetch/out/')
     os.path.isdir(path)
-    filename = f"noaa_nos_{product}_{station_id}.csv"
+    filename = "noaa_nos_{station_id}_{products}.csv"
     data_outfile = os.path.join('.', path + '/' + filename)
     fetch_noaa_nos_data(start_dt, end_dt, datum, station_id, time_zone, product, units, file_format, data_outfile, s3_bucket, write_location, s3_client)
 
-    metadata_filename = f"noaa_nos_metadata_{product}_{station_id}.csv"
-    metadata_outfile = os.path.join('.', path + '/' + metadata_filename)
+    metadata_path = os.path.dirname('/01_fetch/out/metadata/')
+    os.path.isdir(metadata_path)
+    metadata_filename = f"noaa_nos_metadata_{station_id}.csv"
+    metadata_outfile = os.path.join('.', metadata_path + '/' + metadata_filename)
     fetch_metadata(station_id, metadata_outfile, s3_bucket, write_location, s3_client)
 
 
