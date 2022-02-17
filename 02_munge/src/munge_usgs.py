@@ -5,6 +5,16 @@ import re
 import yaml
 import utils
 
+def get_datafile_list(read_location, s3_client=None, s3_bucket=None):
+    raw_datafiles = {}
+    if read_location=='S3':
+        raw_datafiles = [obj['Key'] for obj in s3_client.list_objects_v2(Bucket=s3_bucket, Prefix='01_fetch/out/usgs_nwis_0')['Contents']]
+    elif read_location=='local':
+        prefix = os.path.join('01_fetch', 'out')
+        file_prefix='usgs_nwis_0'
+        raw_datafiles = [os.path.join(prefix, f) for f in os.listdir(prefix) if f.startswith(file_prefix)]
+    return raw_datafiles
+
 def param_code_to_name(df, params_df):
     for col in df.columns:
         # get 5-digit parameter code from column name
@@ -86,7 +96,7 @@ def main():
     params_df = pd.read_csv(os.path.join('.', '01_fetch', 'out', 'metadata', 'usgs_nwis_params.csv'), dtype={"parm_cd":"string"})
 
     # get list of raw data files to process
-    raw_datafiles = [obj['Key'] for obj in s3_client.list_objects_v2(Bucket=s3_bucket, Prefix='01_fetch/out/usgs_nwis_0')['Contents']]
+    raw_datafiles = get_datafile_list(read_location, s3_client, s3_bucket)
     # determine which data flags we want to drop
     flags_to_drop = config['flags_to_drop']
     # determine which parameters we want to keep
