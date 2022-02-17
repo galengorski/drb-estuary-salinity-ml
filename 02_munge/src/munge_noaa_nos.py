@@ -5,6 +5,18 @@ import boto3
 import yaml
 import utils
 
+def get_datafile_list(station_ids, read_location, s3_client=None, s3_bucket=None):
+    raw_datafiles = {}
+    if read_location=='S3':
+        for station_id in station_ids:
+            raw_datafiles[station_id] = [obj['Key'] for obj in s3_client.list_objects_v2(Bucket=s3_bucket, Prefix=f'01_fetch/out/noaa_nos_{station_id}')['Contents']]
+    elif read_location=='local':
+        prefix = os.path.join('01_fetch', 'out')
+        for station_id in station_ids:
+            file_prefix=f'noaa_nos_{station_id}'
+            raw_datafiles[station_id] = [os.path.join(prefix, f) for f in os.listdir(prefix) if f.startswith(file_prefix)]
+    return raw_datafiles
+
 def read_data(raw_datafile, read_location, s3_bucket):
     if read_location == 'local':
         print(f'reading data from local: {raw_datafile}')
