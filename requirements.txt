@@ -13,3 +13,4 @@ torch
 torchaudio
 ipympl
 plotly
+seaborn
