@@ -96,7 +96,7 @@ def main():
     params_df = pd.read_csv(os.path.join('.', '01_fetch', 'out', 'metadata', 'usgs_nwis_params.csv'), dtype={"parm_cd":"string"})
 
     # get list of raw data files to process
-    raw_datafiles = [obj['Key'] for obj in s3_client.list_objects_v2(Bucket=s3_bucket, Prefix='01_fetch/out/usgs_nwis_0')['Contents']]
+    raw_datafiles = get_datafile_list(read_location, s3_client, s3_bucket)
     # determine which data flags we want to drop
     flags_to_drop = config['flags_to_drop']
     # determine which parameters we want to keep
