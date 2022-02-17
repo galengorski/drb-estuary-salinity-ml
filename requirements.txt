@@ -6,7 +6,6 @@ joblib
 matplotlib
 anaconda
 docker
-spyder-notebook
 certifi
 xarray
 torchvision
