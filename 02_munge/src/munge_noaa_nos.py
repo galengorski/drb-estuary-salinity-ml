@@ -5,6 +5,18 @@ import boto3
 import yaml
 import utils
 
+def get_datafile_list(station_ids, read_location, s3_client=None, s3_bucket=None):
+    raw_datafiles = {}
+    if read_location=='S3':
+        for station_id in station_ids:
+            raw_datafiles[station_id] = [obj['Key'] for obj in s3_client.list_objects_v2(Bucket=s3_bucket, Prefix=f'01_fetch/out/noaa_nos_{station_id}')['Contents']]
+    elif read_location=='local':
+        prefix = os.path.join('01_fetch', 'out')
+        for station_id in station_ids:
+            file_prefix=f'noaa_nos_{station_id}'
+            raw_datafiles[station_id] = [os.path.join(prefix, f) for f in os.listdir(prefix) if f.startswith(file_prefix)]
+    return raw_datafiles
+
 def read_data(raw_datafile, read_location, s3_bucket):
     if read_location == 'local':
         print(f'reading data from local: {raw_datafile}')
@@ -82,6 +94,8 @@ def process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_v
     if write_location == 'S3':
         print('uploading to s3')
         s3_client.upload_file(data_outfile_csv, s3_bucket, '02_munge/out/'+os.path.basename(data_outfile_csv))
+        
+    return combined_df
 
 def main():
     # import config
@@ -99,9 +113,7 @@ def main():
     # get list of raw data files to process, by site
     with open("01_fetch/fetch_config.yaml", 'r') as stream:
         station_ids = yaml.safe_load(stream)['fetch_noaa_nos.py']['station_ids']
-    raw_datafiles = {}
-    for station_id in station_ids:
-        raw_datafiles[station_id] = [obj['Key'] for obj in s3_client.list_objects_v2(Bucket=s3_bucket, Prefix=f'01_fetch/out/noaa_nos_{station_id}')['Contents']]
+    raw_datafiles = get_datafile_list(station_ids, read_location, s3_client, s3_bucket)
     
     # determine which data flags we want to drop
     flags_to_drop_by_var = config['flags_to_drop']
@@ -114,7 +126,8 @@ def main():
 
     # process raw data files into csv
     for site, site_raw_datafiles in raw_datafiles.items():
-        process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_var, agg_level, prop_obs_required, read_location, write_location, s3_bucket, s3_client)
+        df = process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_var, agg_level, prop_obs_required, read_location, write_location, s3_bucket, s3_client)
+        # apply butterworth filter
 
 if __name__ == '__main__':
     main()
