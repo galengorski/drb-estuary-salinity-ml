@@ -82,6 +82,8 @@ def process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_v
     if write_location == 'S3':
         print('uploading to s3')
         s3_client.upload_file(data_outfile_csv, s3_bucket, '02_munge/out/'+os.path.basename(data_outfile_csv))
+        
+    return combined_df
 
 def main():
     # import config
