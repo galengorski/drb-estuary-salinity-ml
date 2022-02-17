@@ -113,9 +113,7 @@ def main():
     # get list of raw data files to process, by site
     with open("01_fetch/fetch_config.yaml", 'r') as stream:
         station_ids = yaml.safe_load(stream)['fetch_noaa_nos.py']['station_ids']
-    raw_datafiles = {}
-    for station_id in station_ids:
-        raw_datafiles[station_id] = [obj['Key'] for obj in s3_client.list_objects_v2(Bucket=s3_bucket, Prefix=f'01_fetch/out/noaa_nos_{station_id}')['Contents']]
+    raw_datafiles = get_datafile_list(station_ids, read_location, s3_client, s3_bucket)
     
     # determine which data flags we want to drop
     flags_to_drop_by_var = config['flags_to_drop']
