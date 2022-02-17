@@ -10,7 +10,7 @@ spyder-notebook
 certifi
 xarray
 torchvision
-pytorch
+torch
 torchaudio
 ipympl
 plotly
