@@ -114,7 +114,8 @@ def main():
 
     # process raw data files into csv
     for site, site_raw_datafiles in raw_datafiles.items():
-        process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_var, agg_level, prop_obs_required, read_location, write_location, s3_bucket, s3_client)
+        df = process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_var, agg_level, prop_obs_required, read_location, write_location, s3_bucket, s3_client)
+        # apply butterworth filter
 
 if __name__ == '__main__':
     main()
