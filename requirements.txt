@@ -6,7 +6,6 @@ joblib
 matplotlib
 anaconda
 docker
-yaml
 spyder-notebook
 ca-certificates
 certifi
