@@ -4,6 +4,7 @@ import pandas as pd
 import boto3
 import yaml
 import utils
+from scipy import signal
 
 def get_datafile_list(station_ids, read_location, s3_client=None, s3_bucket=None):
     raw_datafiles = {}
