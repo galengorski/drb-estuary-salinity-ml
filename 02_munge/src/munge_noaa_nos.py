@@ -4,6 +4,7 @@ import pandas as pd
 import boto3
 import yaml
 import utils
+from scipy import signal
 
 def get_datafile_list(station_ids, read_location, s3_client=None, s3_bucket=None):
     raw_datafiles = {}
@@ -127,7 +128,19 @@ def main():
     # process raw data files into csv
     for site, site_raw_datafiles in raw_datafiles.items():
         df = process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_var, agg_level, prop_obs_required, read_location, write_location, s3_bucket, s3_client)
+        #parameter for butterworth filter
+        # filter order
+        order_butter = config['order_butter']
+        # cutoff frequency
+        fc= config['fc']
+        # sample interval
+        fs = config['fs']
+        # filter accepts 1d array
+        x = df{f'config['product']'}
         # apply butterworth filter
+        b,a = signal.butter(order_butter, fc, 'low', fs=fs, output='ba')
+        df_signal = signal.filtfilt(b,a,x)
+    return df_signal
 
 if __name__ == '__main__':
     main()
