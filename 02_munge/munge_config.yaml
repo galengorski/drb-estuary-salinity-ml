@@ -87,4 +87,4 @@ munge_noaa_nos.py:
   # sample interval
   fs: 10
   # desired product to filter
-  product: 'Water Level'
+  product: 'water_level'

@@ -58,13 +58,14 @@ def process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_v
         var_name = os.path.splitext(os.path.basename(raw_datafile))[0].replace(f'noaa_nos_{site}_', '')
 
         # drop any flagged we don't want to include
-        flags_to_drop = flags_to_drop_by_var[var_name]
-        for i in range(len(flags_to_drop)):
-            drop_flag = flags_to_drop[i]
-            if drop_flag:
-                df['v'] = np.where(df['f'].str.split(',', expand=True)[i]=='1', np.nan, df['v'])
-        # drop flag column
-        df = df.drop(['f'], axis=1)
+        if 'f' in df.columns:
+            flags_to_drop = flags_to_drop_by_var[var_name]
+            for i in range(len(flags_to_drop)):
+                drop_flag = flags_to_drop[i]
+                if drop_flag:
+                    df['v'] = np.where(df['f'].str.split(',', expand=True)[i]=='1', np.nan, df['v'])
+            # drop flag column
+            df = df.drop(['f'], axis=1)
 
         # replace value column 'v' with variable name
         df = df.rename(columns={'v': var_name, 't': 'datetime'})
@@ -98,6 +99,22 @@ def process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_v
         
     return combined_df
 
+def butterworth(df):
+    #parameter for butterworth filter
+    # filter order
+    order_butter = config['order_butter']
+    # cutoff frequency
+    fc= config['fc']
+    # sample interval
+    fs = config['fs']
+    # filter accepts 1d array
+    prod = config['product']
+    x = df[prod]
+    # apply butterworth filter
+    b,a = signal.butter(order_butter, fc, 'low', fs=fs, output='ba')
+    df_signal = signal.filtfilt(b,a,x)
+    return df_signal
+
 def main():
     # import config
     with open("02_munge/munge_config.yaml", 'r') as stream:
@@ -128,19 +145,7 @@ def main():
     # process raw data files into csv
     for site, site_raw_datafiles in raw_datafiles.items():
         df = process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_var, agg_level, prop_obs_required, read_location, write_location, s3_bucket, s3_client)
-        #parameter for butterworth filter
-        # filter order
-        order_butter = config['order_butter']
-        # cutoff frequency
-        fc= config['fc']
-        # sample interval
-        fs = config['fs']
-        # filter accepts 1d array
-        x = df{f'config['product']'}
-        # apply butterworth filter
-        b,a = signal.butter(order_butter, fc, 'low', fs=fs, output='ba')
-        df_signal = signal.filtfilt(b,a,x)
-    return df_signal
+        #butterworth_df = butterworth(df)
 
 if __name__ == '__main__':
     main()
