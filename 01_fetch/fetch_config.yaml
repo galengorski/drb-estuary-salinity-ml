@@ -69,6 +69,7 @@ fetch_noaa_nos.py:
   products: 
       - 'water_level'
       - 'conductivity'
+      - 'predictions'
 
   # options:
   # gmt: Greenwich Mean Time
