@@ -39,10 +39,16 @@ def fetch_noaa_nos_data(start_year, end_year, datum, station_id, time_zone, prod
                 try:
                     # if we are on first iteration for fetching product, overwrite df with data
                     if i==0:
-                        data_df = pd.DataFrame(data_json['data'])
+                        try:
+                            data_df = pd.DataFrame(data_json['data'])
+                        except KeyError:
+                            data_df = pd.DataFrame(data_json[product])                          
                     # otherwise, append the new month of data to the df
                     else:
-                        data_df = data_df.append(pd.DataFrame(data_json['data']))
+                        try:
+                            data_df = data_df.append(pd.DataFrame(data_json['data']))
+                        except KeyError:
+                            data_df = data_df.append(pd.DataFrame(data_json[product]))
                     i+=1
                 except:
                     continue
