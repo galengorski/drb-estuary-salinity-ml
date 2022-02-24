@@ -45,5 +45,5 @@ for(i in 1:3){
   ts %>%
     mutate(wspdir = -1*wind_vel*cos(wind_dir*(pi/180))) %>%
     dplyr::select(date, prcp, tmax, tmin, wspdir) %>%
-    write_csv('01_fetch/out/',site[i],'_met_data.csv'))
+    write_csv('01_fetch/out/',site[i],'_gridmet.csv')
 }
