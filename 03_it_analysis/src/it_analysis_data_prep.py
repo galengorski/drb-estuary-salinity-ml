@@ -94,10 +94,10 @@ def select_sinks(snks, date_start, date_end):
     snks_list_historical = list()
 
     #read in the salt front record
-    sf_loc = pd.read_csv('methods_exploration/data/saltfront.csv', index_col = 'datetime')
+    sf_loc = pd.read_csv('methods_exploration/data/salt_front_extended_feb22.csv', index_col = 'datetime')
     sf_loc.index = pd.to_datetime(sf_loc.index)
     #make a copy for historical
-    sf_loc_historical = sf_loc['2015-01-01':date_end].copy()
+    sf_loc_historical = sf_loc['2000-01-01':date_end].copy()
     #save it to a list of _historical
     snks_list_historical.append(sf_loc_historical)
     snks_list_historical.append(sf_loc_historical)
