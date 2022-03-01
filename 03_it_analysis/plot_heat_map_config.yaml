@@ -1,11 +1,11 @@
-plot_heatmap.py:
+plot_heat_map.py:
     #matrix to plot
     mi_matrix: '03_it_analysis/out/mi_matrix'
     corr_matrix: '03_it_analysis/out/corr_matrix'
     #mask threshold mutual information
-    mask_threshold_mi: 0.01
+    mask_threshold_mi: 0.15
     #mask threshold correlation
-    mask_threshold_corr: 0.05
+    mask_threshold_corr: 0.50
     #save location
     save_location: '03_it_analysis/out/'
     #save? true/false
