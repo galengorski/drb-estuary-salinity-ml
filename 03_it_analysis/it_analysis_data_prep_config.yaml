@@ -3,29 +3,13 @@ it_analysis_data_prep.py:
     srcs: 
         - 'discharge'
         - 'specific_conductance'
-        - 'prcp'
-        - 'tmax'
-        - 'tmin'
-        - 'wspdir'
     #the sinks to be analyzed, this will likely be the salt front location
     snks:
-        - 'saltfront_daily'
-        - 'saltfront7_weekly'
+        - 'Daily_salt_front'
+        - '7_day_salt_front'
     preprocess_steps:
         mutual_information:
             sources:
-                prcp:
-                    - remove_seasonal_signal
-                    - normalize
-                tmax:
-                    - remove_seasonal_signal
-                    - normalize
-                tmin:
-                    - remove_seasonal_signal
-                    - normalize
-                wspdir:
-                    - remove_seasonal_signal
-                    - normalize               
                 discharge:
                     - remove_seasonal_signal
                     - normalize
@@ -33,39 +17,28 @@ it_analysis_data_prep.py:
                     - remove_seasonal_signal
                     - normalize
             sinks:
-                saltfront:
+                Daily_salt_front:
                     - remove_seasonal_signal
                     - normalize
-                saltfront7:
+                7_day_salt_front:
                     - remove_seasonal_signal
                     - normalize
-
         correlation:
             sources:
-                prcp:
-                    - none
-                tmax:
-                    - none
-                tmin:
-                    - none
-                wspdir:
-                    - none
                 discharge:
                     - none
                 specific_conductance:
                     - none
             sinks:
-                saltfront:
+                Daily_salt_front:
                     - none
-                saltfront7:
+                7_day_salt_front:
                     - none
     #date range of interest
     date_start: '2015-01-01'
     date_end: '2020-12-31'
     #number of lags to analyze
-    n_lags: 0
+    n_lags: 4
     #where to write the sinks and lagged sources as binary pickle files
     out_dir: '03_it_analysis/out/'
-    #should preprocessing plots be saved
-    plot: True
     
