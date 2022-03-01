@@ -78,13 +78,14 @@ munge_noaa_nos.py:
   # https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html
   agg_level: 'H'
   
-  #filter order
-  order_butter: 6
-  # Duration to capture tide signal (hrs)
-  Cf: 32
-  # cutoff frequency
-  fc: (1/Cf)/2
-  # sample interval
-  fs: 10
-  # desired product to filter
-  product: 'water_level'
+  butterworth_filter_params:
+    #filter order
+    order_butter: 6
+    # Duration to capture tide signal (hrs)
+    Cf: 32
+    # cutoff frequency
+    fc: 0.015625 # equal to (1/Cf)/2
+    # sample interval
+    fs: 10
+    # desired product to filter
+    product: 'water_level'
