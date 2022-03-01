@@ -5,18 +5,15 @@ import re
 import yaml
 import utils
 
-def process_to_timestep(df, cols, agg_level, prop_obs_required):
-    # aggregate data to specified timestep
-    if agg_level == 'daily':
-        # get proportion of measurements available for timestep
-        expected_measurements = df.groupby([df['datetime'].dt.date]).count().mode()[cols].loc[0]
-        observed_measurements = df.groupby([df['datetime'].dt.date]).count()[cols].loc[:]
-        prop_df = observed_measurements / expected_measurements
-        # calculate averages for timestep
-        df = df.groupby([df['datetime'].dt.date]).mean()
-    # only keep averages where we have enough measurements
-    df.where(prop_df.gt(prop_obs_required), inplace=True)
-    return df
+def get_datafile_list(read_location, s3_client=None, s3_bucket=None):
+    raw_datafiles = {}
+    if read_location=='S3':
+        raw_datafiles = [obj['Key'] for obj in s3_client.list_objects_v2(Bucket=s3_bucket, Prefix='01_fetch/out/usgs_nwis_0')['Contents']]
+    elif read_location=='local':
+        prefix = os.path.join('01_fetch', 'out')
+        file_prefix='usgs_nwis_0'
+        raw_datafiles = [os.path.join(prefix, f) for f in os.listdir(prefix) if f.startswith(file_prefix)]
+    return raw_datafiles
 
 def param_code_to_name(df, params_df):
     for col in df.columns:
@@ -74,7 +71,7 @@ def process_data_to_csv(raw_datafile, params_to_process, params_df, flags_to_dro
     df[cols] = df[cols].apply(pd.to_numeric, errors='coerce')
 
     # aggregate data to specified timestep
-    df = process_to_timestep(df, cols, agg_level, prop_obs_required)
+    df = utils.process_to_timestep(df, cols, agg_level, prop_obs_required)
 
     # drop any columns that aren't in the list we want to use
     for col in df.columns:
@@ -112,7 +109,7 @@ def main():
     params_df = pd.read_csv(os.path.join('.', '01_fetch', 'out', 'metadata', 'usgs_nwis_params.csv'), dtype={"parm_cd":"string"})
 
     # get list of raw data files to process
-    raw_datafiles = [obj['Key'] for obj in s3_client.list_objects_v2(Bucket=s3_bucket, Prefix='01_fetch/out/usgs_nwis_0')['Contents']]
+    raw_datafiles = get_datafile_list(read_location, s3_client, s3_bucket)
     # determine which data flags we want to drop
     flags_to_drop = config['flags_to_drop']
     # determine which parameters we want to keep

@@ -256,6 +256,7 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
                 #find the ucn that contains the pp_key, should only be one per var_list[site_num]
                 ucn = [string for string in cols if pp_key in string][0]
                 
+
                 if plot:
                     #if the preprocess step is set to 'none' create a histogram of the raw data
                     fig, (ax1, ax2) = plt.subplots(2)
@@ -268,6 +269,19 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
                     fig.savefig(out_dir+'preprocess_plots/' +ucn + '_raw.png', bbox_inches = 'tight')
                     #plt.show()
                     plt.close()
+
+                #if the preprocess step is set to 'none' create a histogram of the raw data
+                fig, (ax1, ax2) = plt.subplots(2)
+                ax1.plot(var_list[site_num].index, var_list[site_num][ucn])
+                ax1.set_ylabel(ucn)
+                ax2.hist(var_list[site_num][ucn])
+                ax2.set_ylabel('Count')
+                plt.suptitle(ucn)
+                ax1.set_title('raw')
+                fig.savefig(out_dir+'preprocess_plots/' +ucn + '_raw.png', bbox_inches = 'tight')
+                #plt.show()
+                plt.close()
+
 
                 if pre_process_steps[pp_key][0] == 'none':                    
                     #store the variable's data
@@ -292,6 +306,7 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
                         else:
                             temp_data = func(temp_data)
                         
+
                         if plot:
                             #create histogram
                             fig, (ax1, ax2) = plt.subplots(2)
@@ -310,6 +325,24 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
                             fig.savefig(fname+'.png', bbox_inches = 'tight')
                             #plt.show()
                             plt.close()
+
+                        #create histogram
+                        fig, (ax1, ax2) = plt.subplots(2)
+                        ax1.plot(var_list[site_num].index, temp_data)
+                        ax1.set_ylabel(ucn)
+                        ax2.hist(temp_data)
+                        ax2.set_ylabel('Count')
+                        plt.suptitle(ucn)
+                        if count==0:
+                            pltsubt = value
+                        else:                            
+                            pltsubt = pltsubt+', '+ value
+                        ax1.set_title(pltsubt)
+                        fname = fname+'_'+ value
+                        fig.savefig(fname+'.png', bbox_inches = 'tight')
+                        #plt.show()
+                        plt.close()
+
                         
                         #store the variable's data
                         var_proc_df[ucn] = temp_data
@@ -334,8 +367,7 @@ def main():
     #should preprocessing plots be saved
     plot = config['plot']
     
-    #number of lag days to consider for sources
-    n_lags = config['n_lags']
+
     #generate the sources data
     srcs_list, srcs_list_historical = select_sources(srcs, date_start, date_end)    
     #generate the sinks data
@@ -345,7 +377,13 @@ def main():
     #process the sources
     srcs_proc = apply_preprocessing_functions(srcs_list, srcs_list_historical, 'sources', out_dir, plot)
     #process the sinks
+
     snks_proc = apply_preprocessing_functions(snks_list, snks_list_historical, 'sinks', out_dir, plot)
+
+
+    snks_proc = apply_preprocessing_functions(snks_list, snks_list_historical, 'sinks', out_dir)
+    #number of lag days to consider for sources
+    n_lags = config['n_lags']
 
     #lag the sources
     srcs_list_lagged = lag_sources(n_lags, srcs_proc)
