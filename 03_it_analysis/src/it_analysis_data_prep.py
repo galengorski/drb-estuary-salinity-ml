@@ -209,7 +209,6 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
     inputs and outputs that are structurally identical. Input is a list of dataframes of 'raw' data
     and output is a list of dataframes of processed data'''
 
-    #assert (source_sink == 'sources'|source_sink == 'sinks'),'variable source_sink must be set to "sources" or "sinks"'
     #import config
     with open("03_it_analysis/it_analysis_data_prep_config.yaml", 'r') as stream:
         config = yaml.safe_load(stream)['it_analysis_data_prep.py']['preprocess_steps']
@@ -240,13 +239,15 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
             #print(site_num, site_data)
             #create a new data frame with the same structure as the raw data
             var_proc_df = pd.DataFrame().reindex_like(var_list[site_num])
-            #var_proc_df_col_set = set([i.split('_')[0] for i in var_proc_df.columns])
-            #srcs_set = set(list(pre_process_steps.keys()))
-            #var_at_site = var_proc_df_col_set.intersection(srcs_set)
+            #an empty list to be populated with source/sink variables from that site
             var_at_site = []
+            #for each variable in the config file
             for i in list(pre_process_steps.keys()):
+                #for each column name
                 for j in var_proc_df.columns:
+                    #check if the config file name is contained within the column name
                     if(i in j):
+                        #if it is then put it in var_at_site
                         var_at_site.append(i)
             #for each preprocessing key
             for pp_key in var_at_site:
