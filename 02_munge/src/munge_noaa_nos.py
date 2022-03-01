@@ -63,11 +63,14 @@ def butterworth_filter(df, butterworth_filter_params):
     fs = butterworth_filter_params['fs']
     # filter accepts 1d array
     prod = butterworth_filter_params['product']
+
+    # get only product of interest 
     x = df[prod]
+
     # apply butterworth filter
     b,a = signal.butter(order_butter, fc, 'low', fs=fs, output='ba')
-    df_signal = signal.filtfilt(b,a,x)
-    df[prod+'_filtered'] = df_signal
+    x_signal = signal.filtfilt(b,a,x[x.notnull()])
+    df.loc[x.notnull(), prod+'_filtered'] = x_signal
     return df
 
 def process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_var, agg_level, prop_obs_required, read_location, write_location, s3_bucket, s3_client, butterworth_filter_params):
