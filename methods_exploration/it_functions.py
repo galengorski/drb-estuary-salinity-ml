@@ -168,7 +168,7 @@ def calcTE(M, shift, nbins = 11):
     _, _, p_xlyl = calc2Dpdf(M1, nbins)
     T1 = calcEntropy(p_xlyl)
     
-    #calc joint entropy of H(Yt-t) and H(Yt,Yt-T)
+    #calc joint entropy of H(Yt-T) and H(Yt,Yt-T)
     _, pyl, p_yulyl = calc2Dpdf(M2, nbins)
     T2 = calcEntropy(p_yulyl)
     
