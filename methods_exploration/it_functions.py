@@ -13,15 +13,15 @@ These functions were developed borrowing code and ideas from:
 """
 
 from joblib import Parallel, delayed
+import math
 import numpy as np
 
 #%%
-x1 = np.random.rand(10)
-x2 = np.random.rand(10)
-
-x3 = [1400, 1500, 1600, np.nan, np.nan, np.nan ,1700, 700, 430, 650]
-
-y = x1+x2
+#used for some testing
+#x1 = np.random.rand(10)
+#x2 = np.random.rand(10)
+#x3 = [1400, 1500, 1600, np.nan, np.nan, np.nan ,1700, 700, 430, 650]
+#y = x1+x2
 
 M = np.stack((x1,y), axis = 1)
 #%%
@@ -123,16 +123,16 @@ def calcMI_crit(M, nbins = 11, alpha = 0.05, numiter = 1000, ncores = 2):
     MIss = Parallel(n_jobs=ncores)(delayed(calcMI_shuffled)(M, nbins) for ii in range(numiter))
     MIss = np.sort(MIss)
     #print(MIss)
-    MIcrit = MIss[round((1-alpha)*numiter)] 
+    MIcrit = MIss[math.ceil((1-alpha)*numiter)] 
     return(MIcrit)
 
 def lag_data(M, shift):
     '''lags data by shift for transfer entropy calculation
     M: a numpy array of shape (nobs, 2) where nobs is the number of observations
-    this assumes that the data are arrange such that the first column is the source and
+    this assumes that the data are arranged such that the first column is the source and
     the second column is the sink.
     shift: the number of time steps you want to lag the sink by, must be a positive integer
-    returns M_lagged of dimensions [3,length(M)-shift]
+    returns M_lagged of dimensions [length(M)-shift, 3]
     M_lagged[,1] = source_lagged: source[1:n-shift]
     M_lagged[,2] = sink_unlagged: sink[shift:n]
     M_lagged[,3] = sink_lagged: sink[1:n-shift]
@@ -186,7 +186,7 @@ def calcTE(M, shift, nbins = 11):
 def calcTE_shuffled(M, shift, nbins = 11):
     '''shuffles the input dataset to destroy temporal relationships for signficance testing
     M: a numpy array of shape (nobs, 2) where nobs is the number of observations
-    this assumes that the data are arrange such that the first column is the source and
+    this assumes that the data are arranged such that the first column is the source and
     the second column is the sink.
     nbins: is the number of bins used for estimating the pdf with a default of 11
     the transfer entropy is normalized by the entropy of the sink
@@ -218,6 +218,6 @@ def calcTE_crit(M, shift, nbins = 11, alpha = 0.05, numiter = 1000, ncores = 2):
     TEss = Parallel(n_jobs=ncores)(delayed(calcTE_shuffled)(M, shift, nbins) for ii in range(numiter))
     TEss = np.sort(TEss)
     #print(MIss)
-    TEcrit = TEss[round((1-alpha)*numiter)] 
+    TEcrit = TEss[math.ceil((1-alpha)*numiter)] 
     return(TEcrit)
 
