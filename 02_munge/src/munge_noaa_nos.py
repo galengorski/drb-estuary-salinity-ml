@@ -30,6 +30,29 @@ def read_data(raw_datafile, read_location, s3_bucket):
         df = pd.read_csv(obj.get("Body"))
     return df
 
+def fill_gaps(x):
+    '''fills any data gaps in the middle of the input series
+    using linear interpolation; returns gap-filled time series
+    '''
+    #find nans
+    bd = np.isnan(x)
+
+    #early exit if there are no nans  
+    if not bd.any():
+        return x
+
+    #find nonnans index numbers
+    gd = np.flatnonzero(~bd)
+
+    #ignore leading and trailing nans
+    bd[:gd.min()]=False
+    bd[(gd.max()+1):]=False
+
+    #interpolate nans
+    x[bd] = np.interp(np.flatnonzero(bd),gd,x[gd])
+    return x
+
+
 def butterworth_filter(df, butterworth_filter_params):
     #parameter for butterworth filter
     # filter order
@@ -40,11 +63,14 @@ def butterworth_filter(df, butterworth_filter_params):
     fs = butterworth_filter_params['fs']
     # filter accepts 1d array
     prod = butterworth_filter_params['product']
+
+    # get only product of interest 
     x = df[prod]
+
     # apply butterworth filter
     b,a = signal.butter(order_butter, fc, 'low', fs=fs, output='ba')
-    df_signal = signal.filtfilt(b,a,x)
-    df[prod+'_filtered'] = df_signal
+    x_signal = signal.filtfilt(b,a,x[x.notnull()])
+    df.loc[x.notnull(), prod+'_filtered'] = x_signal
     return df
 
 def process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_var, agg_level, prop_obs_required, read_location, write_location, s3_bucket, s3_client, butterworth_filter_params):
@@ -106,6 +132,10 @@ def process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_v
     # drop any columns with no data
     combined_df.dropna(axis=1, how='all', inplace=True)
 
+    # fill inner data gaps on water level using linear interpolation
+    # so we can apply the butterworth filter
+    combined_df['water_level'] = fill_gaps(combined_df['water_level'])
+    
     # apply butterworth filter
     butterworth_df = butterworth_filter(combined_df, butterworth_filter_params)
 
