@@ -18,7 +18,7 @@ def get_datafile_list(station_ids, read_location, s3_client=None, s3_bucket=None
             raw_datafiles[station_id] = [os.path.join(prefix, f) for f in os.listdir(prefix) if f.startswith(file_prefix)]
     return raw_datafiles
 
-def read_data(raw_datafile, read_location, s3_bucket):
+def read_data(raw_datafile, read_location, s3_client, s3_bucket):
     if read_location == 'local':
         print(f'reading data from local: {raw_datafile}')
         # read in raw data as pandas df
@@ -85,7 +85,7 @@ def process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_v
     combined_df = pd.DataFrame(columns=['datetime'])
     for raw_datafile in site_raw_datafiles:
         # read in data file
-        df = read_data(raw_datafile, read_location, s3_bucket)
+        df = read_data(raw_datafile, read_location, s3_client, s3_bucket)
     
         # if there is a SD column, drop it
         if 's' in df.columns:
