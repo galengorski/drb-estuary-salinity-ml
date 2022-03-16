@@ -37,14 +37,14 @@ fetch_noaa_nos.py:
   - '8536110' # Cape May
   - '8557380' # Lewes
   - '8548989' # Newbold, PA
-  - '8539094' # Burlington, NJ
-  - '8546252' # Bridesburg, NJ
-  - '8545240' # Philadelphia, PA
-  - '8540433' # Marcus Hook, PA
-  - '8551762' # Delaware City, DE
-  - '8551910' # Reedy Point, DE
-  - '8537121' # Ship John Shoal, NJ
-  - '8555889' # Brandywine Shoal Lighthouse, DE
+  #- '8539094' # Burlington, NJ
+  #- '8546252' # Bridesburg, NJ
+  #- '8545240' # Philadelphia, PA
+  #- '8540433' # Marcus Hook, PA
+  #- '8551762' # Delaware City, DE
+  #- '8551910' # Reedy Point, DE
+  #- '8537121' # Ship John Shoal, NJ
+  #- '8555889' # Brandywine Shoal Lighthouse, DE
 
   # options:
   # HAT: Highest Astronomical Tide
@@ -88,5 +88,5 @@ fetch_noaa_nos.py:
   # options: csv, json, xml
   file_format: 'json'
 
-  start_year: '2019'
+  start_year: '2000'
   end_year: '2019'
