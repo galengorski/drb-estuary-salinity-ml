@@ -55,7 +55,7 @@ def select_sources(srcs, date_start, date_end):
     date_end_pd = pd.to_datetime(date_end)
     
     for file in os.listdir('02_munge/out/'):
-        if 'params' in file:
+        if 'subdaily' in file:
             continue
         else:
             #read each file
