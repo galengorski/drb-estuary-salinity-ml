@@ -5,7 +5,8 @@ configfile: "03_it_analysis/it_analysis_data_prep_config.yaml"
 rule all:
     input:
         "03_it_analysis/out/srcs_proc_lagged",
-        "03_it_analysis/out/snks_proc"
+        "03_it_analysis/out/snks_proc",
+        expand("02_munge/out/subdaily/noaa_nos_{site}.csv", site=config["fetch_noaa_nos.py"]["station_ids"])
 
 rule fetch_usgs_nwis:
     input:
@@ -29,7 +30,7 @@ rule munge_noaa_nos:
         expand("01_fetch/out/noaa_nos_{site}_predictions.csv", site=config["fetch_noaa_nos.py"]["station_ids"]),
         expand("01_fetch/out/noaa_nos_{site}_water_level.csv", site=config["fetch_noaa_nos.py"]["station_ids"]),
     output:
-        expand("02_munge/out/noaa_nos_{site}.csv", site=config["fetch_noaa_nos.py"]["station_ids"]),
+        expand("02_munge/out/subdaily/noaa_nos_{site}.csv", site=config["fetch_noaa_nos.py"]["station_ids"]),
         expand("02_munge/out/noaa_nos_daily_{site}.csv", site=config["fetch_noaa_nos.py"]["station_ids"])
     shell:
         "python -m 02_munge.src.munge_noaa_nos"
@@ -37,6 +38,7 @@ rule munge_noaa_nos:
 rule it_analysis_data_prep:
     input:
         expand("02_munge/out/usgs_nwis_{site}.csv", site=config["fetch_usgs.py"]["site_ids"]),
+        expand("02_munge/out/noaa_nos_daily_{site}.csv", site=config["fetch_noaa_nos.py"]["station_ids"]),
     output:
         "03_it_analysis/out/srcs_proc_lagged",
         "03_it_analysis/out/snks_proc"

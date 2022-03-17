@@ -140,7 +140,7 @@ def process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_v
     butterworth_df = butterworth_filter(combined_df, butterworth_filter_params)
 
     # save pre-processed data
-    data_outfile_csv = os.path.join('.', '02_munge',  'out','subdaily', f'noaa_nos_{site}.csv')
+    data_outfile_csv = os.path.join('.', '02_munge',  'out','subdaily', f'noaa_nossubdaily_{site}.csv')
     butterworth_df.to_csv(data_outfile_csv, index=True)
     
     if write_location == 'S3':
@@ -150,21 +150,23 @@ def process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_v
     return butterworth_df
 
 def extract_daily_tidal_data(hourly_tidal_data, site, read_location, write_location, s3_bucket, s3_client):
-    hourly_tidal_data['date'] = hourly_tidal_data.index.date
+    #calling it datetime to match other data sources, it is just the date
+    hourly_tidal_data['datetime'] = hourly_tidal_data.index.date
     hourly_tidal_data['obs_pred'] = hourly_tidal_data['water_level'] - hourly_tidal_data['predictions']
     d = {
-    'wl_max_min':hourly_tidal_data.groupby(hourly_tidal_data.date)['water_level'].max() -  hourly_tidal_data.groupby(hourly_tidal_data.date)['water_level'].min(),
-    'wl_max' : hourly_tidal_data.groupby(hourly_tidal_data.date)['water_level'].max(),
-    'wl_obs_pred':hourly_tidal_data.groupby(hourly_tidal_data.date)['obs_pred'].sum(),
-    'wl_filtered':hourly_tidal_data.groupby(hourly_tidal_data.date)['water_level_filtered'].mean(),
-    'conductivity': hourly_tidal_data.groupby(hourly_tidal_data.date)['conductivity'].mean()
+    'wl_range':hourly_tidal_data.groupby(hourly_tidal_data.datetime)['water_level'].max() -  hourly_tidal_data.groupby(hourly_tidal_data.datetime)['water_level'].min(),
+    'wl_max' : hourly_tidal_data.groupby(hourly_tidal_data.datetime)['water_level'].max(),
+    'wl_obs_pred':hourly_tidal_data.groupby(hourly_tidal_data.datetime)['obs_pred'].sum(),
+    'wl_filtered':hourly_tidal_data.groupby(hourly_tidal_data.datetime)['water_level_filtered'].mean(),
+    'conductivity': hourly_tidal_data.groupby(hourly_tidal_data.datetime)['conductivity'].mean()
     }
 
     daily_df = pd.DataFrame(data = d, index = d['conductivity'].index)
+    daily_df
     
     # save pre-processed data
     print("processed site "+ site +" to daily time step")
-    data_outfile_csv = os.path.join('.', '02_munge', 'out', f'noaa_nos_daily_{site}.csv')
+    data_outfile_csv = os.path.join('.', '02_munge', 'out', f'noaa_nos_{site}.csv')
     daily_df.to_csv(data_outfile_csv, index=True)
     
     if write_location == 'S3':

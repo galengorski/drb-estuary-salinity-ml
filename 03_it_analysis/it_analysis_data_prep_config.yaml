@@ -7,6 +7,11 @@ it_analysis_data_prep.py:
         - 'tmax'
         - 'tmin'
         - 'wspdir'
+        - 'wl_range'
+        - 'wl_max'
+        - 'wl_obs_pred'
+        - 'wl_filtered'
+        - 'conductivity'
     #the sinks to be analyzed, this will likely be the salt front location
     snks:
         - 'saltfront_daily'
@@ -32,6 +37,21 @@ it_analysis_data_prep.py:
                 specific_conductance:
                     - remove_seasonal_signal
                     - normalize
+                wl_range:
+                    - remove_seasonal_signal
+                    - normalize                
+                wl_max:
+                    - remove_seasonal_signal
+                    - normalize                
+                wl_obs_pred:
+                    - remove_seasonal_signal
+                    - normalize                
+                wl_filtered:
+                    - remove_seasonal_signal
+                    - normalize
+                conductivity:
+                    - remove_seasonal_signal
+                    - normalize
             sinks:
                 saltfront:
                     - remove_seasonal_signal
@@ -54,6 +74,17 @@ it_analysis_data_prep.py:
                     - none
                 specific_conductance:
                     - none
+                wl_range:
+                    - none                
+                wl_max:
+                    - none               
+                wl_obs_pred:
+                    - none               
+                wl_filtered:
+                    - none
+                conductivity:
+                    - none
+
             sinks:
                 saltfront:
                     - none

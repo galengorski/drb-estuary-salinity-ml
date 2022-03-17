@@ -36,7 +36,7 @@ fetch_noaa_nos.py:
   station_ids:
   - '8536110' # Cape May
   - '8557380' # Lewes
-  - '8548989' # Newbold, PA
+  #- '8548989' # Newbold, PA
   #- '8539094' # Burlington, NJ
   #- '8546252' # Bridesburg, NJ
   #- '8545240' # Philadelphia, PA

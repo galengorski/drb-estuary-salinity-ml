@@ -23,7 +23,7 @@ import numpy as np
 #x3 = [1400, 1500, 1600, np.nan, np.nan, np.nan ,1700, 700, 430, 650]
 #y = x1+x2
 
-M = np.stack((x1,y), axis = 1)
+#M = np.stack((x1,y), axis = 1)
 #%%
 def calc2Dpdf(M,nbins = 11):
     '''calculates the 3 pdfs, one for x, one for y and a joint pdf for x and y 
