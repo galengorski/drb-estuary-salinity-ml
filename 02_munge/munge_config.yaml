@@ -63,7 +63,16 @@ munge_noaa_nos.py:
     # (N) A flag that when set to 1 indicates that the minimum expected conductivity was exceeded
     # (R) A flag that when set to 1 indicates that the rate of change tolerance limit was exceeded
     'conductivity': [True, True, True]
-  
+    # Air pressure Data Flags - in order of listing:
+    # (X) A flag that when set to 1 indicates that the maximum expected conductivity was exceeded
+    # (N) A flag that when set to 1 indicates that the minimum expected conductivity was exceeded
+    # (R) A flag that when set to 1 indicates that the rate of change tolerance limit was exceeded
+    'air_pressure': [True, True, True]
+    # Air temperature Data Flags - in order of listing:
+    # (X) A flag that when set to 1 indicates that the maximum expected conductivity was exceeded
+    # (N) A flag that when set to 1 indicates that the minimum expected conductivity was exceeded
+    # (R) A flag that when set to 1 indicates that the rate of change tolerance limit was exceeded
+    #'air_temperature': [True, True, True]
   # determine what QA/QC levels to drop
   qa_to_drop:
     - 'p' # preliminary

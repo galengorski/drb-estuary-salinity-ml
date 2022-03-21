@@ -12,6 +12,7 @@ it_analysis_data_prep.py:
         - 'wl_obs_pred'
         - 'wl_filtered'
         - 'conductivity'
+        - 'air_pressure'
     #the sinks to be analyzed, this will likely be the salt front location
     snks:
         - 'saltfront_daily'
@@ -52,6 +53,12 @@ it_analysis_data_prep.py:
                 conductivity:
                     - remove_seasonal_signal
                     - normalize
+                air_pressure:
+                    - remove_seasonal_signal
+                    - normalize
+                #air_temperature:
+                #   - remove_seasonal_signal
+                #   - normalize
             sinks:
                 saltfront:
                     - remove_seasonal_signal
@@ -84,7 +91,10 @@ it_analysis_data_prep.py:
                     - none
                 conductivity:
                     - none
-
+                air_pressure:
+                    - none
+                #air_temperature:
+                #    - none
             sinks:
                 saltfront:
                     - none
