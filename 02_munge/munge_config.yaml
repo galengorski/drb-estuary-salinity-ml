@@ -89,3 +89,19 @@ munge_noaa_nos.py:
     fs: 10
     # desired product to filter
     product: 'water_level'
+
+fill_discharge_prms.py
+    #location of data release
+    sb_url: 'https://www.sciencebase.gov/catalog/file/get/5f6a289982ce38aaa2449135?f=__disk__a6%2Fb3%2Ffb%2Fa6b3fb14393cb6b83d25897b395a92c4f4a193ed'
+    #data file
+    prms_predictions: 'sntemp_inputs_outputs_drb'
+    #destination to write 
+    destination: '99_scratch/drb_estuary_salinity_scratch/data/'
+    #segment ids for trenton and schuylkill
+    trenton_seg_id_nat: 1498
+    schuylkill_seg_id_nat: 2338
+    #location of the files in munge, they will be overwritten with gap filled data
+    nwis_trenton_location: '02_munge/out/usgs_nwis_01463500.csv'
+    nwis_schuylkill_location: '02_munge/out/usgs_nwis_01474500.csv'
+    
+
