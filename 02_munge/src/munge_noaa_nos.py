@@ -158,11 +158,15 @@ def extract_daily_tidal_data(hourly_tidal_data, site, read_location, write_locat
     'wl_max' : hourly_tidal_data.groupby(hourly_tidal_data.datetime)['water_level'].max(),
     'wl_obs_pred':hourly_tidal_data.groupby(hourly_tidal_data.datetime)['obs_pred'].sum(),
     'wl_filtered':hourly_tidal_data.groupby(hourly_tidal_data.datetime)['water_level_filtered'].mean(),
-    'conductivity': hourly_tidal_data.groupby(hourly_tidal_data.datetime)['conductivity'].mean()
+    'air_pressure': hourly_tidal_data.groupby(hourly_tidal_data.datetime)['air_pressure'].mean()
+    #'air_temperature': hourly_tidal_data.groupby(hourly_tidal_data.datetime)['air_temperature'].mean()
     }
 
-    daily_df = pd.DataFrame(data = d, index = d['conductivity'].index)
-    daily_df
+    daily_df = pd.DataFrame(data = d, index = d['wl_range'].index)
+    
+    if 'conductivity' in hourly_tidal_data.columns:
+        d['conductivity'] = hourly_tidal_data.groupby(hourly_tidal_data.datetime)['conductivity'].mean()
+    
     
     # save pre-processed data
     print("processed site "+ site +" to daily time step")
