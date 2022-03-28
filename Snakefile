@@ -35,7 +35,7 @@ rule munge_usgs_nwis:
         
 rule munge_noaa_nos:
     input:
-        expand("01_fetch/out/noaa_noss_{noaa_site}_{noaa_product}.txt", noaa_site=config["fetch_noaa_nos.py"]["station_ids"], noaa_product = config["fetch_noaa_nos.py"]["products"])
+        expand("01_fetch/out/noaa_nos_{noaa_site}_{noaa_product}.txt", noaa_site=config["fetch_noaa_nos.py"]["station_ids"], noaa_product = config["fetch_noaa_nos.py"]["products"])
     output:
         expand("02_munge/out/H/noaa_nos_{site}.csv", site=config["fetch_noaa_nos.py"]["station_ids"]),
         expand("02_munge/out/daily_summaries/noaa_nos_{site}.csv", site=config["fetch_noaa_nos.py"]["station_ids"])
