@@ -85,12 +85,12 @@ def process_data_to_csv(raw_datafile, params_to_process, params_df, flags_to_dro
     df = param_code_to_name(df, params_df)
 
     # save pre-processed data
-    data_outfile_csv = os.path.join('.', '02_munge', 'out', os.path.splitext(os.path.basename(raw_datafile))[0]+'.csv')
+    data_outfile_csv = os.path.join('.', '02_munge', 'out', agg_level, os.path.splitext(os.path.basename(raw_datafile))[0]+'.csv')
     df.to_csv(data_outfile_csv, index=True)
     
     if write_location == 'S3':
         print('uploading to s3')
-        s3_client.upload_file(data_outfile_csv, s3_bucket, '02_munge/out/'+os.path.basename(data_outfile_csv))
+        s3_client.upload_file(data_outfile_csv, s3_bucket, local_to_s3_pathname(data_outfile_csv))
 
 def main():
     # import config
