@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import pickle
 import TEpython_ParallelNAN2
+#import it_functions
 import yaml
 
 
@@ -71,6 +72,7 @@ def create_mutual_information_matrix(srcs_lagged_pickle, snks_list_pickle ,out_d
                     temp_snk = b[snk_name]
                     paired = temp_src.to_frame().join(temp_snk).to_numpy()
                     MI, n = TEpython_ParallelNAN2.mutinfo_new(paired, nbins = bins)
+                    #MI = it_functions.calcMI(paired, nbins = bins[0])
                     MI_array[i,j] = MI
                     #print(str(i)+' | '+str(j)+' | '+src_name+' | '+snk_name+'| MI = '+str(MI))
             mat = pd.DataFrame(MI_array.T, columns = a.columns)

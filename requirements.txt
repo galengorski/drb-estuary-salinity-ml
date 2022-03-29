@@ -1,0 +1,17 @@
+boto3
+tqdm
+numpy
+pandas
+joblib
+matplotlib
+anaconda
+docker
+certifi
+xarray
+torchvision
+torch
+torchaudio
+ipympl
+plotly
+seaborn
+utils

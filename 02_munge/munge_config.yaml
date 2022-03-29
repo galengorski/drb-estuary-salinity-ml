@@ -25,8 +25,9 @@ munge_usgs.py:
   prop_obs_required: 0.05
 
   # timestep to aggregate to
-  # options: daily
-  agg_level: 'daily'
+  # options come from data offsets found here:
+  # https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html
+  agg_level: 'D'
 
   # list of parameters to keep in processed data
   params_to_process:
@@ -39,4 +40,61 @@ munge_usgs.py:
     - '00400' # pH, water, unfiltered, field, standard units
 
 munge_noaa_nos.py:
+  # choose where you want to read your data inputs from: local or S3
+  read_location: 'local'
+  # choose where you want to write your data outputs: local or S3
+  write_location: 'local'
+  # set name of AWS profile storing credentials for S3
+  aws_profile: 'dev'
+  # set AWS bucket to read/write to
+  s3_bucket: 'drb-estuary-salinity'
+
+  # determine which data flags we want to drop, by variable
+  # flags marked True will be dropped
+  flags_to_drop:
+    # (verified) Water Level Data Flags - in order of listing:
+    # (I) A flag that when set to 1 indicates that the water level value has been inferred
+    # (F) A flag that when set to 1 indicates that the flat tolerance limit was exceeded
+    # (R) A flag that when set to 1 indicates that the rate of change tolerance limit was exceeded
+    # (T) A flag that when set to 1 indicates that either the maximum or minimum expected water level height limit was exceeded
+    'water_level' : [False, True, True, True]
+    # Conductivity Data Flags - in order of listing:
+    # (X) A flag that when set to 1 indicates that the maximum expected conductivity was exceeded
+    # (N) A flag that when set to 1 indicates that the minimum expected conductivity was exceeded
+    # (R) A flag that when set to 1 indicates that the rate of change tolerance limit was exceeded
+    'conductivity': [True, True, True]
+    # Air pressure Data Flags - in order of listing:
+    # (X) A flag that when set to 1 indicates that the maximum expected conductivity was exceeded
+    # (N) A flag that when set to 1 indicates that the minimum expected conductivity was exceeded
+    # (R) A flag that when set to 1 indicates that the rate of change tolerance limit was exceeded
+    'air_pressure': [True, True, True]
+    # Air temperature Data Flags - in order of listing:
+    # (X) A flag that when set to 1 indicates that the maximum expected conductivity was exceeded
+    # (N) A flag that when set to 1 indicates that the minimum expected conductivity was exceeded
+    # (R) A flag that when set to 1 indicates that the rate of change tolerance limit was exceeded
+    #'air_temperature': [True, True, True]
+  # determine what QA/QC levels to drop
+  qa_to_drop:
+    - 'p' # preliminary
+    # - 'v' # verified
+
+  # number of measurements required to consider average valid
+  # we will assume that we need half of the timestep measurements
+  prop_obs_required: 0.05
+
+  # timestep to aggregate to
+  # options come from data offsets found here:
+  # https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html
+  agg_level: 'H'
   
+  butterworth_filter_params:
+    #filter order
+    order_butter: 6
+    # Duration to capture tide signal (hrs)
+    Cf: 32
+    # cutoff frequency
+    fc: 0.015625 # equal to (1/Cf)/2
+    # sample interval
+    fs: 10
+    # desired product to filter
+    product: 'water_level'
