@@ -140,12 +140,14 @@ def process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_v
     butterworth_df = butterworth_filter(combined_df, butterworth_filter_params)
 
     # save pre-processed data
-    data_outfile_csv = os.path.join('.', '02_munge',  'out','subdaily', f'noaa_nossubdaily_{site}.csv')
+    dir = os.path.join('.', '02_munge',  'out', agg_level)
+    if not os.path.exists(dir): os.mkdir(dir)
+    data_outfile_csv = os.path.join(dir, f'noaa_nos_{site}.csv')
     butterworth_df.to_csv(data_outfile_csv, index=True)
     
     if write_location == 'S3':
         print('uploading to s3')
-        s3_client.upload_file(data_outfile_csv, s3_bucket, '02_munge/out/'+os.path.basename(data_outfile_csv))
+        s3_client.upload_file(data_outfile_csv, s3_bucket, local_to_s3_pathname(data_outfile_csv))
         
     return butterworth_df
 
@@ -170,12 +172,14 @@ def extract_daily_tidal_data(hourly_tidal_data, site, read_location, write_locat
     
     # save pre-processed data
     print("processed site "+ site +" to daily time step")
-    data_outfile_csv = os.path.join('.', '02_munge', 'out', f'noaa_nos_{site}.csv')
+    dir = os.path.join('.', '02_munge',  'out', 'daily_summaries')
+    if not os.path.exists(dir): os.mkdir(dir)
+    data_outfile_csv = os.path.join(dir, f'noaa_nos_{site}.csv')
     daily_df.to_csv(data_outfile_csv, index=True)
     
     if write_location == 'S3':
         print('uploading to s3')
-        s3_client.upload_file(data_outfile_csv, s3_bucket, '02_munge/out/'+os.path.basename(data_outfile_csv))
+        s3_client.upload_file(data_outfile_csv, s3_bucket, local_to_s3_pathname(data_outfile_csv))
         
     return daily_df
 

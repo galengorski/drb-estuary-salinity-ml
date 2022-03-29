@@ -6,6 +6,7 @@ from dateutil.relativedelta import relativedelta
 import requests, json
 import utils
 import yaml
+
 def fetch_metadata(station_id, metadata_outfile, bucket, write_location, s3_client):
     '''fetch tides and currents metadata from NOAA NOS station'''
     metadata_url = f'https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/{station_id}/.json'
@@ -19,7 +20,7 @@ def fetch_metadata(station_id, metadata_outfile, bucket, write_location, s3_clie
     metadata.to_csv(metadata_outfile, index=False)
     if write_location == 'S3':
         print('uploading to s3')
-        s3_client.upload_file(metadata_outfile, bucket, '01_fetch/out/metadata/'+os.path.basename(metadata_outfile))
+        s3_client.upload_file(metadata_outfile, bucket, local_to_s3_pathname(metadata_outfile))
 
 def fetch_noaa_nos_data(start_year, end_year, datum, station_id, time_zone, products, units, file_format, data_outfile, bucket, write_location, s3_client):
     print(f'Fetching data for station {station_id}')
@@ -58,7 +59,7 @@ def fetch_noaa_nos_data(start_year, end_year, datum, station_id, time_zone, prod
             data_df.to_csv(data_outfile_formatted, index=False)
             if write_location == 'S3':
                 print('uploading to s3')
-                s3_client.upload_file(data_outfile_formatted, bucket, '01_fetch/out/'+os.path.basename(data_outfile_formatted))
+                s3_client.upload_file(data_outfile_formatted, bucket, local_to_s3_pathname(data_outfile_formatted))
             # delete the data_df before we move to the next product
             del data_df
         except:

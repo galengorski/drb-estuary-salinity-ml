@@ -37,7 +37,7 @@ def process_site_info_to_csv(raw_site_info_txt, site_info_outfile_csv,  s3_bucke
     site_info_df_subset.to_csv(site_info_outfile_csv, index=False)
     if write_location == 'S3':
         print('uploading to s3')
-        s3_client.upload_file(site_info_outfile_csv, s3_bucket, '01_fetch/out/metadata/'+os.path.basename(site_info_outfile_csv))
+        s3_client.upload_file(site_info_outfile_csv, s3_bucket, local_to_s3_pathname(site_info_outfile_csv))
 
     # get minimum date to pull for this site
     start_dt = site_info_df_subset[['begin_date']].min().values[0]
@@ -59,7 +59,7 @@ def process_params_to_csv(raw_params_txt, params_outfile_csv, write_location, bu
     params_df.to_csv(params_outfile_csv, index=False)
     if write_location == 'S3':
         print('uploading to s3')
-        s3_client.upload_file(params_outfile_csv, bucket, '01_fetch/out/metadata/'+os.path.basename(params_outfile_csv))
+        s3_client.upload_file(params_outfile_csv, bucket, local_to_s3_pathname(params_outfile_csv))
     return params_df
 
 def fetch_data(site_num, start_dt, end_dt, outfile, s3_bucket, write_location, s3_client):
@@ -69,7 +69,7 @@ def fetch_data(site_num, start_dt, end_dt, outfile, s3_bucket, write_location, s
     urllib.request.urlretrieve(data_url, outfile)
     if write_location == 'S3':
         print('uploading to s3')
-        s3_client.upload_file(outfile, s3_bucket, '01_fetch/out/'+os.path.basename(outfile))
+        s3_client.upload_file(outfile, s3_bucket, local_to_s3_pathname(outfile))
 
 def main():
     # import config

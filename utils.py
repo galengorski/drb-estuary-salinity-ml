@@ -43,3 +43,10 @@ def process_to_timestep(df, cols, agg_level, prop_obs_required):
     # only keep averages where we have enough measurements
     df.where(prop_df.gt(prop_obs_required), inplace=True)
     return df
+
+def local_to_s3_pathname(local_pathname):
+    '''
+    takes a local file path name and converts it to the
+    properly formatted s3 file path name
+    '''
+    return local_pathname.replace('.\\','').replace('\\', '/')
