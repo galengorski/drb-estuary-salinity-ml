@@ -77,3 +77,30 @@ fetch_noaa_nos.py:
 
   start_dt: '20190101'
   end_dt: '20191231'
+  
+fetch_COAWST_model.py:
+  #choose where you want to write your data outputs: local or S3
+  write_location: 'local'
+  #set name of AWS profile storing credentials for S3
+  aws_profile: 'dev'
+  #set AWS bucket to read/write to
+  s3_bucket: 'drb-estuary-salinity'
+  #set up AWS client
+  s3_client: utils.prep_write_location(write_location, aws_profile)
+  
+  #select COAWST model run
+  url: 'http://geoport.whoi.edu/thredds/dodsC/vortexfs1/usgs/users/scook/proj/DE_Bay/run07/run07C/ocean_deb_his_run07C_tsvar_00010.nc'
+  # Other model run options:
+  # Model Output with Subtidal Signal
+  # url: https://geoport.whoi.edu/thredds/catalog/vortexfs1/usgs/users/scook/proj/DE_Bay/run07/run07C/run07C_tide_subtidal/ocean_deb_his_run07C_tsvar_00010.
+  # Model Output with Waves - 
+  # url: https://geoport.whoi.edu/thredds/catalog/vortexfs1/usgs/users/scook/proj/DE_Bay/run07/run07C/run07C_waves/era5_2019/catalog.html?  dataset=vortexfs1/usgs/users/scook/proj/DE_Bay/run07/run07C/run07C_waves/era5_2019/ocean_deb_his_run07C_waves_tsvar_2019_00012.nc
+  
+  river_mile_coords_filepath: '/01_fetch/src/river_mile_coords.csv'
+  
+  model_run: 'only'
+  # model runs: 'waves', 'subtidal_signal'
+  
+  model_run_year: '2019'
+  
+  
