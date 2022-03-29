@@ -28,3 +28,18 @@ def usgs_nwis_param_code_to_name(code):
     # give it a shorter machine-readable name
     name = full_name.split(',')[0].replace(' ', '_').lower()
     return name
+
+def process_to_timestep(df, cols, agg_level, prop_obs_required):
+    '''
+    aggregate df to specified timestep
+    must have datetimes in a column named 'datetime'
+    '''
+    # get proportion of measurements available for timestep
+    expected_measurements = df.resample(agg_level, on='datetime').count().mode()[cols].loc[0]
+    observed_measurements = df.resample(agg_level, on='datetime').count()[cols].loc[:]
+    prop_df = observed_measurements / expected_measurements
+    # calculate averages for timestep
+    df = df.resample(agg_level, on='datetime').mean()
+    # only keep averages where we have enough measurements
+    df.where(prop_df.gt(prop_obs_required), inplace=True)
+    return df
