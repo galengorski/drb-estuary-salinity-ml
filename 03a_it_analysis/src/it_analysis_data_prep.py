@@ -54,35 +54,40 @@ def select_sources(srcs, date_start, date_end):
     date_start_pd = pd.to_datetime(date_start)
     date_end_pd = pd.to_datetime(date_end)
     
-    for file in os.listdir('02_munge/out/'):
-        if 'subdaily' in file:
-            continue
-        else:
-            #read each file
-            data = pd.read_csv('02_munge/out/'+file, parse_dates = True, index_col='datetime')
-            col_list = set(data.columns)
-            srcs_set = set(srcs)
-            #if the columns of the dataframe contain any of the entries in srcs
-            if len(col_list.intersection(srcs_set)) > 1: 
-                #select the columns that contain the entries in srcs
-                matches = list(col_list.intersection(srcs_set))
-                #subset those columns
-                data_col_select = data.loc[:,matches]
-                #this relies on a specific file naming structure, it appends the site name to the column header
-                data_col_select = data_col_select.add_suffix('_'+str(file.split('_')[2].split('.')[0]))
     
-                #make a copy to store for historical data
-                data_col_select_historical = data_col_select[:date_end_pd.date()].copy()
-                #store all the data in _historical for preprocessing
-                srcs_list_historical.append(data_col_select_historical)
-                #subset only the date range of interest
-                data_col_select = data_col_select[date_start_pd.date():date_end_pd.date()]
-                print(str(file)+' : Sources Found')
-                print(matches)
-                srcs_list.append(data_col_select)
-            else:
-                print(str(file)+' : No Data')
-                continue
+    files_to_read = []
+    for top,dirs,files in os.walk('02_munge/out/'):
+        if top == '02_munge/out/D' or top == '02_munge/out/daily_summaries':
+            files_to_read.extend([os.path.join(top,files) for files in files])
+
+    
+    
+    for file in files_to_read:
+        #read each file
+        data = pd.read_csv(file, parse_dates = True, index_col='datetime')
+        col_list = set(data.columns)
+        srcs_set = set(srcs)
+        #if the columns of the dataframe contain any of the entries in srcs
+        if len(col_list.intersection(srcs_set)) > 1: 
+            #select the columns that contain the entries in srcs
+            matches = list(col_list.intersection(srcs_set))
+            #subset those columns
+            data_col_select = data.loc[:,matches]
+            #this relies on a specific file naming structure, it appends the site name to the column header
+            data_col_select = data_col_select.add_suffix('_'+str(file.split('_')[-1].split('.')[0]))
+
+            #make a copy to store for historical data
+            data_col_select_historical = data_col_select[:date_end_pd.date()].copy()
+            #store all the data in _historical for preprocessing
+            srcs_list_historical.append(data_col_select_historical)
+            #subset only the date range of interest
+            data_col_select = data_col_select[date_start_pd.date():date_end_pd.date()]
+            print(str(file)+' : Sources Found')
+            print(matches)
+            srcs_list.append(data_col_select)
+        else:
+            print(str(file)+' : No Data')
+            continue
     return srcs_list, srcs_list_historical
     
 ###
@@ -210,7 +215,7 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
     and output is a list of dataframes of processed data'''
 
     #import config
-    with open("03_it_analysis/it_analysis_data_prep_config.yaml", 'r') as stream:
+    with open("03a_it_analysis/it_analysis_data_prep_config.yaml", 'r') as stream:
         config = yaml.safe_load(stream)['it_analysis_data_prep.py']['preprocess_steps']
     
     #get the functions of class pre_proc_func
@@ -322,7 +327,7 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
 ###
 def main():
     #import config
-    with open("03_it_analysis/it_analysis_data_prep_config.yaml", 'r') as stream:
+    with open("03a_it_analysis/it_analysis_data_prep_config.yaml", 'r') as stream:
         config = yaml.safe_load(stream)['it_analysis_data_prep.py']
     #select the sources
     srcs = config['srcs']

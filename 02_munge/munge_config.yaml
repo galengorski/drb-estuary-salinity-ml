@@ -108,10 +108,10 @@ fill_discharge_prms.py:
     destination: '02_munge/in/'
     fill_segments:
       trenton:
-        nwis_site: 01463500
+        nwis_site: '01463500'
         seg_id_nat: 1498
       schuylkill:
-        nwis_site: 01474500
+        nwis_site: '01474500'
         seg_id_nat: 2338
     
 
