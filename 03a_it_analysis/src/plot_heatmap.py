@@ -37,11 +37,11 @@ def plot_heatmap(matrix, mask_threshold, metric, date_start, date_end, save_loca
         
 def main():
     # import config from data prep step
-    with open("03_it_analysis/it_analysis_data_prep_config.yaml", 'r') as stream:
+    with open("03a_it_analysis/it_analysis_data_prep_config.yaml", 'r') as stream:
         config_data_prep = yaml.safe_load(stream)['it_analysis_data_prep.py']
     
     #import config file 
-    with open("03_it_analysis/plot_heatmap_config.yaml", 'r') as stream:
+    with open("03a_it_analysis/plot_heatmap_config.yaml", 'r') as stream:
         config = yaml.safe_load(stream)['plot_heatmap.py']
     
     date_start = config_data_prep['date_start']

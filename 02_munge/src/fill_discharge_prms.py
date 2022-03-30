@@ -20,11 +20,14 @@ def download_unzip_sb(sb_url, prms_predictions, destination):
     :prms_predictions: [str] specific file name 
     :destination: [str] where the file will be downloaded to'''
     
-    os.makedirs(destination, exist_ok=True)
-    sb = sciencebasepy.SbSession()
-    sb.download_file(sb_url, prms_predictions+'.zip', destination)
-    with zipfile.ZipFile(os.path.join(destination,prms_predictions+'.zip'), 'r') as zip_ref:
-        zip_ref.extractall(destination)
+    if os.path.exists(os.path.join(destination,prms_predictions+'.zip')):
+        print('File has already been downloaded')
+    else:
+        os.makedirs(destination, exist_ok=True)
+        sb = sciencebasepy.SbSession()
+        sb.download_file(sb_url, prms_predictions+'.zip', destination)
+        with zipfile.ZipFile(os.path.join(destination,prms_predictions+'.zip'), 'r') as zip_ref:
+            zip_ref.extractall(destination)
         
 
 
@@ -36,21 +39,21 @@ def fill_discharge_prms(fill_segments, destination, prms_predictions):
     
     sn_temp_data = pd.read_csv(os.path.join(destination,prms_predictions+'.csv'), parse_dates = True, index_col = 'date')
     
-for segment_details in fill_segments.values():
-    sn_temp_site = sn_temp_data[sn_temp_data['seg_id_nat'] == segment_details['seg_id_nat']]
-
-    nwis_data_path = os.path.join('02_munge', 'out', 'D', 'usgs_nwis_{}.csv'.format(segment_details['nwis_site']))
-    nwis_site_data = pd.read_csv(nwis_data_path, parse_dates = True, index_col = 'datetime')
-
-    #fill the gaps make sure to from cubic meters to cfs
-    nwis_site_data['filled'] = nwis_site_data['discharge'].fillna(sn_temp_site['seg_outflow']*35.315)
-
-    #drop the old discharge and rename filled as discharge
-    nwis_site_data = nwis_site_data.drop(columns = 'discharge')
-    nwis_site_data.rename(columns = {'filled':'discharge'}, inplace=True)
-
-    #write to dataframe
-    nwis_site_data.to_csv(nwis_data_path)
+    for segment_details in fill_segments.values():
+        sn_temp_site = sn_temp_data[sn_temp_data['seg_id_nat'] == segment_details['seg_id_nat']]
+    
+        nwis_data_path = os.path.join('02_munge', 'out', 'D', 'usgs_nwis_{}.csv'.format(segment_details['nwis_site']))
+        nwis_site_data = pd.read_csv(nwis_data_path, parse_dates = True, index_col = 'datetime')
+    
+        #fill the gaps make sure to from cubic meters to cfs
+        nwis_site_data['filled'] = nwis_site_data['discharge'].fillna(sn_temp_site['seg_outflow']*35.315)
+    
+        #drop the old discharge and rename filled as discharge
+        nwis_site_data = nwis_site_data.drop(columns = 'discharge')
+        nwis_site_data.rename(columns = {'filled':'discharge'}, inplace=True)
+    
+        #write to dataframe
+        nwis_site_data.to_csv(nwis_data_path)
 
 
 def main():

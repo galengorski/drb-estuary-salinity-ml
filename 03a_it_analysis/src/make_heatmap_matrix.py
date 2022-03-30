@@ -92,7 +92,7 @@ def create_mutual_information_matrix(srcs_lagged_pickle, snks_list_pickle ,out_d
 ###
 def main():
     # import config
-    with open("03_it_analysis/make_heatmap_matrix_config.yaml", 'r') as stream:
+    with open("03a_it_analysis/make_heatmap_matrix_config.yaml", 'r') as stream:
         config = yaml.safe_load(stream)['make_heatmap_matrix.py']
     
     #select the sources
