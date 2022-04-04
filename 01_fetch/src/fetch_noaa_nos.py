@@ -67,9 +67,13 @@ def fetch_noaa_nos_data(start_year, end_year, datum, station_id, time_zone, prod
 
 def main():
     # import config
-    with open("01_fetch/fetch_config.yaml", 'r') as stream:
+    with open("01_fetch/fetch_sites_config.yaml", 'r') as stream:
         config = yaml.safe_load(stream)['fetch_noaa_nos.py']
-        
+    with open("01_fetch/fetch_products_config.yaml", 'r') as stream:
+        config.update(yaml.safe_load(stream)['fetch_noaa_nos.py'])
+    with open("01_fetch/fetch_params_config.yaml", 'r') as stream:
+        config.update(yaml.safe_load(stream)['fetch_noaa_nos.py'])
+
     # set up write location data outputs
     write_location = config['write_location']
     s3_client = utils.prep_write_location(write_location, config['aws_profile'])
