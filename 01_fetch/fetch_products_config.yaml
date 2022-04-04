@@ -1,0 +1,12 @@
+fetch_usgs_products:
+
+fetch_noaa_nos_products:
+  # options: water_level, air_temperature, water_temperature, wind, air_pressure, air_gap, conductivity, visibility,
+  # humidity, salinity, hourly_height, high_low, daily_mean, monthly_mean, one_minute_water_level, predictions, datums,
+  # currents, and currents_predictions.
+  products:
+      - 'water_level'
+      - 'conductivity'
+      - 'predictions'
+      - 'air_pressure'
+      #- 'air_temperature'
