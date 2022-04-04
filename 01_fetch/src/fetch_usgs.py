@@ -59,7 +59,7 @@ def fetch_params(outfile):
     print('fetching parameter file and saving locally')
     urllib.request.urlretrieve(params_url, outfile)
 
-def process_params_to_csv(raw_params_txt, params_outfile_csv, write_location, bucket, s3_client):
+def process_params_to_csv(raw_params_txt, params_outfile_csv):
     '''process raw parameter text file into a csv file'''
     print('reading raw parameter data from local')
     params_df = pd.read_csv(raw_params_txt, comment='#', sep='\t', lineterminator='\n')
