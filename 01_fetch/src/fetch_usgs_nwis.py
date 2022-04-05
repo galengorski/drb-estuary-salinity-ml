@@ -6,7 +6,7 @@ import pandas as pd
 import utils
 
 # import config
-with open("01_fetch/fetch_params_config_usgs_nwis.yaml", 'r') as stream:
+with open("01_fetch/params_config_fetch_usgs_nwis.yaml", 'r') as stream:
     config = yaml.safe_load(stream)
 
 # set up write location data outputs
