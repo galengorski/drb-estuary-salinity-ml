@@ -1,4 +1,4 @@
-configfile: "01_fetch/fetch_config.yaml"
+configfile: "01_fetch/wildcards_fetch_config.yaml"
 #configfile: "02_munge/munge_config.yaml"
 #configfile: "03_it_analysis/it_analysis_data_prep_config.yaml"
 
