@@ -1,0 +1,11 @@
+# choose where you want to write your data outputs: local or S3
+write_location: 'local'
+# set name of AWS profile storing credentials for S3
+aws_profile: 'dev'
+# set AWS bucket to read/write to
+s3_bucket: 'drb-estuary-salinity'
+
+# start and end dates for data fetch
+# should be in the format 'YYYY-MM-DD'
+start_dt: '2000-01-01'
+end_dt: '2019-12-31'
