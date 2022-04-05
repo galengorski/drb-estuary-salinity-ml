@@ -8,7 +8,7 @@ import utils
 import yaml
 
 # import config
-with open("01_fetch/fetch_params_config_noaa_nos.yaml", 'r') as stream:
+with open("01_fetch/params_config_fetch_noaa_nos.yaml", 'r') as stream:
     config = yaml.safe_load(stream)
 
 # set up write location data outputs
