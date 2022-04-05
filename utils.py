@@ -50,3 +50,13 @@ def local_to_s3_pathname(local_pathname):
     properly formatted s3 file path name
     '''
     return local_pathname.replace('.\\','').replace('\\', '/')
+
+def get_datafile_list(read_location, s3_client=None, s3_bucket=None):
+    raw_datafiles = {}
+    if read_location=='S3':
+        raw_datafiles = [obj['Key'] for obj in s3_client.list_objects_v2(Bucket=s3_bucket, Prefix='01_fetch/out/usgs_nwis_0')['Contents']]
+    elif read_location=='local':
+        prefix = os.path.join('01_fetch', 'out')
+        file_prefix='usgs_nwis_0'
+        raw_datafiles = [os.path.join(prefix, f) for f in os.listdir(prefix) if f.startswith(file_prefix)]
+    return raw_datafiles

@@ -1,0 +1,39 @@
+# choose where you want to read your data inputs from: local or S3
+read_location: 'local'
+# choose where you want to write your data outputs: local or S3
+write_location: 'local'
+# set name of AWS profile storing credentials for S3
+aws_profile: 'dev'
+# set AWS bucket to read/write to
+s3_bucket: 'drb-estuary-salinity'
+
+# determine which data flags we want to drop
+flags_to_drop:
+  - 'e' # Value has been edited or estimated by USGS personnel and is write protected
+  - '&' # Value was computed from affected unit values
+  - 'E' # Value was computed from estimated unit values.
+  # - 'A' # Approved for publication -- Processing and review completed.
+  - 'P' # Provisional data subject to revision.
+  - '<' # The value is known to be less than reported value and is write protected.
+  - '>' # The value is known to be greater than reported value and is write protected.
+  - '1' # Value is write protected without any remark code to be printed
+  - '2' # Remark is write protected without any remark code to be printed
+
+# number of measurements required to consider average valid
+# we will assume that we need half of the timestep measurements
+prop_obs_required: 0.05
+
+# timestep to aggregate to
+# options come from data offsets found here:
+# https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html
+agg_level: 'D'
+
+# list of parameters to keep in processed data
+params_to_process:
+  - '00060' # Discharge, cubic feet per second
+  - '00065' # Gage height, feet
+  - '00095' # Specific conductance, water, unfiltered, microsiemens per centimeter at 25 degrees Celsius
+  - '00010' # Temperature, water, degrees Celsius
+  - '72279' # Tidal elevation, NOS-averaged, NAVD88, feet
+  - '63680' # Turbidity, water, unfiltered, monochrome near infra-red LED light, 780-900 nm, detection angle 90 +-2.5 degrees, formazin nephelometric units (FNU)
+  - '00400' # pH, water, unfiltered, field, standard units
