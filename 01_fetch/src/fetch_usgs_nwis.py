@@ -105,7 +105,7 @@ def fetch_single_site_data(site_num):
     fetch_data(site_num, start_dt, end_dt, data_outfile_txt)
 
 def fetch_all_sites_data():
-    with open("01_fetch/fetch_config.yaml", 'r') as stream:
+    with open("01_fetch/wildcards_fetch_config.yaml", 'r') as stream:
         site_ids = yaml.safe_load(stream)['fetch_usgs_nwis.py']['sites']
     for site_num in site_ids:
         fetch_single_site_data(site_num)
