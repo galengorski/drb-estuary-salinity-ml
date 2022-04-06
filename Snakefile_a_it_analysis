@@ -41,12 +41,16 @@ rule fetch_noaa_nos:
 rule munge_usgs_nwis:
     input:
         "02_munge/params_config_munge_usgs_nwis.yaml",
-        "01_fetch/out/usgs_nwis_{usgs_nwis_sites}.txt"
+        "01_fetch/out/usgs_nwis_{usgs_nwis_sites}.txt",
+        "02_munge/params_config_fill_discharge_prms.yaml",
     output:
         "02_munge/out/D/usgs_nwis_{usgs_nwis_sites}.csv"
     run:
         munge = importlib.import_module('02_munge.src.munge_usgs_nwis')
         munge.munge_single_site_data({wildcards.usgs_nwis_sites})
+        # fill discharge data with prms data
+        fill = importlib.import_module('02_munge.src.fill_discharge_prms')
+        fill.fill_single_site_data({wildcards.usgs_nwis_sites})
 
 rule munge_noaa_nos:
     input:

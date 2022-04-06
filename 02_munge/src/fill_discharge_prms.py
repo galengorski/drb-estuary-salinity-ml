@@ -11,9 +11,6 @@ import sciencebasepy
 import yaml
 import zipfile
 
-
-
-
 def download_unzip_sb(sb_url, prms_predictions, destination):
     '''downloads prms predictions of discharge from science base data release: https://www.sciencebase.gov/catalog/item/5f6a289982ce38aaa2449135
     :sb_url: [str] url for downloading zip file
@@ -31,7 +28,7 @@ def download_unzip_sb(sb_url, prms_predictions, destination):
         
 
 
-def fill_discharge_prms(fill_segments, destination, prms_predictions):
+def fill_discharge_prms(site_num, fill_segment_crosswalk, destination, prms_predictions):
     '''reads in prms predictions of discharge and fills nan gaps for trenton and schuylkill nwis time series
     :fill_segments: [dict] dictionary of sites to fill data for; each site in the dictionary contains 'nwis_site' (nwis site number) and 'seg_id_nat' (segment id closest to discharge location)
     :destination: [str] directory where prms data file is located
@@ -39,35 +36,43 @@ def fill_discharge_prms(fill_segments, destination, prms_predictions):
     
     sn_temp_data = pd.read_csv(os.path.join(destination,prms_predictions+'.csv'), parse_dates = True, index_col = 'date')
     
-    for segment_details in fill_segments.values():
-        sn_temp_site = sn_temp_data[sn_temp_data['seg_id_nat'] == segment_details['seg_id_nat']]
+    sn_temp_site = sn_temp_data[sn_temp_data['seg_id_nat'] == fill_segment_crosswalk[site_num]]
     
-        nwis_data_path = os.path.join('02_munge', 'out', 'D', 'usgs_nwis_{}.csv'.format(segment_details['nwis_site']))
-        nwis_site_data = pd.read_csv(nwis_data_path, parse_dates = True, index_col = 'datetime')
+    nwis_data_path = os.path.join('02_munge', 'out', 'D', 'usgs_nwis_{}.csv'.format(site_num))
+    nwis_site_data = pd.read_csv(nwis_data_path, parse_dates = True, index_col = 'datetime')
     
-        #fill the gaps make sure to from cubic meters to cfs
-        nwis_site_data['filled'] = nwis_site_data['discharge'].fillna(sn_temp_site['seg_outflow']*35.315)
+    #fill the gaps make sure to from cubic meters to cfs
+    nwis_site_data['filled'] = nwis_site_data['discharge'].fillna(sn_temp_site['seg_outflow']*35.315)
     
-        #drop the old discharge and rename filled as discharge
-        nwis_site_data = nwis_site_data.drop(columns = 'discharge')
-        nwis_site_data.rename(columns = {'filled':'discharge'}, inplace=True)
+    #drop the old discharge and rename filled as discharge
+    nwis_site_data = nwis_site_data.drop(columns = 'discharge')
+    nwis_site_data.rename(columns = {'filled':'discharge'}, inplace=True)
     
-        #write to dataframe
-        nwis_site_data.to_csv(nwis_data_path)
+    #write to dataframe
+    nwis_site_data.to_csv(nwis_data_path)
 
 
-def main():
+def fill_single_site_data(site_num):
     # import config
-    with open("02_munge/munge_config.yaml", 'r') as stream:
-        config = yaml.safe_load(stream)['fill_discharge_prms.py']
+    with open("02_munge/params_config_fill_discharge_prms.yaml", 'r') as stream:
+        config = yaml.safe_load(stream)
     
     sb_url = config['sb_url']
     prms_predictions = config['prms_predictions']
     destination = config['destination']
-    fill_segments = config['fill_segments']
+    fill_segment_crosswalk = config['fill_segments']
     
-    download_unzip_sb(sb_url, prms_predictions, destination)
-    fill_discharge_prms(fill_segments, destination, prms_predictions)
+    # if we don't already have sntemp data, download it
+    if f'{prms_predictions}.csv' not in os.listdir(destination):
+        download_unzip_sb(sb_url, prms_predictions, destination)
+
+    fill_discharge_prms(site_num, fill_segment_crosswalk, destination, prms_predictions)
+
+def fill_all_sites_data():
+    with open("01_fetch/wildcards_fetch_config.yaml", 'r') as stream:
+        site_ids = yaml.safe_load(stream)['fetch_usgs_nwis.py']['sites']
+    for site_num in site_ids:
+        fill_single_site_data(site_num)
 
 if __name__ == '__main__':
-    main()
+    fill_all_sites_data()
