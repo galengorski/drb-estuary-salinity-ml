@@ -11,6 +11,10 @@ import sciencebasepy
 import yaml
 import zipfile
 
+# import config
+with open("02_munge/params_config_fill_discharge_prms.yaml", 'r') as stream:
+    config = yaml.safe_load(stream)
+
 def download_unzip_sb(sb_url, prms_predictions, destination):
     '''downloads prms predictions of discharge from science base data release: https://www.sciencebase.gov/catalog/item/5f6a289982ce38aaa2449135
     :sb_url: [str] url for downloading zip file
@@ -53,9 +57,9 @@ def fill_discharge_prms(site_num, fill_segment_crosswalk, destination, prms_pred
 
 
 def fill_single_site_data(site_num):
-    # import config
-    with open("02_munge/params_config_fill_discharge_prms.yaml", 'r') as stream:
-        config = yaml.safe_load(stream)
+    # site data comes in from snakemake as a set, get single value from set
+    if type(site_num)==set:
+        site_num = list(site_num)[0]
     
     sb_url = config['sb_url']
     prms_predictions = config['prms_predictions']
