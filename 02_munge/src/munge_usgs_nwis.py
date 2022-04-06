@@ -5,15 +5,17 @@ import re
 import yaml
 import utils
 
-def get_datafile_list(read_location, s3_client=None, s3_bucket=None):
-    raw_datafiles = {}
-    if read_location=='S3':
-        raw_datafiles = [obj['Key'] for obj in s3_client.list_objects_v2(Bucket=s3_bucket, Prefix='01_fetch/out/usgs_nwis_0')['Contents']]
-    elif read_location=='local':
-        prefix = os.path.join('01_fetch', 'out')
-        file_prefix='usgs_nwis_0'
-        raw_datafiles = [os.path.join(prefix, f) for f in os.listdir(prefix) if f.startswith(file_prefix)]
-    return raw_datafiles
+# import config
+with open("02_munge/params_config_munge_usgs_nwis.yaml", 'r') as stream:
+    config = yaml.safe_load(stream)
+
+# check where to read data inputs from
+read_location = config['read_location']
+
+# set up write location data outputs
+write_location = config['write_location']
+s3_client = utils.prep_write_location(write_location, config['aws_profile'])
+s3_bucket = config['s3_bucket']
 
 def param_code_to_name(df, params_df):
     for col in df.columns:
@@ -27,7 +29,7 @@ def param_code_to_name(df, params_df):
         df.rename(columns={col: name}, inplace=True)
     return df 
 
-def read_data(raw_datafile, read_location, s3_bucket):
+def read_data(raw_datafile):
     if read_location == 'local':
         print(f'reading data from local: {raw_datafile}')
         # read in raw data as pandas df
@@ -39,7 +41,7 @@ def read_data(raw_datafile, read_location, s3_bucket):
         df = pd.read_csv(obj.get("Body"), comment='#', sep='\t', lineterminator='\n', low_memory=False)
     return df
 
-def process_data_to_csv(raw_datafile, params_to_process, params_df, flags_to_drop, agg_level, prop_obs_required, read_location, write_location, s3_bucket, s3_client):
+def process_data_to_csv(raw_datafile, params_to_process, params_df, flags_to_drop, agg_level, prop_obs_required, read_location):
     '''
     process raw data text files into clean csvs, including:
         dropping unwanted flags
@@ -48,7 +50,7 @@ def process_data_to_csv(raw_datafile, params_to_process, params_df, flags_to_dro
         removing metadata columns so that only datetime and data columns remain 
     '''
     # read in data file
-    df = read_data(raw_datafile, read_location, s3_bucket)
+    df = read_data(raw_datafile)
     
     print(f'processing and saving locally')
     # drop first row which does not contain useful headers or data
@@ -92,24 +94,13 @@ def process_data_to_csv(raw_datafile, params_to_process, params_df, flags_to_dro
         print('uploading to s3')
         s3_client.upload_file(data_outfile_csv, s3_bucket, local_to_s3_pathname(data_outfile_csv))
 
-def main():
-    # import config
-    with open("02_munge/munge_config.yaml", 'r') as stream:
-        config = yaml.safe_load(stream)['munge_usgs.py']
-
-    # check where to read data inputs from
-    read_location = config['read_location']
-
-    # set up write location data outputs
-    write_location = config['write_location']
-    s3_client = utils.prep_write_location(write_location, config['aws_profile'])
-    s3_bucket = config['s3_bucket']
-
+def munge_single_site_data(site_num):
+    # site data comes in from snakemake as a set, get single value from set
+    if type(site_num)==set:
+        site_num = list(site_num)[0]
     # read parameter data into df
     params_df = pd.read_csv(os.path.join('.', '01_fetch', 'out', 'metadata', 'usgs_nwis_params.csv'), dtype={"parm_cd":"string"})
 
-    # get list of raw data files to process
-    raw_datafiles = get_datafile_list(read_location, s3_client, s3_bucket)
     # determine which data flags we want to drop
     flags_to_drop = config['flags_to_drop']
     # determine which parameters we want to keep
@@ -119,8 +110,14 @@ def main():
     # timestep to aggregate to
     agg_level = config['agg_level']
     # process raw data files into csv
-    for raw_datafile in raw_datafiles:
-        process_data_to_csv(raw_datafile, params_to_process, params_df, flags_to_drop, agg_level, prop_obs_required, read_location, write_location, s3_bucket, s3_client)
+    raw_datafile = os.path.join('01_fetch', 'out', f'usgs_nwis_{site_num}.txt')
+    process_data_to_csv(raw_datafile, params_to_process, params_df, flags_to_drop, agg_level, prop_obs_required, read_location)
+
+def munge_all_sites_data():
+    with open("01_fetch/wildcards_fetch_config.yaml", 'r') as stream:
+        site_ids = yaml.safe_load(stream)['fetch_usgs_nwis.py']['sites']
+    for site_num in site_ids:
+        munge_single_site_data(site_num)
 
 if __name__ == '__main__':
-    main()
+    munge_all_sites_data()

@@ -6,19 +6,29 @@ import yaml
 import utils
 from scipy import signal
 
-def get_datafile_list(station_ids, read_location, s3_client=None, s3_bucket=None):
+# import config
+with open("02_munge/params_config_munge_noaa_nos.yaml", 'r') as stream:
+    config = yaml.safe_load(stream)
+
+# check where to read data inputs from
+read_location = config['read_location']
+
+# set up write location data outputs
+write_location = config['write_location']
+s3_client = utils.prep_write_location(write_location, config['aws_profile'])
+s3_bucket = config['s3_bucket']
+
+def get_datafile_list(station_id, read_location, s3_client=None, s3_bucket=None):
     raw_datafiles = {}
     if read_location=='S3':
-        for station_id in station_ids:
-            raw_datafiles[station_id] = [obj['Key'] for obj in s3_client.list_objects_v2(Bucket=s3_bucket, Prefix=f'01_fetch/out/noaa_nos_{station_id}')['Contents']]
+        raw_datafiles = [obj['Key'] for obj in s3_client.list_objects_v2(Bucket=s3_bucket, Prefix=f'01_fetch/out/noaa_nos_{station_id}')['Contents']]
     elif read_location=='local':
         prefix = os.path.join('01_fetch', 'out')
-        for station_id in station_ids:
-            file_prefix=f'noaa_nos_{station_id}'
-            raw_datafiles[station_id] = [os.path.join(prefix, f) for f in os.listdir(prefix) if f.startswith(file_prefix)]
+        file_prefix=f'noaa_nos_{station_id}'
+        raw_datafiles = [os.path.join(prefix, f) for f in os.listdir(prefix) if f.startswith(file_prefix)]
     return raw_datafiles
 
-def read_data(raw_datafile, read_location, s3_client, s3_bucket):
+def read_data(raw_datafile):
     if read_location == 'local':
         print(f'reading data from local: {raw_datafile}')
         # read in raw data as pandas df
@@ -73,7 +83,7 @@ def butterworth_filter(df, butterworth_filter_params):
     df.loc[x.notnull(), prod+'_filtered'] = x_signal
     return df
 
-def process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_var, agg_level, prop_obs_required, read_location, write_location, s3_bucket, s3_client, butterworth_filter_params):
+def process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_var, agg_level, prop_obs_required, butterworth_filter_params):
     '''
     process raw data text files into clean csvs, including:
         dropping unwanted flags
@@ -84,8 +94,11 @@ def process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_v
     print(f'processing and saving locally')
     combined_df = pd.DataFrame(columns=['datetime'])
     for raw_datafile in site_raw_datafiles:
-        # read in data file
-        df = read_data(raw_datafile, read_location, s3_client, s3_bucket)
+        # read in data file (unless it is empty)
+        try:
+            df = read_data(raw_datafile)
+        except pd.errors.EmptyDataError:
+            continue
     
         # if there is a SD column, drop it
         if 's' in df.columns:
@@ -151,7 +164,7 @@ def process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_v
         
     return butterworth_df
 
-def extract_daily_tidal_data(hourly_tidal_data, site, read_location, write_location, s3_bucket, s3_client):
+def extract_daily_tidal_data(hourly_tidal_data, site):
     #calling it datetime to match other data sources, it is just the date
     hourly_tidal_data['datetime'] = hourly_tidal_data.index.date
     hourly_tidal_data['obs_pred'] = hourly_tidal_data['water_level'] - hourly_tidal_data['predictions']
@@ -184,24 +197,10 @@ def extract_daily_tidal_data(hourly_tidal_data, site, read_location, write_locat
     return daily_df
 
 
-def main():
-    # import config
-    with open("02_munge/munge_config.yaml", 'r') as stream:
-        config = yaml.safe_load(stream)['munge_noaa_nos.py']
-
-    # check where to read data inputs from
-    read_location = config['read_location']
-
-    # set up write location data outputs
-    write_location = config['write_location']
-    s3_client = utils.prep_write_location(write_location, config['aws_profile'])
-    s3_bucket = config['s3_bucket']
-
-    # get list of raw data files to process, by site
-    with open("01_fetch/fetch_config.yaml", 'r') as stream:
-        station_ids = yaml.safe_load(stream)['fetch_noaa_nos.py']['station_ids']
-    raw_datafiles = get_datafile_list(station_ids, read_location, s3_client, s3_bucket)
-    
+def munge_single_site_data(site_num):
+    # site data comes in from snakemake as a set, get single value from set
+    if type(site_num)==set:
+        site_num = list(site_num)[0] 
     # determine which data flags we want to drop
     flags_to_drop_by_var = config['flags_to_drop']
     # determine which QA/QC levels we want to drop
@@ -214,12 +213,18 @@ def main():
     # butterworth filter parameters
     butterworth_filter_params = config['butterworth_filter_params']
     # process raw data files into csv
-    for site, site_raw_datafiles in raw_datafiles.items():
-        if bool(site_raw_datafiles):
-            df = process_data_to_csv(site, site_raw_datafiles, qa_to_drop, flags_to_drop_by_var, agg_level, prop_obs_required, read_location, write_location, s3_bucket, s3_client, butterworth_filter_params)
-            daily_df = extract_daily_tidal_data(df, site, read_location, write_location, s3_bucket, s3_client)
-        else:
-            print('no data in 01_fetch/out/ for site '+ site)
+    site_raw_datafiles = get_datafile_list(site_num, read_location=read_location)
+    if bool(site_raw_datafiles):
+        df = process_data_to_csv(site_num, site_raw_datafiles, qa_to_drop, flags_to_drop_by_var, agg_level, prop_obs_required, butterworth_filter_params)
+        daily_df = extract_daily_tidal_data(df, site_num)
+    else:
+        print('no data in 01_fetch/out/ for site '+ site_num)
+
+def munge_all_sites_data():
+    with open("01_fetch/wildcards_fetch_config.yaml", 'r') as stream:
+        site_ids = yaml.safe_load(stream)['fetch_noaa_nos.py']['sites']
+    for site_num in site_ids:
+        munge_single_site_data(site_num)
 
 if __name__ == '__main__':
-    main()
+    munge_all_sites_data()

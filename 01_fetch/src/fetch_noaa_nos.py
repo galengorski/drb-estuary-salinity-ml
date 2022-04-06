@@ -8,7 +8,7 @@ import utils
 import yaml
 
 # import config
-with open("01_fetch/fetch_params_config_noaa_nos.yaml", 'r') as stream:
+with open("01_fetch/params_config_fetch_noaa_nos.yaml", 'r') as stream:
     config = yaml.safe_load(stream)
 
 # set up write location data outputs
@@ -81,6 +81,8 @@ def fetch_site_metadata_file(station_id):
     fetch_metadata(station_id, metadata_outfile)
 
 def fetch_single_site_data(station_id, product):
+    print(station_id)
+    print(product)
     # site data comes in from snakemake as a set, get single value from set
     if type(station_id)==set:
         station_id = list(station_id)[0]
@@ -99,7 +101,7 @@ def fetch_single_site_data(station_id, product):
     fetch_noaa_nos_data(station_id, product, start_year, end_year, datum, time_zone, units, file_format, data_outfile)
 
 def fetch_all_sites_data():
-    with open("01_fetch/fetch_config.yaml", 'r') as stream:
+    with open("01_fetch/wildcards_fetch_config.yaml", 'r') as stream:
         site_product_config = yaml.safe_load(stream)['fetch_noaa_nos.py']
     site_ids = site_product_config['sites']
     products = site_product_config['products']

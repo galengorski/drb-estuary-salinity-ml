@@ -12,32 +12,9 @@ import pickle
 import yaml
 import utils
 
-
-###
-def download_s3_to_local(s3_dir_prefix, local_outdir, file_id):
-    '''download data files from s3 bucket to local machine for development
-    file_id - a file identifier substring that is contained within all 
-    the file names you want to download. For example 'usgs_nwis' will 
-    download all files with 'usgs_nwis' in the file name'''
-    
-    # assumes we are using a credential profile names 'dev'
-    write_location = 'local'
-    aws_profile = 'dev'
-    s3_client = utils.prep_write_location(write_location, aws_profile)
-    # end the name of the bucket you want to read/write to:
-    s3_bucket = 'drb-estuary-salinity'
-    
-    # create the output file directory on your local
-    os.makedirs(local_outdir, exist_ok=True)
-
-    # loop through all objects with this prefix that contain .csv and file_id and download
-    for obj in s3_client.list_objects_v2(Bucket=s3_bucket, Prefix=s3_dir_prefix)['Contents']:
-        s3_fpath = obj['Key']
-        if ".csv" and file_id not in s3_fpath:
-            continue
-        local_fpath = os.path.join(local_outdir,obj['Key'].split('/')[2])
-        s3_client.download_file(s3_bucket, s3_fpath, local_fpath)
-        print(s3_fpath+' Downloaded to local')
+#import config
+with open("03a_it_analysis/params_config_it_analysis_data_prep.yaml", 'r') as stream:
+    config = yaml.safe_load(stream)['it_analysis_data_prep.py']
 
 ###
 def select_sources(srcs, date_start, date_end):
@@ -105,7 +82,7 @@ def select_sinks(snks, date_start, date_end):
     date_end_pd = pd.to_datetime(date_end)
 
     #read in the salt front record
-    sf_loc = pd.read_csv('methods_exploration/data/salt_front_extended_feb22.csv', parse_dates = True, index_col = 'datetime')
+    sf_loc = pd.read_csv(os.path.join('03a_it_analysis', 'in', 'saltfront.csv'), parse_dates = True, index_col = 'datetime')
     sf_loc.index = sf_loc.index.date
     sf_loc.index = pd.to_datetime(sf_loc.index)
     #make a copy for historical
@@ -214,9 +191,8 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
     inputs and outputs that are structurally identical. Input is a list of dataframes of 'raw' data
     and output is a list of dataframes of processed data'''
 
-    #import config
-    with open("03a_it_analysis/it_analysis_data_prep_config.yaml", 'r') as stream:
-        config = yaml.safe_load(stream)['it_analysis_data_prep.py']['preprocess_steps']
+    #import preprocessing steps from config
+    preprocess_config = config['preprocess_steps']
     
     #get the functions of class pre_proc_func
     ppf = globals()['pre_proc_func']()
@@ -225,17 +201,17 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
     os.makedirs(out_dir+'preprocess_plots', exist_ok=True)
     
     #make empty dictionary to store processed data, one entry for each metric
-    processed_dict = dict.fromkeys(config.keys())
+    processed_dict = dict.fromkeys(preprocess_config.keys())
     
     #for each metric
-    for n_metric, metric in enumerate(config.keys()):
+    for n_metric, metric in enumerate(preprocess_config.keys()):
         #print(n_metric, metric)
         
         #select the steps for the sources and sinks        
         if source_sink == 'sources':
-            pre_process_steps = config[metric]['sources']
+            pre_process_steps = preprocess_config[metric]['sources']
         else:
-            pre_process_steps = config[metric]['sinks']
+            pre_process_steps = preprocess_config[metric]['sinks']
     
         #make new empty list of processed source data
         data_proc_list = []
@@ -326,9 +302,6 @@ def apply_preprocessing_functions(var_list, var_list_historical, source_sink, ou
 
 ###
 def main():
-    #import config
-    with open("03a_it_analysis/it_analysis_data_prep_config.yaml", 'r') as stream:
-        config = yaml.safe_load(stream)['it_analysis_data_prep.py']
     #select the sources
     srcs = config['srcs']
     #select the sinks
