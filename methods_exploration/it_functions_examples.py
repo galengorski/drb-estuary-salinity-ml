@@ -238,7 +238,7 @@ def gen_plot_logistic_it_mi(ndata, e):
     ax1.set_xlabel('Time lag')
     ax1.set_ylabel('MI as a fraction of H(y)', color='dodgerblue')
     ax2.set_ylabel('Pearson correlation', color='red')
-    fig.suptitle('Transfer entropy | number of data points = '+str(ndata) + ' | noise = '+ str(e))
+    fig.suptitle('Mutual information | number of data points = '+str(ndata) + ' | noise = '+ str(e))
     # Solution for having two legends
     leg = mi_p +micrit_p + corr_p
     labs = [l.get_label() for l in leg]
@@ -276,7 +276,7 @@ def gen_plot_periodic_it_mi(ndata, cc1, cc2, cc3, cc4, e):
     ax1.set_xlabel('Time lag')
     ax1.set_ylabel('MI as a fraction of H(y)', color='dodgerblue')
     ax2.set_ylabel('Pearson correlation', color='red')
-    fig.suptitle('Transfer entropy | number of data points = '+str(ndata) + ' | noise = '+ str(e))
+    fig.suptitle('Mutual information | number of data points = '+str(ndata) + ' | noise = '+ str(e))
     # Solution for having two legends
     leg = mi_p +micrit_p + corr_p
     labs = [l.get_label() for l in leg]

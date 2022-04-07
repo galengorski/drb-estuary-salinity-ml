@@ -26,6 +26,61 @@ from scipy.stats.stats import pearsonr
 
 #M = np.stack((x1,y), axis = 1)
 #%%
+class pre_proc_func:
+    def __init__(self):
+        pass
+
+    def log10(self, sr):
+        l10 = np.log10(sr+1e-6)
+        return l10
+    
+    def standardize(self, sr):
+        standardized = (sr - np.nanmean(sr))/np.nanstd(sr, ddof = 1)
+        return standardized
+        # standardized = list()
+        # for i in range(len(sr)):
+        #     #standardize
+        #     value_z = (sr[i] - np.nanmean(sr))/np.nanstd(sr, ddof = 1)
+        #     standardized.append(value_z)
+        # return standardized
+
+    def normalize(self, sr):
+        normalized = list()
+        for i in range(len(sr)):
+            #normalize
+            value_z = (sr[i]-np.nanmin(sr))/(np.nanmax(sr)-np.nanmin(sr))
+            normalized.append(value_z)
+        return normalized
+    
+    def anomaly(self, sr):
+        anomaly = list()
+        for i in range(len(sr)):
+            value_z = (sr[i] - np.nanmean(sr))
+            anomaly.append(value_z)
+        return anomaly
+
+    def remove_seasonal_signal(self, sr):
+        #calculate doy for sr
+        sr_doy = sr.index.strftime('%j')
+        #convert sr_historical to df
+        sr_historical_df = sr.to_frame().copy()
+        #calculate doy
+        sr_historical_df['doy'] = list(sr.index.strftime('%j'))
+        #calculate the doy means
+        doy_means = sr_historical_df.groupby('doy').mean()
+        #convert the index (doy) to int64
+        doy_means.index = doy_means.index.astype('int64')
+        
+        seasonal_removed = list()
+        for i in range(len(sr)):
+            doy = int(sr_doy[i])
+            doy_mean = doy_means.loc[doy]
+            value = sr.iloc[i]-doy_mean[0]
+            seasonal_removed.append(value)
+        return seasonal_removed
+    
+    
+
 def calc2Dpdf(M,nbins = 11):
     '''calculates the 3 pdfs, one for x, one for y and a joint pdf for x and y 
     M: a numpy array of shape (nobs, 2) where nobs is the number of observations
@@ -222,7 +277,7 @@ def calcTE_crit(M, shift, nbins = 11, alpha = 0.05, numiter = 1000, ncores = 2):
     TEcrit = TEss[math.ceil((1-alpha)*numiter)] 
     return(TEcrit)
 
-def calc_it_metrics(M, Mswap, n_lags, nbins = 11, alpha = 0.01):
+def calc_it_metrics(M, Mswap, n_lags, calc_swap = True, nbins = 11, alpha = 0.01):
     MI = []
     MIcrit = []
     corr = []
@@ -235,23 +290,24 @@ def calc_it_metrics(M, Mswap, n_lags, nbins = 11, alpha = 0.01):
         M_lagged = lag_data(M,shift = i)
         #remove any rows where there is an nan value
         M_short =  M_lagged[~np.isnan(M_lagged).any(axis=1)]
-        MItemp = calcMI(M_short[:,(0,1)])
+        MItemp = calcMI(M_short[:,(0,1)], nbins = nbins)
         MI.append(MItemp)
-        MIcrittemp = calcMI_crit(M_short[:,(0,1)], ncores = 8, alpha = 0.01)
+        MIcrittemp = calcMI_crit(M_short[:,(0,1)], nbins = nbins, ncores = 8, alpha = 0.01)
         MIcrit.append(MIcrittemp)
         
         corrtemp = pearsonr(M_short[:,0], M_short[:,1])[0]
         corr.append(corrtemp)
         
-        TEtemp = calcTE(M, shift = i)
+        TEtemp = calcTE(M, shift = i, nbins = nbins)
         TE.append(TEtemp)
-        TEcrittemp = calcTE_crit(M, shift = i, ncores = 8, alpha = 0.01)
+        TEcrittemp = calcTE_crit(M, shift = i, nbins = nbins, ncores = 8, alpha = 0.01)
         TEcrit.append(TEcrittemp)
         
-        TEtempswap = calcTE(Mswap, shift = i)
-        TEswap.append(TEtempswap)
-        TEcrittempswap = calcTE_crit(Mswap, shift = i, ncores = 8, alpha = 0.01)
-        TEcritswap.append(TEcrittempswap)
+        if calc_swap:
+            TEtempswap = calcTE(Mswap, shift = i)
+            TEswap.append(TEtempswap)
+            TEcrittempswap = calcTE_crit(Mswap, shift = i, nbins = nbins, ncores = 8, alpha = 0.01)
+            TEcritswap.append(TEcrittempswap)
         
     it_metrics = {'MI':MI, 'MIcrit':MIcrit,
                   'TE':TE, 'TEcrit':TEcrit,
