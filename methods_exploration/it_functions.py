@@ -18,15 +18,9 @@ import numpy as np
 from scipy.stats.stats import pearsonr
 
 #%%
-#used for some testing
-#x1 = np.random.rand(10)
-#x2 = np.random.rand(10)
-#x3 = [1400, 1500, 1600, np.nan, np.nan, np.nan ,1700, 700, 430, 650]
-#y = x1+x2
-
-#M = np.stack((x1,y), axis = 1)
-#%%
 class pre_proc_func:
+    '''this class of functions preprocesses the data to remove unwanted signals
+    and prepare the data for information theory calculations'''
     def __init__(self):
         pass
 
@@ -37,26 +31,13 @@ class pre_proc_func:
     def standardize(self, sr):
         standardized = (sr - np.nanmean(sr))/np.nanstd(sr, ddof = 1)
         return standardized
-        # standardized = list()
-        # for i in range(len(sr)):
-        #     #standardize
-        #     value_z = (sr[i] - np.nanmean(sr))/np.nanstd(sr, ddof = 1)
-        #     standardized.append(value_z)
-        # return standardized
 
     def normalize(self, sr):
-        normalized = list()
-        for i in range(len(sr)):
-            #normalize
-            value_z = (sr[i]-np.nanmin(sr))/(np.nanmax(sr)-np.nanmin(sr))
-            normalized.append(value_z)
+        normalized = (sr-np.nanmin(sr))/(np.nanmax(sr)-np.nanmin(sr))
         return normalized
     
     def anomaly(self, sr):
-        anomaly = list()
-        for i in range(len(sr)):
-            value_z = (sr[i] - np.nanmean(sr))
-            anomaly.append(value_z)
+        anomaly = sr - np.nanmean(sr)
         return anomaly
 
     def remove_seasonal_signal(self, sr):
@@ -172,7 +153,7 @@ def calcMI_crit(M, nbins = 11, alpha = 0.05, numiter = 1000, ncores = 2):
     the second column is the sink.
     nbins: is the number of bins used for estimating the pdf with a default of 11
     the mutual information is normalized by the entropy of the sink
-    alpha: sigficance threshold, default = 0.05
+    alpha: significance threshold, default = 0.05
     numiter: number of iterations, default = 1000
     ncores: number of cores, default = 2'''
     
@@ -267,7 +248,7 @@ def calcTE_crit(M, shift, nbins = 11, alpha = 0.05, numiter = 1000, ncores = 2):
     shift: time lag that should be considered
     nbins: is the number of bins used for estimating the pdf with a default of 11
     the transfer entropy is normalized by the entropy of the sink
-    alpha: sigficance threshold, default = 0.05
+    alpha: significance threshold, default = 0.05
     numiter: number of iterations, default = 1000
     ncores: number of cores, default = 2'''
     
@@ -278,6 +259,20 @@ def calcTE_crit(M, shift, nbins = 11, alpha = 0.05, numiter = 1000, ncores = 2):
     return(TEcrit)
 
 def calc_it_metrics(M, Mswap, n_lags, calc_swap = True, nbins = 11, alpha = 0.01):
+    '''wrapper function for calculating mutual information and transfer entropy 
+    (for both x -> y and y -> x) across a range of time lags. It also calculates
+    a significance threshold for mutual information and transfer entropy using the 
+    shuffled surrogate method
+    M: a numpy array of shape (nobs, 2) where nobs is the number of observations
+    this assumes that the data are arrange such that the first column is the source and
+    the second column is the sink.
+    Mswap: a numpy array identical to M except the two columns have been swapped
+    n_lags: number of time lag that should be considered, will calculate from 0-n_lags
+    nbins: is the number of bins used for estimating the pdf with a default of 11
+    the transfer entropy is normalized by the entropy of the sink
+    alpha: significance threshold, default = 0.05
+    '''
+    
     MI = []
     MIcrit = []
     corr = []
