@@ -15,6 +15,7 @@ These functions were developed borrowing code and ideas from:
 from joblib import Parallel, delayed
 import math
 import numpy as np
+from scipy.stats.stats import pearsonr
 
 #%%
 #used for some testing
@@ -221,3 +222,40 @@ def calcTE_crit(M, shift, nbins = 11, alpha = 0.05, numiter = 1000, ncores = 2):
     TEcrit = TEss[math.ceil((1-alpha)*numiter)] 
     return(TEcrit)
 
+def calc_it_metrics(M, Mswap, n_lags, nbins = 11, alpha = 0.01):
+    MI = []
+    MIcrit = []
+    corr = []
+    TE = []
+    TEcrit = []
+    TEswap = []
+    TEcritswap = []
+    for i in range(1,n_lags):
+        #lag data
+        M_lagged = lag_data(M,shift = i)
+        #remove any rows where there is an nan value
+        M_short =  M_lagged[~np.isnan(M_lagged).any(axis=1)]
+        MItemp = calcMI(M_short[:,(0,1)])
+        MI.append(MItemp)
+        MIcrittemp = calcMI_crit(M_short[:,(0,1)], ncores = 8, alpha = 0.01)
+        MIcrit.append(MIcrittemp)
+        
+        corrtemp = pearsonr(M_short[:,0], M_short[:,1])[0]
+        corr.append(corrtemp)
+        
+        TEtemp = calcTE(M, shift = i)
+        TE.append(TEtemp)
+        TEcrittemp = calcTE_crit(M, shift = i, ncores = 8, alpha = 0.01)
+        TEcrit.append(TEcrittemp)
+        
+        TEtempswap = calcTE(Mswap, shift = i)
+        TEswap.append(TEtempswap)
+        TEcrittempswap = calcTE_crit(Mswap, shift = i, ncores = 8, alpha = 0.01)
+        TEcritswap.append(TEcrittempswap)
+        
+    it_metrics = {'MI':MI, 'MIcrit':MIcrit,
+                  'TE':TE, 'TEcrit':TEcrit,
+                  'TEswap':TEswap, 'TEcritswap':TEcritswap,
+                  'corr':corr}
+    
+    return it_metrics

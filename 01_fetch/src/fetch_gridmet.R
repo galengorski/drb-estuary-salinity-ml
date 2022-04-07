@@ -33,8 +33,8 @@ long = c(-75.119,
          -75.56861)
 
 site = c('lewes',
-         'ben_franklin',
-         'reedy_island_jetty')
+         'benfranklin',
+         'reedyisland')
 
 df <- data.frame(site = site, lat = lat, long = long)
 sites_sf <- st_as_sf(df, coords = c("long","lat"), crs = 4326, agr = "constant")
@@ -46,5 +46,5 @@ for(i in 1:3){
     mutate(wspdir = -1*wind_vel*cos(wind_dir*(pi/180))) %>%
     mutate(datetime = date) %>%
     dplyr::select(datetime, prcp, tmax, tmin, wspdir) %>%
-    write_csv('01_fetch/out/gridmet_',site[i],'.csv')
+    write_csv(paste0('01_fetch/out/gridmet_',site[i],'.csv'))
 }
