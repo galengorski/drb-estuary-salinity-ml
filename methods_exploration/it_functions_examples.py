@@ -135,7 +135,7 @@ def calc_it_metrics(M, Mswap, n_lags, calc_swap = True, nbins = 11, alpha = 0.01
     TEcrit = []
     TEswap = []
     TEcritswap = []
-    for i in range(1,n_lags):
+    for i in range(0,n_lags):
         #lag data
         M_lagged = it_functions.lag_data(M,shift = i)
         #remove any rows where there is an nan value
@@ -168,11 +168,11 @@ def calc_it_metrics(M, Mswap, n_lags, calc_swap = True, nbins = 11, alpha = 0.01
     
 #%%
 def plot_te(n_lags, it_metrics, plot_swap = True):
-    plt.plot(range(1,n_lags),it_metrics['TE'], color='#0077b6', marker='o', linewidth=2, markersize=5, label = 'TE x -> y')
-    plt.plot(range(1,n_lags),it_metrics['TEcrit'], color = '#00b4d8', linewidth=1, linestyle='dashed', label = 'TE critical x -> y')
+    plt.plot(range(0,n_lags),it_metrics['TE'], color='#0077b6', marker='o', linewidth=2, markersize=5, label = 'TE x -> y')
+    plt.plot(range(0,n_lags),it_metrics['TEcrit'], color = '#00b4d8', linewidth=1, linestyle='dashed', label = 'TE critical x -> y')
     if plot_swap:
-        plt.plot(range(1,n_lags),it_metrics['TEswap'], color='#ff5400', marker='o', linewidth=2, markersize=5, label = 'TE y -> x')
-        plt.plot(range(1,n_lags),it_metrics['TEcritswap'], color = '#ff9e00', linewidth=1, linestyle='dashed', label = 'TE critical y -> x')
+        plt.plot(range(0,n_lags),it_metrics['TEswap'], color='#ff5400', marker='o', linewidth=2, markersize=5, label = 'TE y -> x')
+        plt.plot(range(0,n_lags),it_metrics['TEcritswap'], color = '#ff9e00', linewidth=1, linestyle='dashed', label = 'TE critical y -> x')
     plt.xlabel('Time lag')
     plt.ylabel('TE as a fraction of H(y)')
     plt.title('Transfer entropy')
@@ -183,9 +183,9 @@ def plot_mi_corr(n_lags, it_metrics):
     fig, ax1 = plt.subplots()
 
     ax2 = ax1.twinx()
-    mi_p = ax1.plot(range(1,n_lags),it_metrics['MI'], color='dodgerblue', marker='o', linewidth=2, markersize=5, label = 'MI')
-    micrit_p = ax1.plot(range(1,n_lags),it_metrics['MIcrit'], color = 'lightskyblue', linewidth=2, linestyle='dashed', label = 'MI critical')
-    corr_p = ax2.plot(range(1,n_lags),it_metrics['corr'], color='red', marker='o', linewidth=2, markersize=5, label = 'Pearson correlation')
+    mi_p = ax1.plot(range(0,n_lags),it_metrics['MI'], color='dodgerblue', marker='o', linewidth=2, markersize=5, label = 'MI')
+    micrit_p = ax1.plot(range(0,n_lags),it_metrics['MIcrit'], color = 'lightskyblue', linewidth=2, linestyle='dashed', label = 'MI critical')
+    corr_p = ax2.plot(range(0,n_lags),it_metrics['corr'], color='red', marker='o', linewidth=2, markersize=5, label = 'Pearson correlation')
     ax1.set_xlabel('Time lag')
     ax1.set_ylabel('MI as a fraction of H(y)', color='dodgerblue')
     ax2.set_ylabel('Pearson correlation', color='red')
@@ -211,11 +211,11 @@ def gen_plot_logistic_it_te(ndata, e):
     calc_swap = True
     M, Mswap = generate_logistic_data(ndata, growth, lag, e)
     it_dict = calc_it_metrics(M,Mswap, n_lags_plot ,calc_swap)
-    plt.plot(range(1,n_lags_plot),it_dict['TE'], color='#0077b6', marker='o', linewidth=2, markersize=5, label = 'TE x -> y')
-    plt.plot(range(1,n_lags_plot),it_dict['TEcrit'], color = '#00b4d8', linewidth=1, linestyle='dashed', label = 'TE critical x -> y')
+    plt.plot(range(0,n_lags_plot),it_dict['TE'], color='#0077b6', marker='o', linewidth=2, markersize=5, label = 'TE x -> y')
+    plt.plot(range(0,n_lags_plot),it_dict['TEcrit'], color = '#00b4d8', linewidth=1, linestyle='dashed', label = 'TE critical x -> y')
     if calc_swap:
-        plt.plot(range(1,n_lags_plot),it_dict['TEswap'], color='#ff5400', marker='o', linewidth=2, markersize=5, label = 'TE y -> x')
-        plt.plot(range(1,n_lags_plot),it_dict['TEcritswap'], color = '#ff9e00', linewidth=1, linestyle='dashed', label = 'TE critical y -> x')
+        plt.plot(range(0,n_lags_plot),it_dict['TEswap'], color='#ff5400', marker='o', linewidth=2, markersize=5, label = 'TE y -> x')
+        plt.plot(range(0,n_lags_plot),it_dict['TEcritswap'], color = '#ff9e00', linewidth=1, linestyle='dashed', label = 'TE critical y -> x')
     plt.xlabel('Time lag')
     plt.ylabel('TE as a fraction of H(y)')
     plt.title('Transfer entropy | number of data points = '+str(ndata) + ' | noise = '+ str(e))
@@ -232,9 +232,9 @@ def gen_plot_logistic_it_mi(ndata, e):
     fig, ax1 = plt.subplots()
 
     ax2 = ax1.twinx()
-    mi_p = ax1.plot(range(1,n_lags_plot),it_dict['MI'], color='dodgerblue', marker='o', linewidth=2, markersize=5, label = 'MI')
-    micrit_p = ax1.plot(range(1,n_lags_plot),it_dict['MIcrit'], color = 'lightskyblue', linewidth=2, linestyle='dashed', label = 'MI critical')
-    corr_p = ax2.plot(range(1,n_lags_plot),it_dict['corr'], color='red', marker='o', linewidth=2, markersize=5, label = 'Pearson correlation')
+    mi_p = ax1.plot(range(0,n_lags_plot),it_dict['MI'], color='dodgerblue', marker='o', linewidth=2, markersize=5, label = 'MI')
+    micrit_p = ax1.plot(range(0,n_lags_plot),it_dict['MIcrit'], color = 'lightskyblue', linewidth=2, linestyle='dashed', label = 'MI critical')
+    corr_p = ax2.plot(range(0,n_lags_plot),it_dict['corr'], color='red', marker='o', linewidth=2, markersize=5, label = 'Pearson correlation')
     ax1.set_xlabel('Time lag')
     ax1.set_ylabel('MI as a fraction of H(y)', color='dodgerblue')
     ax2.set_ylabel('Pearson correlation', color='red')
@@ -250,11 +250,11 @@ def gen_plot_periodic_it_te(ndata, cc1, cc2, cc3, cc4, e):
     calc_swap = True
     M, Mswap = generate_periodic_data(ndata, cc1, cc2, cc3, cc4, e)
     it_dict = calc_it_metrics(M,Mswap, n_lags_plot ,calc_swap)
-    plt.plot(range(1,n_lags_plot),it_dict['TE'], color='#0077b6', marker='o', linewidth=2, markersize=5, label = 'TE x -> y')
-    plt.plot(range(1,n_lags_plot),it_dict['TEcrit'], color = '#00b4d8', linewidth=1, linestyle='dashed', label = 'TE critical x -> y')
+    plt.plot(range(0,n_lags_plot),it_dict['TE'], color='#0077b6', marker='o', linewidth=2, markersize=5, label = 'TE x -> y')
+    plt.plot(range(0,n_lags_plot),it_dict['TEcrit'], color = '#00b4d8', linewidth=1, linestyle='dashed', label = 'TE critical x -> y')
     if calc_swap:
-        plt.plot(range(1,n_lags_plot),it_dict['TEswap'], color='#ff5400', marker='o', linewidth=2, markersize=5, label = 'TE y -> x')
-        plt.plot(range(1,n_lags_plot),it_dict['TEcritswap'], color = '#ff9e00', linewidth=1, linestyle='dashed', label = 'TE critical y -> x')
+        plt.plot(range(0,n_lags_plot),it_dict['TEswap'], color='#ff5400', marker='o', linewidth=2, markersize=5, label = 'TE y -> x')
+        plt.plot(range(0,n_lags_plot),it_dict['TEcritswap'], color = '#ff9e00', linewidth=1, linestyle='dashed', label = 'TE critical y -> x')
     plt.xlabel('Time lag')
     plt.ylabel('TE as a fraction of H(y)')
     plt.title('Transfer entropy | number of data points = '+str(ndata) + ' | noise = '+ str(e))
@@ -270,9 +270,9 @@ def gen_plot_periodic_it_mi(ndata, cc1, cc2, cc3, cc4, e):
     fig, ax1 = plt.subplots()
 
     ax2 = ax1.twinx()
-    mi_p = ax1.plot(range(1,n_lags_plot),it_dict['MI'], color='dodgerblue', marker='o', linewidth=2, markersize=5, label = 'MI')
-    micrit_p = ax1.plot(range(1,n_lags_plot),it_dict['MIcrit'], color = 'lightskyblue', linewidth=2, linestyle='dashed', label = 'MI critical')
-    corr_p = ax2.plot(range(1,n_lags_plot),it_dict['corr'], color='red', marker='o', linewidth=2, markersize=5, label = 'Pearson correlation')
+    mi_p = ax1.plot(range(0,n_lags_plot),it_dict['MI'], color='dodgerblue', marker='o', linewidth=2, markersize=5, label = 'MI')
+    micrit_p = ax1.plot(range(0,n_lags_plot),it_dict['MIcrit'], color = 'lightskyblue', linewidth=2, linestyle='dashed', label = 'MI critical')
+    corr_p = ax2.plot(range(0,n_lags_plot),it_dict['corr'], color='red', marker='o', linewidth=2, markersize=5, label = 'Pearson correlation')
     ax1.set_xlabel('Time lag')
     ax1.set_ylabel('MI as a fraction of H(y)', color='dodgerblue')
     ax2.set_ylabel('Pearson correlation', color='red')

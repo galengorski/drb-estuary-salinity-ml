@@ -170,19 +170,19 @@ def lag_data(M, shift):
     the second column is the sink.
     shift: the number of time steps you want to lag the sink by, must be a positive integer
     returns M_lagged of dimensions [length(M)-shift, 3]
-    M_lagged[,1] = source_lagged: source[1:n-shift]
+    M_lagged[,1] = source_lagged: source[0:n-shift]
     M_lagged[,2] = sink_unlagged: sink[shift:n]
-    M_lagged[,3] = sink_lagged: sink[1:n-shift]
-    => H(Xt-T, Yt, Yt-T)'''
+    M_lagged[,3] = sink_lagged: sink[1:n-1]
+    => H(Xt-T, Yt, Yt-1)'''
     
     length_M = M.shape[0]
     cols_M = M.shape[1]
-    newlength_M = length_M - shift 
+    newlength_M = length_M - shift - 1
     M_lagged = np.nan*np.ones([newlength_M, cols_M+1]) 
     
-    M_lagged[:,0] = M[0:(length_M-shift), 0]
-    M_lagged[:,1] = M[shift:(length_M),1]
-    M_lagged[:,2] = M[0:(length_M-shift),1]
+    M_lagged[:,0] = M[1:(length_M-shift), 0]
+    M_lagged[:,1] = M[shift+1:(length_M),1]
+    M_lagged[:,2] = M[(shift):(length_M-1),1]
     return M_lagged
 
 def calcTE(M, shift, nbins = 11):
@@ -280,7 +280,7 @@ def calc_it_metrics(M, Mswap, n_lags, calc_swap = True, nbins = 11, alpha = 0.01
     TEcrit = []
     TEswap = []
     TEcritswap = []
-    for i in range(1,n_lags):
+    for i in range(0,n_lags):
         #lag data
         M_lagged = lag_data(M,shift = i)
         #remove any rows where there is an nan value
