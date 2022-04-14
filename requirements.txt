@@ -15,3 +15,13 @@ ipympl
 plotly
 seaborn
 utils
+netCDF4
+h5netcdf
+scipy
+pydap
+zarr
+fsspec
+cftime
+rasterio
+cfgrib
+pooch 
