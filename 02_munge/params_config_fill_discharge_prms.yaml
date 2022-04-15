@@ -4,10 +4,11 @@ sb_url: 'https://www.sciencebase.gov/catalog/file/get/5f6a289982ce38aaa2449135?f
 prms_predictions: 'sntemp_inputs_outputs_drb'
 #destination to write
 destination: '02_munge/in/'
+
+# define crosswalk between nwis site and sntemp data
+# 'nwis_site': sntemp_seg_id_nat
 fill_segments:
-  trenton:
-    nwis_site: '01463500'
-    seg_id_nat: 1498
-  schuylkill:
-    nwis_site: '01474500'
-    seg_id_nat: 2338
+  # trenton
+  '01463500': 1498
+  # schuylkill
+  '01474500': 2338
