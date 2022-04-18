@@ -106,7 +106,7 @@ it_analysis_data_prep.py:
     #number of lags to analyze
     n_lags: 0
     #where to write the sinks and lagged sources as binary pickle files
-    out_dir: '03_it_analysis/out/'
+    out_dir: '03a_it_analysis/out/'
     #should preprocessing plots be saved
     plot: True
     

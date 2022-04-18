@@ -1,0 +1,69 @@
+import importlib
+
+configfile: "01_fetch/wildcards_fetch_config.yaml"
+
+usgs_nwis_sites = config["fetch_usgs_nwis.py"]["sites"]
+noaa_nos_sites = config["fetch_noaa_nos.py"]["sites"]
+noaa_nos_products = config["fetch_noaa_nos.py"]["products"]
+
+wildcard_constraints:
+    noaa_nos_sites="\d+"
+
+rule all_fetch_munge:
+    input:
+        "03a_it_analysis/out/srcs_proc_lagged",
+        "03a_it_analysis/out/snks_proc",
+        expand("01_fetch/out/usgs_nwis_{sites}.txt", sites = usgs_nwis_sites),
+        expand("01_fetch/out/noaa_nos_{noaa_nos_sites}_{noaa_nos_products}.csv", noaa_nos_sites = noaa_nos_sites, noaa_nos_products = noaa_nos_products)
+        
+rule fetch_usgs_nwis:
+    input:
+        "01_fetch/params_config_fetch_usgs_nwis.yaml"
+    output:
+        "01_fetch/out/usgs_nwis_{usgs_nwis_sites}.txt"
+    run:
+        fetch = importlib.import_module('01_fetch.src.fetch_usgs_nwis')
+        fetch.fetch_single_site_data({wildcards.usgs_nwis_sites})
+        fetch.fetch_param_file()
+
+rule fetch_noaa_nos:
+   input:
+      "01_fetch/params_config_fetch_noaa_nos.yaml"
+   output:
+       "01_fetch/out/noaa_nos_{noaa_nos_sites}_{noaa_nos_products}.csv"
+   run:
+        fetch = importlib.import_module('01_fetch.src.fetch_noaa_nos')
+        fetch.fetch_single_site_data({wildcards.noaa_nos_sites}, {wildcards.noaa_nos_products})
+        fetch.fetch_site_metadata_file({wildcards.noaa_nos_sites})
+
+# rule fetch_noaa_nerrs:
+
+rule munge_usgs_nwis:
+    input:
+        "02_munge/params_config_munge_usgs_nwis.yaml",
+        "01_fetch/out/usgs_nwis_{usgs_nwis_sites}.txt",
+        "02_munge/params_config_fill_discharge_prms.yaml",
+    output:
+        "02_munge/out/D/usgs_nwis_{usgs_nwis_sites}.csv"
+    run:
+        munge = importlib.import_module('02_munge.src.munge_usgs_nwis')
+        munge.munge_single_site_data({wildcards.usgs_nwis_sites})
+        # fill discharge data with prms data
+        fill = importlib.import_module('02_munge.src.fill_discharge_prms')
+        fill.fill_single_site_data({wildcards.usgs_nwis_sites})
+
+rule munge_noaa_nos:
+    input:
+        "02_munge/params_config_munge_noaa_nos.yaml",
+        expand("01_fetch/out/noaa_nos_{noaa_nos_site}_{noaa_nos_product}.csv", noaa_nos_site = noaa_nos_sites, noaa_nos_product=noaa_nos_products)
+    output:
+        "02_munge/out/H/noaa_nos_{noaa_nos_sites}.csv",
+        "02_munge/out/daily_summaries/noaa_nos_{noaa_nos_sites}.csv"
+    run:
+        munge = importlib.import_module('02_munge.src.munge_noaa_nos')
+        munge.munge_single_site_data({wildcards.noaa_nos_sites})
+
+# rule munge_noaa_nerrs:
+
+# rule fill_discharge_prms:
+

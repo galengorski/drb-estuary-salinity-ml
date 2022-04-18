@@ -60,7 +60,7 @@ def download_s3_to_local(s3_dir_prefix, local_outdir, file_id):
     # assumes we are using a credential profile names 'dev'
     write_location = 'local'
     aws_profile = 'dev'
-    s3_client = utils.prep_write_location(write_location, aws_profile)
+    s3_client = prep_write_location(write_location, aws_profile)
     # end the name of the bucket you want to read/write to:
     s3_bucket = 'drb-estuary-salinity'
     

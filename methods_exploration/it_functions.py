@@ -51,15 +51,16 @@ class pre_proc_func:
         doy_means = sr_historical_df.groupby('doy').mean()
         #convert the index (doy) to int64
         doy_means.index = doy_means.index.astype('int64')
-        
         seasonal_removed = list()
         for i in range(len(sr)):
-            doy = int(sr_doy[i])
-            doy_mean = doy_means.loc[doy]
-            value = sr.iloc[i]-doy_mean[0]
-            seasonal_removed.append(value)
+            if math.isnan(sr[i]):
+                seasonal_removed.append(np.nan)
+            else:
+                doy = int(sr_doy[i])
+                doy_mean = doy_means.loc[doy]
+                value = sr.iloc[i]-doy_mean[0]
+                seasonal_removed.append(value)
         return seasonal_removed
-    
     
 
 def calc2Dpdf(M,nbins):

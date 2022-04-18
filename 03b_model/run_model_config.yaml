@@ -1,0 +1,50 @@
+data_prep.py:
+    all_srcs: 
+        - 'discharge'
+        - 'specific_conductance'
+        - 'prcp'
+        - 'tmax'
+        - 'tmin'
+        - 'wspdir'
+        - 'wl_range'
+        - 'wl_max'
+        - 'wl_range'
+        - 'wl_filtered'
+        - 'conductivity'
+        - 'air_pressure'
+    #the sinks to be analyzed, this will likely be the salt front location
+    snks:
+        - 'saltfront_daily'
+
+    source_loc: '03_it_analysis/out/srcs_proc_lagged'
+    sink_loc: '03_it_analysis/out/snks_proc'
+    out_dir: '04_model/out/'
+    run: 'Run_00'
+        
+    sourc_vars: ['discharge_01463500', 
+                    'specific_conductance_01463500',
+                    'discharge_01474500', 
+                    'specific_conductance_01474500', 
+                    'wl_max_min_lewes','wl_max_lewes','wl_obs_pred_lewes','wl_filtered_lewes','conductivity_lewes',
+                    'wl_max_min_capemay','wl_max_capemay','wl_obs_pred_capemay','wl_filtered_capemay','conductivity_capemay',
+                    'prcp_lewes', 'tmax_lewes', 'tmin_lewes', 'wspdir_lewes', 
+                    'prcp_benfranklin','tmax_benfranklin', 'tmin_benfranklin', 'wspdir_benfranklin', 
+                    'prcp_reedyislandjetty', 'tmax_reedyislandjetty', 'tmin_reedyislandjetty', 'wspdir_reedyislandjetty']
+
+    #select the split dates
+    train_start_date: '2000-01-01'
+    train_end_date: '2011-04-01'
+    val_start_date: '2011-04-02'
+    val_end_date: '2015-12-31'
+    test_start_date: '2016-01-01'
+    test_end_date: '2019-12-31'
+    
+    #model parameters
+    seq_len: 365
+    hidden_units: 10
+    n_epochs_pre: 250
+    learn_rate_pre: 0.001
+    recur_dropout: 0.25
+    dropout: 0.25
+     
+
