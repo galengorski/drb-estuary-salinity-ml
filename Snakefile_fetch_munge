@@ -7,15 +7,17 @@ noaa_nos_sites = config["fetch_noaa_nos.py"]["sites"]
 noaa_nos_products = config["fetch_noaa_nos.py"]["products"]
 
 wildcard_constraints:
-    noaa_nos_sites="\d+"
+    noaa_nos_sites="\d+",
+    noaa_nerrs_years="\d+"
 
 rule all_fetch_munge:
     input:
         "03a_it_analysis/out/srcs_proc_lagged",
         "03a_it_analysis/out/snks_proc",
         expand("01_fetch/out/usgs_nwis_{sites}.txt", sites = usgs_nwis_sites),
-        expand("01_fetch/out/noaa_nos_{noaa_nos_sites}_{noaa_nos_products}.csv", noaa_nos_sites = noaa_nos_sites, noaa_nos_products = noaa_nos_products)
-        
+        expand("01_fetch/out/noaa_nos_{noaa_nos_sites}_{noaa_nos_products}.csv", noaa_nos_sites = noaa_nos_sites, noaa_nos_products = noaa_nos_products),
+        "02_munge/out/D/noaa_nerrs_delsjmet.csv",
+
 rule fetch_usgs_nwis:
     input:
         "01_fetch/params_config_fetch_usgs_nwis.yaml"
@@ -65,12 +67,12 @@ rule munge_noaa_nos:
 
 rule munge_noaa_nerrs:
     input:
-        "01_fetch/out/noaa_nos_delsjmet_{noaa_nos_years}.csv"
+        expand("01_fetch/out/noaa_nerrs_delsjmet_{years}.csv", years=[2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022])
     output:
-        "02_munge/out/D/noaa_nerrs_{noaa_nerrs_sites}.csv",
+        "02_munge/out/D/noaa_nerrs_delsjmet.csv",
     run:
         munge = importlib.import_module('02_munge.src.munge_noaa_nerrs')
-        munge.munge_single_site_data({wildcards.noaa_nerrs_sites})
+        munge.munge_single_site_data('delsjmet')
 
 # rule fill_discharge_prms:
 
