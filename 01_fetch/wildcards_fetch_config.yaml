@@ -35,3 +35,7 @@ fetch_noaa_nos.py:
     - 'predictions'
     - 'air_pressure'
     #- 'air_temperature'
+
+fetch_noaa_nerrs.py:
+  sites:
+    - 'delsjmet'

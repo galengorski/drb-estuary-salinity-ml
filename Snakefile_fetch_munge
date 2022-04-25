@@ -63,7 +63,14 @@ rule munge_noaa_nos:
         munge = importlib.import_module('02_munge.src.munge_noaa_nos')
         munge.munge_single_site_data({wildcards.noaa_nos_sites})
 
-# rule munge_noaa_nerrs:
+rule munge_noaa_nerrs:
+    input:
+        "01_fetch/out/noaa_nos_delsjmet_{noaa_nos_years}.csv"
+    output:
+        "02_munge/out/D/noaa_nerrs_{noaa_nerrs_sites}.csv",
+    run:
+        munge = importlib.import_module('02_munge.src.munge_noaa_nerrs')
+        munge.munge_single_site_data({wildcards.noaa_nerrs_sites})
 
 # rule fill_discharge_prms:
 
