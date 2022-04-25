@@ -7,9 +7,7 @@ noaa_nos_sites = config["fetch_noaa_nos.py"]["sites"]
 noaa_nos_products = config["fetch_noaa_nos.py"]["products"]
 
 wildcard_constraints:
-    noaa_nos_sites="\d+",
-    noaa_nerrs_years="\d+"
-
+    noaa_nos_sites="\d+"
 rule all_fetch_munge:
     input:
         "03a_it_analysis/out/srcs_proc_lagged",
