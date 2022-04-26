@@ -1,5 +1,5 @@
 #choose where you want to read your data inputs from: local or S3
-read_location: 'local'
+read_location: 'S3'
 #choose where you want to write your data outputs: local or S3
 write_location: 'local'
 #set name of AWS profile storing credentials for S3
