@@ -1,0 +1,61 @@
+#choose where you want to read your data inputs from: local or S3
+read_location: 'local'
+#choose where you want to write your data outputs: local or S3
+write_location: 'local'
+#set name of AWS profile storing credentials for S3
+aws_profile: 'dev'
+#set AWS bucket to read/write to
+s3_bucket: 'drb-estuary-salinity'
+
+# dictionary of variables to process, and what we 
+# want to rename those columns to:
+# options:
+# 'ATemp', 'F_ATemp', 'RH', 'BP', 'WSpd', 'MaxWSpd',
+# 'MaxWSpdT', 'Wdir', 'SDWDir', 'TotPAR',
+# 'TotPrcp', 'TotSoRad', 
+vars: {'DatetimeStamp': 'datetime',
+        'ATemp': 'temperature',
+        'BP': 'air_pressure',
+        'WSpd': 'wind_speed',
+        'Wdir': 'wind_direction',
+        'TotPrcp': 'precipitation'
+        }
+
+# flag values
+# -5 Outside high sensor range
+# -4 Outside low sensor range
+# -3 Data rejected due to QA/QC
+# -2 Missing data
+# -1 Optional parameter not collected
+# 0 Passed initial QAQC checks
+# 1 Suspect data
+# 2 Reserved for future use*
+# 3 Calculated data: non-vented depth/level sensor correction for changes in barometric pressure*
+# 4 Historical: Pre-auto QA/QC
+# 5 Corrected data
+# note: 2 and 3 Flags were used in 2007 and 2008 to designate data that were outside 
+# 2 and 3 standard deviations from the historical seasonal mean. This automated check 
+#has since been discontinued and the 2 and 3 flags applied to the data during this time 
+# are being removed from the dataset as the data are authenticated.
+flags_to_drop: ['<-5>', '<-4>', '<-3>', '<-2>', '<-1>', '<1>']
+
+
+col_values_accepted:
+    # The values in the historical and provisional plus columns of the exported data indicate what stage of QAQC the data are in. There are three QAQC stages reported: 
+    # Provisional data have been through an automated flagging process (primary QAQC) only and have not been checked by the Reserve. The automated flagging process currently flags data that are out of sensor range or missing. Provisional data are indicated with a value of 0 in the provisional plus column.
+    # Provisional plus data have been reviewed by the Reserve staff (secondary QAQC) using Excel macros to further QAQC the data. Provisional plus data are indicated with a value of 1 in the provisional plus column. 
+    # Authenticated data have been through final tertiary review at the CDMO and are posted as the final authoritative data. Authenticated data are indicated with a value of 1 in the historical column. A value of 0 in the historical column indicates that the data have not been through final QAQC by the CDMO, and could be either provisional or provisional plus data.
+    Historical: [1]
+    ProvisionalPlus: [0,1]
+    # drop daily and hourly averages because they are redundant to 15 min data
+    # later years have only the 15 min data
+    Frequency: [15]
+
+# number of measurements required to consider average valid
+# we will assume that we need half of the timestep measurements
+prop_obs_required: 0.05
+
+# timestep to aggregate to
+# options come from data offsets found here:
+# https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html
+agg_level: 'D'
