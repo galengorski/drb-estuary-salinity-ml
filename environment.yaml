@@ -8,10 +8,8 @@ dependencies:
   - joblib
   - matplotlib
   - yaml
-  - anaconda
   - boto3
   - tqdm
-  - spyder-notebook
   - snakemake-minimal
   - ca-certificates
   - certifi
@@ -23,7 +21,12 @@ dependencies:
   - torchaudio
   - ipympl
   - plotly=5.5.0
+  - spyder
+  - scipy
+  - zarr
+  - lz4
+  - seaborn
   - xarray=0.20.1
   - pip:
     - netcdf4==1.5.8
-prefix: C:\Users\ggorski\Miniconda3\envs\drb_estuary_salinity
+

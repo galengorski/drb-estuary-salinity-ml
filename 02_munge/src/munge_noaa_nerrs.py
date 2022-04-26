@@ -38,6 +38,28 @@ def read_data(raw_datafile):
         df = pd.read_csv(obj.get("Body"))
     return df
 
+def fill_gaps(x):
+    '''fills any data gaps in the middle of the input series
+    using linear interpolation; returns gap-filled time series
+    '''
+    #find nans
+    bd = np.isnan(x)
+
+    #early exit if there are no nans  
+    if not bd.any():
+        return x
+
+    #find nonnans index numbers
+    gd = np.flatnonzero(~bd)
+
+    #ignore leading and trailing nans
+    bd[:gd.min()]=False
+    bd[(gd.max()+1):]=False
+
+    #interpolate nans
+    x[bd] = np.interp(np.flatnonzero(bd),gd,x[gd])
+    return x
+
 def process_data_to_csv(site, site_raw_datafiles, column_mapping, flags_to_drop, agg_level, prop_obs_required):
     '''
     process raw data text files into clean csvs, including:
@@ -84,6 +106,14 @@ def process_data_to_csv(site, site_raw_datafiles, column_mapping, flags_to_drop,
 
     # drop any columns with no data
     combined_df.dropna(axis=1, how='all', inplace=True)
+    
+    #fill gaps in temperature, air pressure, wind speed and wind direction
+    # all < 0.5 %, precipitation has more like 10% missing so we won't fill that
+    combined_df['temperature'] = fill_gaps(combined_df['temperature'])
+    combined_df['air_pressure'] = fill_gaps(combined_df['air_pressure'])
+    combined_df['wind_speed'] = fill_gaps(combined_df['wind_speed'])
+    combined_df['wind_direction'] = fill_gaps(combined_df['wind_direction'])
+    combined_df['wind_speed_direction'] = -1*combined_df['wind_speed']*np.cos(combined_df['wind_direction']*(np.pi/180))
 
     # save pre-processed data
     data_outfile_csv = os.path.join('.', '02_munge', 'out', agg_level, 'noaa_nerrs_delsjmet.csv')
@@ -91,7 +121,7 @@ def process_data_to_csv(site, site_raw_datafiles, column_mapping, flags_to_drop,
 
     if write_location == 'S3':
         print('uploading to s3')
-        s3_client.upload_file(data_outfile_csv, s3_bucket, local_to_s3_pathname(data_outfile_csv))
+        s3_client.upload_file(data_outfile_csv, s3_bucket, utils.local_to_s3_pathname(data_outfile_csv))
 
     return combined_df
 
@@ -111,7 +141,7 @@ def munge_single_site_data(site_num):
     # process raw data files into csv
     site_raw_datafiles = get_datafile_list(site_num, read_location=read_location)
     
-    df = process_data_to_csv(site_num, site_raw_datafiles, column_mapping, flags_to_drop, agg_level, prop_obs_required)
+    process_data_to_csv(site_num, site_raw_datafiles, column_mapping, flags_to_drop, agg_level, prop_obs_required)
 
 def munge_all_sites_data():
     with open("01_fetch/wildcards_fetch_config.yaml", 'r') as stream:
