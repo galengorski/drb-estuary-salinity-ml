@@ -8,6 +8,16 @@ from dask.distributed import Client
 client = Client()
 client
 
+# import config
+with open("01_fetch/params_config_fetch_coawst_model.yaml", 'r') as stream:
+    config = yaml.safe_load(stream)
+        
+# set up write location data outputs
+write_location = config['write_location']
+s3_client = utils.prep_write_location(write_location, config['aws_profile'])
+s3_bucket = config['s3_bucket']
+
+
 def load_COAWST_model_run(url):
     ds = xr.open_dataset(url, chunks={'ocean_time':720})
     ds = xr.Dataset(ds, coords={'lon': (['eta_rho', 'xi_rho'], nc['lon_rho']),
@@ -60,15 +70,6 @@ def salt_front_timeseries(write_location, s3_client, s3_bucket, run_number):
         s3_client.upload_file(saltfront_data, s3_bucket, '01_fetch/out/'+os.path.basename(saltfront_data))
                                 
 def main():
-    # import config
-    with open("01_fetch/fetch_config.yaml", 'r') as stream:
-        config = yaml.safe_load(stream)['fetch_COAWST_model_run.py']
-        
-    # set up write location data outputs
-    write_location = config['write_location']
-    s3_client = utils.prep_write_location(write_location, config['aws_profile'])
-    s3_bucket = config['s3_bucket']
-    
     # define model run
     url = config['url']
     u = url.split('/')
