@@ -19,7 +19,7 @@ dependencies:
   - xarray
   - torchvision
   - pytorch
-  - cudatoolkit==10.2
+  - cudatoolkit=10.2
   - torchaudio
   - ipympl
   - plotly=5.5.0
