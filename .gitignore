@@ -60,3 +60,10 @@ __pycache__/
 
 # pycharm files
 .idea/
+
+#netcdf_files
+*.nc
+.ipynb_checkpoints
+
+#dask
+dask-worker-space/
