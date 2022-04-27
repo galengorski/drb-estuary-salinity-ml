@@ -30,15 +30,8 @@ def load_COAWST_model_run(url):
     # the ocean_time variable, measures XX
     # A chunk size of 720 was chosen, meaning that all 720 time steps available are read in together
     ds = xr.open_dataset(url, chunks={'ocean_time':720})
-    # XX - what is this doing?
-    # eta_rho:
-    # xi_rho: 
-    # lon_rho: 
-    # lat_rho: 
-    # s_rho
-    ds = xr.Dataset(ds, coords={'lon': (ds[['eta_rho', 'xi_rho']], ds['lon_rho']),
-                          'lat': (ds[['eta_rho', 'xi_rho']], ds['lat_rho']),
-                          's': ds['s_rho']})
+    # read in dataset as an array
+    ds = xr.Dataset(ds)
     print(f'Size: {ds.nbytes / (-10**9)} GB')
     return ds
                                 
