@@ -22,12 +22,23 @@ s3_bucket = config['s3_bucket']
 
 
 def load_COAWST_model_run(url):
+    '''
+    This function is used to XX
+    ''''
+    # load the dataset from the input THREDDS url and chunk it by 
+    # the ocean_time variable, measures XX
+    # A chunk size of 720 was chosen because XX
     ds = xr.open_dataset(url, chunks={'ocean_time':720})
-    ds = xr.Dataset(ds, coords={'lon': (['eta_rho', 'xi_rho'], nc['lon_rho']),
-                          'lat': (['eta_rho', 'xi_rho'], nc['lat_rho']),
-                          's': nc['s_rho']})
+    # XX - what is this doing?
+    # eta_rho:
+    # xi_rho: 
+    # lon_rho: 
+    # lat_rho: 
+    # s_rho
+    ds = xr.Dataset(ds, coords={'lon': (ds[['eta_rho', 'xi_rho']], ds['lon_rho']),
+                          'lat': (ds[['eta_rho', 'xi_rho']], ds['lat_rho']),
+                          's': ds['s_rho']})
     print(f'Size: {ds.nbytes / (-10**9)} GB')
-    print(run_number)
     return ds
                                 
 def salt_front_timeseries(write_location, s3_client, s3_bucket, run_number):
@@ -81,7 +92,7 @@ def main():
     # define csv with river mile coordinates
     river_mile_coords_filepath = config['river_mile_coords_filepath']
 
-    load_COAWST_model_run(url)
+    ds = load_COAWST_model_run(url)
     salt_front_timeseries()
 
 if __name__ == '__main__':
