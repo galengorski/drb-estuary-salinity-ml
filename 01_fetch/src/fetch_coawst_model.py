@@ -28,7 +28,7 @@ def load_COAWST_model_run(url):
     ''''
     # load the dataset from the input THREDDS url and chunk it by 
     # the ocean_time variable, measures XX
-    # A chunk size of 720 was chosen because XX
+    # A chunk size of 720 was chosen, meaning that all 720 time steps available are read in together
     ds = xr.open_dataset(url, chunks={'ocean_time':720})
     # XX - what is this doing?
     # eta_rho:
