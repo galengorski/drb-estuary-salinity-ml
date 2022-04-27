@@ -88,7 +88,7 @@ def main():
     river_mile_coords_filepath = config['river_mile_coords_filepath']
 
     ds = load_COAWST_model_run(url)
-    salt_front_timeseries()
+    salt_front_timeseries(ds, river_mile_coords_filepath, run_number)
 
 if __name__ == '__main__':
     main()
