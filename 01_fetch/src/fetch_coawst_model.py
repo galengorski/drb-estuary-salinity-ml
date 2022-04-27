@@ -25,7 +25,7 @@ def load_COAWST_model_run(url):
     '''
     This function is used to read a COAWST model output dataset from a THREDDS url
     and return a data array
-    ''''
+    '''
     # load the dataset from the input THREDDS url and chunk it by 
     # the ocean_time variable, which measures the time step in the dataset
     # model outputs are on a 3-hour time step
