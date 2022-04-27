@@ -36,7 +36,7 @@ def load_COAWST_model_run(url):
     print(f'Size: {ds.nbytes / (-10**9)} GB')
     return ds
                                 
-def salt_front_timeseries(write_location, s3_client, s3_bucket, run_number):
+def salt_front_timeseries(ds, river_mile_coords_filepath, run_number):
     # read river mile coordinates csv
     river_mile_coords = pd.read_csv(river_mile_coords_filepath, index_col=0)
     
