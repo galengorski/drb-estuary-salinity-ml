@@ -15,7 +15,7 @@ url: 'http://geoport.whoi.edu/thredds/dodsC/vortexfs1/usgs/users/scook/proj/DE_B
 # Model Output with Waves -
 # url: https://geoport.whoi.edu/thredds/catalog/vortexfs1/usgs/users/scook/proj/DE_Bay/run07/run07C/run07C_waves/era5_2019/catalog.html?  dataset=vortexfs1/usgs/users/scook/proj/DE_Bay/run07/run07C/run07C_waves/era5_2019/ocean_deb_his_run07C_waves_tsvar_2019_00012.nc
 
-river_mile_coords_filepath: '/01_fetch/in/river_mile_coords.csv'
+river_mile_coords_filepath: './01_fetch/in/river_mile_coords.csv'
 
 model_run: 'only'
 # model runs: 'waves', 'subtidal_signal'

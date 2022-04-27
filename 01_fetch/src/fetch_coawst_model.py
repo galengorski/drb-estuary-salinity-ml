@@ -22,15 +22,21 @@ s3_bucket = config['s3_bucket']
 
 
 def load_COAWST_model_run(url):
-    ds = xr.open_dataset(url, chunks={'ocean_time':720})
-    ds = xr.Dataset(ds, coords={'lon': (['eta_rho', 'xi_rho'], nc['lon_rho']),
-                          'lat': (['eta_rho', 'xi_rho'], nc['lat_rho']),
-                          's': nc['s_rho']})
+    '''
+    This function is used to read a COAWST model output dataset from a THREDDS url
+    and return a data array
+    '''
+    # load the dataset from the input THREDDS url and chunk it by 
+    # the ocean_time variable, which measures the time step in the dataset
+    # model outputs are on a 3-hour time step
+    # A chunk size of 1 was chosen, meaning that data will be split up by timestep. 
+    ds = xr.open_dataset(url, chunks={'ocean_time':1})
+    # read in dataset as an array
+    ds = xr.Dataset(ds)
     print(f'Size: {ds.nbytes / (-10**9)} GB')
-    print(run_number)
     return ds
                                 
-def salt_front_timeseries(write_location, s3_client, s3_bucket, run_number):
+def salt_front_timeseries(ds, river_mile_coords_filepath, run_number):
     # read river mile coordinates csv
     river_mile_coords = pd.read_csv(river_mile_coords_filepath, index_col=0)
     
@@ -81,8 +87,8 @@ def main():
     # define csv with river mile coordinates
     river_mile_coords_filepath = config['river_mile_coords_filepath']
 
-    load_COAWST_model_run(url)
-    salt_front_timeseries()
+    ds = load_COAWST_model_run(url)
+    salt_front_timeseries(ds, river_mile_coords_filepath, run_number)
 
 if __name__ == '__main__':
     main()
