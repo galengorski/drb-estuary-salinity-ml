@@ -42,7 +42,7 @@ def salt_front_timeseries(ds, river_mile_coords_filepath, run_number):
 
     # create array of river miles as points
     target_x = np.array(river_mile_coords.iloc[:,[1]].values).squeeze()
-    target_x = xr.DataArray(target_x-1,dims=["dist_miles"])
+    target_x = xr.DataArray(target_x-1, dims=["dist_miles"]) 
     target_y = np.array(river_mile_coords.iloc[:,[2]].values).squeeze()
     target_y = xr.DataArray(target_y-1,dims=["dist_miles"])
     dist_mile = np.array(river_mile_coords.iloc[:,[0]].values).squeeze()
