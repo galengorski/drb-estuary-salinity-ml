@@ -23,7 +23,8 @@ s3_bucket = config['s3_bucket']
 
 def load_COAWST_model_run(url):
     '''
-    This function is used to XX
+    This function is used to read a COAWST model output dataset from a THREDDS url
+    and return a data array
     ''''
     # load the dataset from the input THREDDS url and chunk it by 
     # the ocean_time variable, measures XX
