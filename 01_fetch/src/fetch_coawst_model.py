@@ -78,10 +78,10 @@ def salt_front_timeseries(ds, river_mile_coords_filepath, run_number):
     df = df.resample('1H').max()
 
     # take daily average by averaging hourly location throughout day 
-    df_mean = df.resample('1D').mean()
+    df = df.resample('1D').mean()
 
     saltfront_data = os.path.join('.', '01_fetch', 'out', f'salt_front_location_from_COAWST_run_{run_number}.csv')
-    df_mean.to_csv(saltfront_data, index=False)
+    df.to_csv(saltfront_data, index=False)
 
     # upload csv with salt front data to S3
     if write_location == 'S3':
