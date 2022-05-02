@@ -67,20 +67,20 @@ def salt_front_timeseries(ds, river_mile_coords_filepath, run_number):
     saltfront_location = saltfront.where(saltfront.max('ocean_time'))
 
     # subset salt variable
-    saltfront_location_salt = saltfront_location.salt
+    saltfront_location = saltfront_location.salt
 
     # convert to dataframe
-    df = saltfront_location_salt.to_dataframe()
+    df = saltfront_location.to_dataframe()
 
     # tidy dataframe
     # get location of salt front at each hour of the day
-    df_short = df[df['salt'].notna()]
+    df = df[df['salt'].notna()]
     
     # drop points index column so we only have one index (ocean_time)
-    df_drop = df_short.droplevel(level=1)
+    df = df.droplevel(level=1)
 
     # take daily average by averaging hourly location throughout day 
-    df_mean = df_drop.resample('1D').mean()
+    df = df.resample('1D').mean()
 
     saltfront_data = os.path.join('.', '01_fetch', 'out', f'salt_front_location_from_COAWST_run_{run_number}.csv')
     df_mean.to_csv(saltfront_data, index=False)
