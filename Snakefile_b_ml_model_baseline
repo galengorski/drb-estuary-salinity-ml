@@ -1,42 +1,145 @@
-configfile: "01_fetch/fetch_config.yaml"
-configfile: "02_munge/munge_config.yaml"
+import importlib
+import os
+import sys
+from river_dl.preproc_utils import prep_all_data
+sys.path.append('03b_model/src')
+import run_model
 
-rule all:
-    input:
-        expand("02_munge/out/H/noaa_nos_{site}.csv", site=config["fetch_noaa_nos.py"]["station_ids"])
-        expand("02_munge/out/D/usgs_nwis_{usgs_site}.csv", usgs_site=config["fetch_usgs.py"]["site_ids"]),
-        expand("02_munge/out/daily_summaries/noaa_nos_{noaa_site}.csv", noaa_site=config["fetch_noaa_nos.py"]["station_ids"]),
 
-rule fetch_usgs_nwis:
+configfile: "01_fetch/wildcards_fetch_config.yaml"
+configfile: "03b_model/model_config.yaml"
+
+usgs_nwis_sites = config["fetch_usgs_nwis.py"]["sites"]
+noaa_nos_sites = config["fetch_noaa_nos.py"]["sites"]
+noaa_nos_products = config["fetch_noaa_nos.py"]["products"]
+noaa_nerr_site = config["fetch_noaa_nerrs.py"]["sites"]
+
+wildcard_constraints:
+    noaa_nos_sites="\d+"
+
+include: "Snakefile_fetch_munge"
+
+###########################################################################################                        
+#RULE ALL
+########################################################################################### 
+rule all_b_ml_model_baseline:
     input:
-        "01_fetch/fetch_config.yaml"
+        expand("02_munge/out/D/usgs_nwis_{usgs_nwis_site}.csv", usgs_nwis_site = usgs_nwis_sites),
+        expand("02_munge/out/daily_summaries/noaa_nos_{noaa_nos_site}.csv", noaa_nos_site = noaa_nos_sites),
+        expand("02_munge/out/D/noaa_nerr_{noaa_nerr_site}.csv", noaa_nerr_site = noaa_nerr_site),
+        "03b_model/out/inputs.zarr",
+        "03b_model/out/target.zarr",
+        "03b_model/out/prepped_model_io_data",
+        os.path.join(config['out_dir'], config['run_id'], 'model_param_output.txt'),
+        os.path.join(config['out_dir'], config['run_id'], 'losses.png'),
+        os.path.join(config['out_dir'], config['run_id'], 'weights.pt'),
+        os.path.join(config['out_dir'],config['run_id'],"ModelResults.csv"),
+        os.path.join(config['out_dir'],config['run_id'],"ModelResultsTimeSeries.png")
+##---------------------------------------------------------------------------------------##  
+
+###########################################################################################                        
+#PREPARE THE INPUT DATA
+########################################################################################### 
+rule prepare_inputs_targets:
+    input:
+        "03b_model/model_config.yaml",
+        expand("02_munge/out/D/usgs_nwis_{usgs_nwis_site}.csv", usgs_nwis_site = usgs_nwis_sites),
+        expand("02_munge/out/daily_summaries/noaa_nos_{noaa_nos_site}.csv", noaa_nos_site = noaa_nos_sites),
+        expand("02_munge/out/D/noaa_nerr_{noaa_nerr_site}.csv", noaa_nerr_site = noaa_nerr_site)
     output:
-        expand("01_fetch/out/usgs_nwis_{usgs_site}.txt", usgs_site=config["fetch_usgs.py"]["site_ids"]),
-    shell:
-        "python -m 01_fetch.src.fetch_usgs"
+        directory("03b_model/out/inputs.zarr"),
+        directory("03b_model/out/target.zarr"),
+        "03b_model/out/prepped_model_io_data"
+    run:
+        inputs_xarray, target_xarray = run_model.select_inputs_targets(inputs = config['inputs'], 
+                                                                target = config['target'], 
+                                                                train_start_date = config['train_start_date'], 
+                                                                test_end_date = config['test_end_date'], 
+                                                                out_dir = config['out_dir']) 
+        run_model.prep_input_target_data(inputs_xarray = inputs_xarray, target_xarray = target_xarray, 
+                              train_start_date = config['train_start_date'], 
+                              train_end_date = config['train_end_date'], 
+                              val_start_date = config['val_start_date'], 
+                              val_end_date = config['val_end_date'], 
+                              test_start_date = config['test_start_date'], 
+                              test_end_date = config['test_end_date'], 
+                              seq_len = config['seq_len'], 
+                              offset = config['offset'], 
+                              out_dir = config['out_dir'])
+##---------------------------------------------------------------------------------------##  
 
-rule fetch_noaa_nos:
+###########################################################################################                        
+#TRAIN THE MODEL
+###########################################################################################                                
+rule train_model:
     input:
-        "01_fetch/fetch_config.yaml"
+        "03b_model/model_config.yaml", 
+        os.path.join(config['out_dir'],'prepped_model_io_data')
     output:
-        expand("01_fetch/out/noaa_nos_{noaa_site}_{noaa_product}.txt", noaa_site=config["fetch_noaa_nos.py"]["station_ids"], noaa_product = config["fetch_noaa_nos.py"]["products"]),
-    shell:
-        "python -m 01_fetch.src.fetch_noaa_nos"
-
-
-rule munge_usgs_nwis:
+        os.path.join(config['out_dir'], config['run_id'], 'model_param_output.txt'),
+        os.path.join(config['out_dir'], config['run_id'], 'losses.png'),
+        os.path.join(config['out_dir'], config['run_id'], 'weights.pt')
+    run:
+        run_model.train_model(prepped_model_io_data_file = input[1], 
+                                inputs = config['inputs'], 
+                                seq_len = config['seq_len'],
+                                hidden_units = config['hidden_units'], 
+                                recur_dropout = config['recur_dropout'], 
+                                dropout = config['dropout'], 
+                                n_epochs_pre = config['n_epochs_pre'], 
+                                learn_rate_pre = config['learn_rate_pre'], 
+                                out_dir = config['out_dir'], 
+                                run_id = config['run_id'],
+                                train_start_date = config['train_start_date'], 
+                                train_end_date = config['train_end_date'], 
+                                val_start_date = config['val_start_date'], 
+                                val_end_date = config['val_end_date'], 
+                                test_start_date = config['test_start_date'], 
+                                test_end_date = config['test_end_date'])
+##---------------------------------------------------------------------------------------##
+                        
+###########################################################################################                        
+#TEST RULE
+###########################################################################################
+rule train_model_test:
     input:
-        expand("01_fetch/out/usgs_nwis_{usgs_site}.txt", usgs_site=config["fetch_usgs.py"]["site_ids"]),
+        "03b_model/model_config.yaml", 
+        os.path.join(config['out_dir'],'prepped_model_io_data')
     output:
-        expand("02_munge/out/D/usgs_nwis_{usgs_site}.csv", usgs_site=config["fetch_usgs.py"]["site_ids"]),
+        os.path.join(config['out_dir'], config['run_id'], 'model_param_output.txt'),
+        os.path.join(config['out_dir'], config['run_id'], 'losses.png'),
+        os.path.join(config['out_dir'], config['run_id'], 'weights.pt')
     shell:
-        "python -m 02_munge.src.munge_usgs"
+        "python -m 03b_model.src.train_model_test"
         
-rule munge_noaa_nos:
+##---------------------------------------------------------------------------------------##
+
+
+###########################################################################################
+#MAKE PLOT AND SAVE MODEL PREDICTIONS
+###########################################################################################
+rule make_plot_save_predictions:
     input:
-        expand("01_fetch/out/noaa_nos_{noaa_site}_{noaa_product}.txt", noaa_site=config["fetch_noaa_nos.py"]["station_ids"], noaa_product = config["fetch_noaa_nos.py"]["products"])
+        "03b_model/model_config.yaml", 
+        os.path.join(config['out_dir'],'prepped_model_io_data')
     output:
-        expand("02_munge/out/H/noaa_nos_{site}.csv", site=config["fetch_noaa_nos.py"]["station_ids"]),
-        expand("02_munge/out/daily_summaries/noaa_nos_{site}.csv", site=config["fetch_noaa_nos.py"]["station_ids"])
-    shell:
-        "python -m 02_munge.src.munge_noaa_nos"
+        os.path.join(config['out_dir'],config['run_id'],"ModelResults.csv"),
+        os.path.join(config['out_dir'],config['run_id'],"ModelResultsTimeSeries.png")
+    run:
+        predictions = run_model.make_predictions(prepped_model_io_data_file = input[1], 
+                             hidden_units = config['hidden_units'], 
+                             recur_dropout = config['recur_dropout'], 
+                             dropout = config['dropout'], 
+                             n_epochs_pre = config['n_epochs_pre'], 
+                             learn_rate_pre = config['learn_rate_pre'], 
+                             out_dir = config['out_dir'], 
+                             run_id = config['run_id'],
+                             train_start_date = config['train_start_date'], 
+                             train_end_date = config['train_end_date'], 
+                             val_start_date = config['val_start_date'], 
+                             val_end_date = config['val_end_date'], 
+                             test_start_date = config['test_start_date'], 
+                             test_end_date = config['test_end_date'])
+        run_model.plot_save_predictions(predictions, config['out_dir'], config['run_id'])
+##---------------------------------------------------------------------------------------##
+
