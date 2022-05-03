@@ -60,7 +60,7 @@ def fill_gaps(x):
     x[bd] = np.interp(np.flatnonzero(bd),gd,x[gd])
     return x
 
-def process_data_to_csv(site, site_raw_datafiles, column_mapping, flags_to_drop, agg_level, prop_obs_required):
+def process_data_to_csv(site, site_raw_datafiles, column_mapping, flags_to_drop, agg_level, prop_obs_required, fill_anom_w_nos):
     '''
     process raw data text files into clean csvs, including:
         dropping unwanted flags
@@ -107,6 +107,17 @@ def process_data_to_csv(site, site_raw_datafiles, column_mapping, flags_to_drop,
     # drop any columns with no data
     combined_df.dropna(axis=1, how='all', inplace=True)
     
+    # there are some anomalous values below 980
+    combined_df.loc[combined_df['air_pressure'] < 980,'air_pressure'] = np.nan
+    
+    if fill_anom_w_nos:
+        try:
+            noaa_nos_file = os.listdir('02_munge/out/daily_summaries')
+            noaa_nos = pd.read_csv(os.path.join('02_munge','out','daily_summaries',noaa_nos_file[0]), index_col = 'datetime')
+            combined_df['air_pressure'] = combined_df['air_pressure'].fillna(noaa_nos['air_pressure'])
+        except:
+            print('No NOAA NOS data to fill NERR air pressure record')
+    
     #fill gaps in temperature, air pressure, wind speed and wind direction
     # all < 0.5 %, precipitation has more like 10% missing so we won't fill that
     combined_df['temperature'] = fill_gaps(combined_df['temperature'])
@@ -138,10 +149,12 @@ def munge_single_site_data(site_num):
     agg_level = config['agg_level']
     # number of measurements required to consider average valid
     prop_obs_required = config['prop_obs_required']
+    #should air pressure anomalies in NERR be filled with NOS data
+    fill_anom_w_nos = config['fill_anom_w_nos']
     # process raw data files into csv
     site_raw_datafiles = get_datafile_list(site_num, read_location=read_location)
     
-    process_data_to_csv(site_num, site_raw_datafiles, column_mapping, flags_to_drop, agg_level, prop_obs_required)
+    process_data_to_csv(site_num, site_raw_datafiles, column_mapping, flags_to_drop, agg_level, prop_obs_required, fill_anom_w_nos)
 
 def munge_all_sites_data():
     with open("01_fetch/wildcards_fetch_config.yaml", 'r') as stream:
