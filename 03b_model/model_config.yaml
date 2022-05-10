@@ -1,5 +1,5 @@
 out_dir: '03b_model/out'
-run_id: 'Run_04'  
+run_id: 'Run_08'  
 inputs: ['discharge_01463500', 
                 #'specific_conductance_01463500',
                 'discharge_01474500', 
@@ -9,9 +9,17 @@ inputs: ['discharge_01463500',
                 'temperature_delsjmet',
                 #'precipitation_delsjmet',
                 'wind_direction_delsjmet',
-                'wind_speed_delsjmet','wind_speed_direction_delsjmet']                    
- #the sinks to be analyzed, this will likely be the salt front location
+                'wind_speed_delsjmet']#,'wind_speed_direction_delsjmet']                    
+#the sinks to be analyzed, this will likely be the salt front location
 target: 'saltfront_daily'
+replicates: 5
+
+#explicitly including summary antecedant data
+#window_size and antecedant_variables must be in a list
+#as they are iterated over
+include_antecedant_data: True
+window_size: [60]
+antecedant_variables: ['temperature_delsjmet']
 
 
 #select the split dates
@@ -26,7 +34,7 @@ test_end_date: '2019-12-31'
 seq_len: 365
 offset: 1.0
 hidden_units: 10
-n_epochs_pre: 300
+n_epochs_pre: 500
 learn_rate_pre: 0.001
 recur_dropout: 0.0
 dropout: 0.1

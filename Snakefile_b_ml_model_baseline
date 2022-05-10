@@ -13,6 +13,7 @@ usgs_nwis_sites = config["fetch_usgs_nwis.py"]["sites"]
 noaa_nos_sites = config["fetch_noaa_nos.py"]["sites"]
 noaa_nos_products = config["fetch_noaa_nos.py"]["products"]
 noaa_nerr_site = config["fetch_noaa_nerrs.py"]["sites"]
+replicates = [str(x).rjust(2,'0') for x in range(config['replicates'])]
 
 wildcard_constraints:
     noaa_nos_sites="\d+"
@@ -26,7 +27,7 @@ rule all_b_ml_model_baseline:
     input:
         expand("02_munge/out/D/usgs_nwis_{usgs_nwis_site}.csv", usgs_nwis_site = usgs_nwis_sites),
         expand("02_munge/out/daily_summaries/noaa_nos_{noaa_nos_site}.csv", noaa_nos_site = noaa_nos_sites),
-        expand("02_munge/out/D/noaa_nerr_{noaa_nerr_site}.csv", noaa_nerr_site = noaa_nerr_site),
+        expand("02_munge/out/D/noaa_nerrs_{noaa_nerr_site}.csv", noaa_nerr_site = noaa_nerr_site),
         "03b_model/out/inputs.zarr",
         "03b_model/out/target.zarr",
         "03b_model/out/prepped_model_io_data",
@@ -45,7 +46,7 @@ rule prepare_inputs_targets:
         "03b_model/model_config.yaml",
         expand("02_munge/out/D/usgs_nwis_{usgs_nwis_site}.csv", usgs_nwis_site = usgs_nwis_sites),
         expand("02_munge/out/daily_summaries/noaa_nos_{noaa_nos_site}.csv", noaa_nos_site = noaa_nos_sites),
-        expand("02_munge/out/D/noaa_nerr_{noaa_nerr_site}.csv", noaa_nerr_site = noaa_nerr_site)
+        expand("02_munge/out/D/noaa_nerrs_{noaa_nerr_site}.csv", noaa_nerr_site = noaa_nerr_site)
     output:
         directory("03b_model/out/inputs.zarr"),
         directory("03b_model/out/target.zarr"),
@@ -55,7 +56,8 @@ rule prepare_inputs_targets:
                                                                 target = config['target'], 
                                                                 train_start_date = config['train_start_date'], 
                                                                 test_end_date = config['test_end_date'], 
-                                                                out_dir = config['out_dir']) 
+                                                                out_dir = config['out_dir'],
+                                                                inc_ante = config['include_antecedant_data']) 
         run_model.prep_input_target_data(inputs_xarray = inputs_xarray, target_xarray = target_xarray, 
                               train_start_date = config['train_start_date'], 
                               train_end_date = config['train_end_date'], 
@@ -95,25 +97,9 @@ rule train_model:
                                 val_start_date = config['val_start_date'], 
                                 val_end_date = config['val_end_date'], 
                                 test_start_date = config['test_start_date'], 
-                                test_end_date = config['test_end_date'])
+                                test_end_date = config['test_end_date'],
+                                inc_ante = config['include_antecedant_data'])
 ##---------------------------------------------------------------------------------------##
-                        
-###########################################################################################                        
-#TEST RULE
-###########################################################################################
-rule train_model_test:
-    input:
-        "03b_model/model_config.yaml", 
-        os.path.join(config['out_dir'],'prepped_model_io_data')
-    output:
-        os.path.join(config['out_dir'], config['run_id'], 'model_param_output.txt'),
-        os.path.join(config['out_dir'], config['run_id'], 'losses.png'),
-        os.path.join(config['out_dir'], config['run_id'], 'weights.pt')
-    shell:
-        "python -m 03b_model.src.train_model_test"
-        
-##---------------------------------------------------------------------------------------##
-
 
 ###########################################################################################
 #MAKE PLOT AND SAVE MODEL PREDICTIONS
@@ -143,3 +129,18 @@ rule make_plot_save_predictions:
         run_model.plot_save_predictions(predictions, config['out_dir'], config['run_id'])
 ##---------------------------------------------------------------------------------------##
 
+###########################################################################################                        
+#RUN REPLICATES
+###########################################################################################
+rule run_replicates:
+    input:
+        "03b_model/model_config.yaml", 
+        os.path.join(config['out_dir'],'prepped_model_io_data')
+    output:
+        expand(os.path.join(config['out_dir'], config['run_id'], '{rep}/model_param_output.txt'), rep = replicates),
+        expand(os.path.join(config['out_dir'], config['run_id'], '{rep}/losses.png'), rep = replicates),
+        expand(os.path.join(config['out_dir'], config['run_id'], '{rep}/weights.pt'), rep = replicates)
+    run:
+        run_model.run_replicates(config['replicates'], os.path.join(config['out_dir'],'prepped_model_io_data'))
+        
+##---------------------------------------------------------------------------------------##

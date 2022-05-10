@@ -22,16 +22,63 @@ import yaml
 with open("03b_model/model_config.yaml", 'r') as stream:
     config = yaml.safe_load(stream)
 
+inputs = config['inputs']
+target = config['target']
+inc_ante = config['include_antecedant_data']
+
+out_dir = config['out_dir']
+run_id = config['run_id']
+
+train_start_date = config['train_start_date']
+train_end_date = config['train_end_date']
+val_start_date = config['val_start_date']
+val_end_date = config['val_end_date']
+test_start_date = config['test_start_date']
+test_end_date = config['test_end_date']
+
+seq_len = config['seq_len']
+offset = config['offset']
+n_epochs_pre = config['n_epochs_pre']
+hidden_units = config['hidden_units']
+learn_rate_pre = config['learn_rate_pre']
+recur_dropout = config['recur_dropout']
+dropout = config['dropout']
+
+
 ###
-def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_dir):
-    '''select the variables you are interested in examining, 
-    srcs must be a list using the exact variable names,
-    it will return a list of dataframes, each dataframe corresponding to a site
-    with the requested variables as columns'''
+def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_dir, inc_ante):
+    '''
+    select the variables and target varliables you are interested in examining, 
+    saves the inputs and variables as separate .zarr files
+    
+    Parameters
+    ----------
+    inputs : list
+        list of input variables used as predictors
+    target : str
+        target variable
+    train_start_date : str
+        start of training in YYYY-MM-DD format
+    test_end_date : str
+        end of testing in YYYY-MM-DD format
+    out_dir : str
+        directory where inputs and targets .zarr will be written
+    inc_ante : bool
+        flag to determine if antecedant conditions should be explicitly included, if True, 
+        a rolling look back average of the last n days will be included as an input variable, 
+        the number of days and variable are written in the config file
+
+    Returns
+    -------
+    inputs_xarray : xarray.dataset
+        inputs used for modeling
+    target_xarray : xarray.dataset
+        target variable
+
+    '''
+    
     inputs_df = pd.DataFrame()
-    
-    #print('Looking for sources: ', inputs)
-    
+        
     files_to_read = []
     for top,dirs,files in os.walk('02_munge/out/'):
         if top == '02_munge/out/D' or top == '02_munge/out/daily_summaries':
@@ -41,9 +88,7 @@ def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_d
         var = '_'.join(inp.split('_')[:-1])
         site = inp.split('_')[-1]
         
-        #if site == 'delsjmet':
-        #    continue
-        
+         
         inp_file = [s for s in files_to_read if site in s]
         data = pd.read_csv(inp_file[0], parse_dates = True, index_col = 'datetime')
         try:
@@ -54,12 +99,41 @@ def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_d
     #inputs_df = inputs_df.join(nerrs_input)
     inputs_df = inputs_df[train_start_date:test_end_date]
     
+    if inc_ante:
+        
+        with open("03b_model/model_config.yaml", 'r') as stream:
+            config = yaml.safe_load(stream)
+            
+        win_sizes = config['window_size']
+        ante_var = config['antecedant_variables']
+        
+        
+        if 'discharge' in ante_var:
+            inputs_df['discharge'] = inputs_df['discharge_01463500']+inputs_df['discharge_01474500']
+        
+        for win_size in win_sizes:    
+            for j,col in enumerate(ante_var):
+                inputs_df[col+'_'+str(win_size).rjust(3,'0')+'_mean'] = float('nan')
+                col_values = []
+                for i in range(len(inputs_df)-win_size):
+                    temp_win = inputs_df[col].iloc[i:win_size+i].copy()
+                    win_mean = np.mean(temp_win)
+                    col_values.append(win_mean)
+                        
+                print('Calculating '+inputs_df.columns[-1]+' '+str(win_size))
+                inputs_df.iloc[win_size:len(inputs_df), -1] = col_values
+        
+        if 'discharge' in ante_var:
+            inputs_df = inputs_df.drop(columns = 'discharge')
+        
+        inputs_df = inputs_df.dropna()
+    
     
     #read in the salt front record
     target_df = pd.read_csv(os.path.join('03a_it_analysis', 'in', 'saltfront.csv'), parse_dates = True, index_col = 'datetime')
     target_df = target_df['saltfront_daily'].to_frame()
     target_df.index = pd.to_datetime(target_df.index.date)
-    target_df = target_df[train_start_date:test_end_date]
+    target_df = target_df[str(inputs_df.index[0]):test_end_date]
     target_df.index = target_df.index.rename('datetime')
     
     #set everything below 54 to nan
@@ -86,6 +160,45 @@ def prep_input_target_data(inputs_xarray, target_xarray,
                            val_start_date, val_end_date, 
                            test_start_date, test_end_date, 
                            seq_len, offset, out_dir):
+    '''
+    takes inputs and target variables as xarray files, then: 
+    1) splits them into train, val, test sets
+    2) scales each set (subtract mean, divide by stdev)
+    3) splits data into batches of size [nbatches, seq_len, n_features]
+    4) converts data into pytorch tensors
+    5) saves input and output together to file
+    Parameters
+    ----------
+    inputs_xarray : xarray.dataset
+        full modeling inputs
+    target_xarray : xarray.dataset
+        full target data
+    train_start_date : str
+        start of training in YYYY-MM-DD format
+    train_end_date : str
+        end of training in YYYY-MM-DD format
+    val_start_date : str
+        start of validation in YYYY-MM-DD format
+    val_end_date : str
+        end of validation in YYYY-MM-DD format
+    test_start_date : str
+        start of testing in YYYY-MM-DD format
+    test_end_date : str
+        end of testing in YYYY-MM-DD format
+    seq_len : int
+        sequence length
+    offset : float
+        How to offset the batches. Values < 1 are taken as fractions, (e.g., 0.5 means that
+        the first batch will be 0-365 and the second will be 182-547), values > 1 are used as a constant number of
+        observations to offset by.
+    out_dir : str
+        the directory where the prepped data will be written to as a pickle file
+
+    Returns
+    -------
+    None.
+
+    '''
     
     #split into train val test sets
     y_trn, y_val, y_tst = separate_trn_tst(target_xarray,'datetime',train_start_date, train_end_date,
@@ -159,33 +272,95 @@ def prep_input_target_data(inputs_xarray, target_xarray,
 
 def write_model_params(out_dir, run_id, inputs, n_epochs_pre,
                        learn_rate_pre, seq_len, hidden_units,
+                       recur_dropout, dropout,
                        train_start_date, train_end_date,
                        val_start_date, val_end_date,
-                       test_start_date, test_end_date):
+                       test_start_date, test_end_date, inc_ante):
+    '''
+    Write model parameters to directory where model results will be saved
+
+    Parameters
+    ----------
+    out_dir : str
+        directory where model results will be saved
+    run_id : str
+        sub-directory within out_dir where model results will be saved
+    inputs : list
+        list of input variables used as predictors
+    n_epochs_pre : int
+        number of epochs to run model
+    learn_rate_pre : float
+        learning rate
+    seq_len : int
+        sequence length
+    hidden_units : int
+        number of hidden units in the model
+    recur_dropout : float
+        fraction of the units to drop from the cell update vector
+    dropout : float
+        fraction of the units to drop from the input
+    train_start_date : str
+        start of training in YYYY-MM-DD format
+    train_end_date : str
+        end of training in YYYY-MM-DD format
+    val_start_date : str
+        start of validation in YYYY-MM-DD format
+    val_end_date : str
+        end of validation in YYYY-MM-DD format
+    test_start_date : str
+        start of testing in YYYY-MM-DD format
+    test_end_date : str
+        end of testing in YYYY-MM-DD format
+    inc_ante : bool
+        flag to determine if antecedant conditions should be explicitly included, if True, 
+        a rolling look back average of the last n days will be included as an input variable, 
+        the number of days and variable are written in the config file
+
+    Returns
+    -------
+    None.
+
+    '''
+    
+    
     #write out model paramters
+    with open("03b_model/model_config.yaml", 'r') as stream:
+        config = yaml.safe_load(stream)
+    
     dir = os.path.join(out_dir, run_id)
-    if os.path.exists(dir): 
-        overwrite = input('Directory for this run id already exists, would you like to continue? (yes or no)')
-        if overwrite == 'yes':
-            os.makedirs(dir, exist_ok=True)
-        else:
-            exit('Nothing written to file')
-    else:
-        os.mkdir(dir)
+    os.makedirs(dir, exist_ok=True)
+    # if os.path.exists(dir): 
+    #     overwrite = input('Directory for this run id already exists, would you like to continue? (yes or no)')
+    #     if overwrite == 'yes':
+    #         os.makedirs(dir, exist_ok=True)
+    #     else:
+    #         exit('Nothing written to file')
+    # else:
+    #     os.mkdir(dir)
+    
+    inputs_log = inputs.copy()
+    
+    if inc_ante:
+        for var in config['antecedant_variables']: 
+            for w in config['window_size']: 
+                inputs_log.append(var+'_'+str(w).rjust(3,'0')+'_mean')
     
     f= open(os.path.join(dir,"model_param_output.txt"),"w+")
     f.write("Date: %s\r\n" % date.today().strftime("%b-%d-%Y"))
-    f.write("Feature List: %s\r\n" % inputs)
+    f.write("Feature List: %s\r\n" % inputs_log)
+    f.write("Include antecedant variable: %s\r\n" % inc_ante)
     f.write("Epochs: %d\r\n" % n_epochs_pre)
     f.write("Learning rate: %f\r\n" % learn_rate_pre)
     f.write("Sequence Length: %d\r\n" % seq_len)
     f.write("Cells: %d\r\n" % hidden_units)
+    f.write("Recurrent Dropout: %f\r\n" % recur_dropout)
+    f.write("Dropout: %f\r\n" % dropout)
     f.write("Train date start: %s\r\n" % train_start_date)
     f.write("Train date end: %s\r\n" % train_end_date)
     f.write("Validation date start: %s\r\n" % val_start_date)
     f.write("Validation date end: %s\r\n" % val_end_date)
     f.write("Test date start: %s\r\n" % test_start_date)
-    f.write("Test date start: %s\r\n" % test_end_date)
+    f.write("Test date end: %s\r\n" % test_end_date)
     f.close()
 
 def train_model(prepped_model_io_data_file, inputs, seq_len,
@@ -194,13 +369,59 @@ def train_model(prepped_model_io_data_file, inputs, seq_len,
                 out_dir, run_id,                       
                 train_start_date, train_end_date,
                 val_start_date, val_end_date,
-                test_start_date, test_end_date):
-    
+                test_start_date, test_end_date, inc_ante):
+    '''
+    write modeling parameters to a .txt file within out_dir/run_id, train the model,
+    save the weights, and save a plot of the losses
+    Parameters
+    ----------
+    prepped_model_io_data_file : str
+        location of prepped model input, saved as a pickle file by write model params
+    inputs : list
+        list of input variables used as predictors
+    seq_len : int
+        sequence length
+    hidden_units : int
+        number of hidden units in the model
+    recur_dropout : float
+        fraction of the units to drop from the cell update vector
+    dropout : float
+        fraction of the units to drop from the input
+    n_epochs_pre : int
+        number of epochs to run model
+    learn_rate_pre : float
+        learning rate
+    out_dir : str
+        directory where model results will be saved
+    run_id : str
+        sub-directory within out_dir where model results will be saved
+    train_start_date : str
+        start of training in YYYY-MM-DD format
+    train_end_date : str
+        end of training in YYYY-MM-DD format
+    val_start_date : str
+        start of validation in YYYY-MM-DD format
+    val_end_date : str
+        end of validation in YYYY-MM-DD format
+    test_start_date : str
+        start of testing in YYYY-MM-DD format
+    test_end_date : str
+        end of testing in YYYY-MM-DD format
+    inc_ante : bool
+        flag to determine if antecedant conditions should be explicitly included, if True, 
+        a rolling look back average of the last n days will be included as an input variable, 
+        the number of days and variable are written in the config file
+
+    Returns
+    -------
+    None.
+
+    '''
     write_model_params(out_dir, run_id, inputs, n_epochs_pre,
                            learn_rate_pre, seq_len, hidden_units,
                            train_start_date, train_end_date,
                            val_start_date, val_end_date,
-                           test_start_date, test_end_date)
+                           test_start_date, test_end_date, inc_ante)
     
     with open(prepped_model_io_data_file, 'rb') as f:
         prepped_model_io_data = pickle.load(f)
@@ -223,9 +444,8 @@ def train_model(prepped_model_io_data_file, inputs, seq_len,
     
     plt.plot(rl_t, 'b', label = 'training')
     plt.plot(rl_v,'r', label = 'validation')
-    plt.ylabel('RMSE river mile')
+    plt.ylabel('Loss (RMSE scaled river mile)')
     plt.legend()
-    #plt.show()
     plt.savefig(os.path.join(out_dir,run_id,'losses.png'))
     plt.close()
 
@@ -235,6 +455,46 @@ def make_predictions(prepped_model_io_data_file,
                      train_start_date, train_end_date,
                      val_start_date, val_end_date,
                      test_start_date, test_end_date):
+    '''
+    read weights from file, and make predictions. output results as dataframe   
+    
+    Parameters
+    ----------
+    prepped_model_io_data_file : str
+        location of prepped model input, saved as a pickle file by write model params
+    hidden_units : int
+        number of hidden units in the model
+    recur_dropout : float
+        fraction of the units to drop from the cell update vector
+    dropout : float
+        fraction of the units to drop from the input
+    n_epochs_pre : int
+        number of epochs to run model
+    learn_rate_pre : float
+        learning rate
+    out_dir : str
+        directory where model results will be saved
+    run_id : str
+        sub-directory within out_dir where model results will be saved
+    train_start_date : str
+        start of training in YYYY-MM-DD format
+    train_end_date : str
+        end of training in YYYY-MM-DD format
+    val_start_date : str
+        start of validation in YYYY-MM-DD format
+    val_end_date : str
+        end of validation in YYYY-MM-DD format
+    test_start_date : str
+        start of testing in YYYY-MM-DD format
+    test_end_date : str
+        end of testing in YYYY-MM-DD format
+
+    Returns
+    -------
+    trainval_df : TYPE
+        DESCRIPTION.
+
+    '''
     
     
     with open(prepped_model_io_data_file, 'rb') as f:
@@ -272,6 +532,22 @@ def make_predictions(prepped_model_io_data_file,
     return trainval_df
 
 def plot_save_predictions(trainval_df, out_dir, run_id):
+    '''
+    make a plot of the predictions and save to out_dir/run_id
+    Parameters
+    ----------
+    trainval_df : dataframe
+        dataframe of training and validation predictions
+    out_dir : str
+        directory where model results will be saved
+    run_id : str
+        sub-directory within out_dir where model results will be saved
+
+    Returns
+    -------
+    None.
+
+    '''
     
     MSE_train = np.square(np.subtract(trainval_df[trainval_df['train/val'] == 'Training']['saltfront_obs'],trainval_df[trainval_df['train/val'] == 'Training']['saltfront_pred'])).mean() 
     RMSE_train = math.sqrt(MSE_train)
@@ -291,34 +567,61 @@ def plot_save_predictions(trainval_df, out_dir, run_id):
     
     #save predictions
     trainval_df.to_csv(os.path.join(out_dir, run_id, 'ModelResults.csv'))
+    
+def run_replicates(n_reps, prepped_model_io_data_file):
+    '''
+    run model replicates to understand variability
+    Parameters
+    ----------
+    n_reps : int
+        number of replicates to run
+    prepped_model_io_data_file : str
+        location of prepped model input, saved as a pickle file by write model params
 
+    Returns
+    -------
+    None.
+
+    '''
+    
+    for i in range(config['replicates']):
+        
+        run_id = os.path.join(config['run_id'], str(i).rjust(2,'0'))
+        
+        train_model(prepped_model_io_data_file, inputs, seq_len,
+                        hidden_units, recur_dropout, 
+                        dropout, n_epochs_pre, learn_rate_pre, 
+                        out_dir, run_id,                       
+                        train_start_date, train_end_date,
+                        val_start_date, val_end_date,
+                        test_start_date, test_end_date, inc_ante)
+        
+        predictions = make_predictions(prepped_model_io_data_file, 
+                             hidden_units, recur_dropout, dropout, 
+                             n_epochs_pre, learn_rate_pre, out_dir, run_id,
+                             train_start_date, train_end_date,
+                             val_start_date, val_end_date,
+                             test_start_date, test_end_date)
+        
+        plot_save_predictions(predictions, out_dir, run_id)
+    
+    
 
 def main():
-    with open("03b_model/model_config.yaml", 'r') as stream:
-        config = yaml.safe_load(stream)
+    '''
+    prepare inputs and targets
+    train the model, save the weights
+    make predictions
+    save and plot predictions
+
+    Returns
+    -------
+    None.
+
+    '''
+        
+    inputs_xarray, target_xarray = select_inputs_targets(inputs, target, train_start_date, test_end_date, out_dir, inc_ante) 
     
-    inputs = config['inputs']
-    target = config['target']
-    
-    out_dir = config['out_dir']
-    run_id = config['run_id']
-    
-    train_start_date = config['train_start_date']
-    train_end_date = config['train_end_date']
-    val_start_date = config['val_start_date']
-    val_end_date = config['val_end_date']
-    test_start_date = config['test_start_date']
-    test_end_date = config['test_end_date']
-    
-    seq_len = config['seq_len']
-    offset = config['offset']
-    n_epochs_pre = config['n_epochs_pre']
-    hidden_units = config['hidden_units']
-    learn_rate_pre = config['learn_rate_pre']
-    recur_dropout = config['recur_dropout']
-    dropout = config['dropout']
-    
-    inputs_xarray, target_xarray = select_inputs_targets(inputs, target, train_start_date, test_end_date, out_dir) 
     
     prep_input_target_data(inputs_xarray, target_xarray, train_start_date, train_end_date, 
                            val_start_date, val_end_date, test_start_date, test_end_date, 
@@ -327,11 +630,6 @@ def main():
     if os.path.exists(os.path.join(out_dir,'prepped_model_io_data')):
        prepped_model_io_data_file = os.path.join(out_dir,'prepped_model_io_data')
     
-    write_model_params(out_dir, run_id, inputs, n_epochs_pre,
-                           learn_rate_pre, seq_len, hidden_units,
-                           train_start_date, train_end_date,
-                           val_start_date, val_end_date,
-                           test_start_date, test_end_date)
     
     train_model(prepped_model_io_data_file, inputs, seq_len,
                     hidden_units, recur_dropout, 
@@ -339,7 +637,7 @@ def main():
                     out_dir, run_id,                       
                     train_start_date, train_end_date,
                     val_start_date, val_end_date,
-                    test_start_date, test_end_date)
+                    test_start_date, test_end_date, inc_ante)
     
     predictions = make_predictions(prepped_model_io_data_file, 
                          hidden_units, recur_dropout, dropout, 
@@ -353,3 +651,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+    
+
