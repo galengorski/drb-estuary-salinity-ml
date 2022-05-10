@@ -66,7 +66,7 @@ def salt_front_timeseries(ds, river_mile_coords_filepath, run_number):
     saltfront = salt.where(salt.salt < 0.53)
 
     # subset salt variable
-    saltfront_location = saltfront_location.salt
+    saltfront_location = saltfront.salt
 
     # convert to dataframe
     df = saltfront_location.to_dataframe()
