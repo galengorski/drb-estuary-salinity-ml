@@ -79,6 +79,10 @@ def salt_front_timeseries(ds, river_mile_coords_filepath, run_number):
 
     # take daily average by averaging hourly location throughout day 
     df = df.resample('1D').mean()
+    
+    # rename datetime column
+    df.reset_index(inplace=True)
+    df.rename({'ocean_time':'datetime'}, axis=1)
 
     saltfront_data = os.path.join('.', '01_fetch', 'out', f'salt_front_location_from_COAWST_run_{run_number}.csv')
     df.to_csv(saltfront_data, index=False)
