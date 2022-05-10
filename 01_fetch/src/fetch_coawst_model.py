@@ -74,12 +74,12 @@ def salt_front_timeseries(ds, river_mile_coords_filepath, run_number):
     # drop points index column so we only have one index (ocean_time)
     df = df.droplevel(level=1)
 
-    # get actual maximum value to use as salt front location
-    df = df.resample('1H').max()
+    s = df.groupby(pd.Grouper(freq='H'))['salt'].transform('max')
+    df = df[df['salt'] == s]
 
     # take daily average by averaging hourly location throughout day 
     df = df.resample('1D').mean()
-    
+
     # rename datetime column
     df.reset_index(inplace=True)
     df.rename({'ocean_time':'datetime'}, axis=1)
