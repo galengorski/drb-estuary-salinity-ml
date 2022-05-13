@@ -62,25 +62,27 @@ def salt_front_timeseries(ds, river_mile_coords_filepath, run_number):
     # assign river mile distance as a new coordinate in dataset
     salt = salt.assign_coords({'dist_mile': dist_mile})
 
-    # locate saltfront
-    saltfront = salt.where(salt.salt < 0.53).where(salt.salt > 0.5)
-    saltfront_location = saltfront.where(saltfront.max('ocean_time'))
+    # locate values where salinity is at or below saltfront value (0.53)
+    saltfront = salt.where(salt.salt < 0.53)
 
     # subset salt variable
-    saltfront_location = saltfront_location.salt
+    saltfront_location = saltfront.salt
 
     # convert to dataframe
     df = saltfront_location.to_dataframe()
 
-    # tidy dataframe
-    # get location of salt front at each hour of the day
-    df = df[df['salt'].notna()]
-    
     # drop points index column so we only have one index (ocean_time)
     df = df.droplevel(level=1)
 
+    s = df.groupby(pd.Grouper(freq='H'))['salt'].transform('max')
+    df = df[df['salt'] == s]
+
     # take daily average by averaging hourly location throughout day 
     df = df.resample('1D').mean()
+
+    # rename datetime column
+    df.reset_index(inplace=True)
+    df.rename({'ocean_time':'datetime'}, axis=1)
 
     saltfront_data = os.path.join('.', '01_fetch', 'out', f'salt_front_location_from_COAWST_run_{run_number}.csv')
     df.to_csv(saltfront_data, index=False)
