@@ -38,17 +38,18 @@ test_end_date = config['test_end_date']
 
 seq_len = config['seq_len']
 offset = config['offset']
-n_epochs_pre = config['n_epochs_pre']
 hidden_units = config['hidden_units']
-learn_rate_pre = config['learn_rate_pre']
+n_epochs = config['n_epochs']
+learn_rate = config['learn_rate']
 recur_dropout = config['recur_dropout']
 dropout = config['dropout']
+inc_ante = config['include_antecedant_data']
 
 
 ###
 def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_dir, inc_ante):
     '''
-    select the variables and target varliables you are interested in examining, 
+    select the input variables and target variables you are interested in examining, 
     saves the inputs and variables as separate .zarr files
     
     Parameters
@@ -101,13 +102,12 @@ def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_d
     
     if inc_ante:
         
-        with open("03b_model/model_config.yaml", 'r') as stream:
-            config = yaml.safe_load(stream)
-            
         win_sizes = config['window_size']
         ante_var = config['antecedant_variables']
         
-        
+        #if discharge is in the antecedant variable list make a combined
+        #discharge variable adding the discharge from the Delaware at Trenton (01474500)
+        #to the discharge from the Schuylkill at Philadelphia (01463500)
         if 'discharge' in ante_var:
             inputs_df['discharge'] = inputs_df['discharge_01463500']+inputs_df['discharge_01474500']
         
@@ -122,8 +122,11 @@ def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_d
                         
                 print('Calculating '+inputs_df.columns[-1]+' '+str(win_size))
                 inputs_df.iloc[win_size:len(inputs_df), -1] = col_values
-        
+        #if discharge is in the antecedant variable list
         if 'discharge' in ante_var:
+            #remove the combined discharge from the list of inputs
+            #this way we have the discharge at Trenton and from the Schuylkill as separate predictors
+            #and the antecedant discharge of the two combined as another predictor
             inputs_df = inputs_df.drop(columns = 'discharge')
         
         inputs_df = inputs_df.dropna()
@@ -138,9 +141,16 @@ def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_d
     
     #set everything below 54 to nan
     target_df_c = target_df.copy()
+    #set river mile < 54 to NA as the salt front is not tracked below river mile 54 per DRBC
+    # if train_high:
+    #     mask_high = target_df_c['saltfront_daily'] < 78
+    #     target_df_c.loc[mask_high,'saltfront_daily'] = np.nan
+    # else:
+    #     mask = target_df_c['saltfront_daily'] < 54
+    #     target_df_c.loc[mask,'saltfront_daily'] = np.nan
     mask = target_df_c['saltfront_daily'] < 54
     target_df_c.loc[mask,'saltfront_daily'] = np.nan
-    
+       
     inputs_xarray = inputs_df.to_xarray()
     target_xarray = target_df_c.to_xarray()
     
@@ -217,14 +227,14 @@ def prep_input_target_data(inputs_xarray, target_xarray,
     x_scl_trn, x_std_trn, x_mean_trn = scale(x_trn)
     y_scl_trn, y_std_trn, y_mean_trn = scale(y_trn)
     
-    x_scl_val, x_std_val, x_mean_val = scale(x_val)
-    y_scl_val, y_std_val, y_mean_val = scale(y_val)
+    x_scl_val, x_std_val, x_mean_val = scale(x_val, std = x_std_trn, mean = x_mean_trn)
+    y_scl_val, y_std_val, y_mean_val = scale(y_val, std = y_std_trn, mean = y_mean_trn)
     
-    x_scl_trnval, x_std_trnval, x_mean_trnval = scale(x_trnval)
-    y_scl_trnval, y_std_trnval, y_mean_trnval = scale(y_trnval)
+    x_scl_trnval, x_std_trnval, x_mean_trnval = scale(x_trnval, std = x_std_trn, mean = x_mean_trn)
+    y_scl_trnval, y_std_trnval, y_mean_trnval = scale(y_trnval, std = y_std_trn, mean = y_mean_trn)
     
-    x_scl_tst, x_std_tst, x_mean_tst = scale(x_tst)
-    y_scl_tst, y_std_tst, y_mean_tst = scale(y_tst)
+    x_scl_tst, x_std_tst, x_mean_tst = scale(x_tst, std = x_std_trn, mean = x_mean_trn)
+    y_scl_tst, y_std_tst, y_mean_tst = scale(y_tst, std = y_std_trn, mean = y_mean_trn)
     
     means_stds = {'x_std_trn':x_std_trn, 'x_mean_trn':x_mean_trn,
                  'y_std_trn':y_std_trn, 'y_mean_trn':y_mean_trn,
@@ -270,8 +280,8 @@ def prep_input_target_data(inputs_xarray, target_xarray,
     with open(os.path.join(out_dir,'prepped_model_io_data'), 'wb') as handle:
         pickle.dump(prepped_model_io_data, handle)
 
-def write_model_params(out_dir, run_id, inputs, n_epochs_pre,
-                       learn_rate_pre, seq_len, hidden_units,
+def write_model_params(out_dir, run_id, inputs, n_epochs,
+                       learn_rate, seq_len, hidden_units,
                        recur_dropout, dropout,
                        train_start_date, train_end_date,
                        val_start_date, val_end_date,
@@ -287,9 +297,9 @@ def write_model_params(out_dir, run_id, inputs, n_epochs_pre,
         sub-directory within out_dir where model results will be saved
     inputs : list
         list of input variables used as predictors
-    n_epochs_pre : int
+    n_epochs : int
         number of epochs to run model
-    learn_rate_pre : float
+    learn_rate : float
         learning rate
     seq_len : int
         sequence length
@@ -345,12 +355,12 @@ def write_model_params(out_dir, run_id, inputs, n_epochs_pre,
             for w in config['window_size']: 
                 inputs_log.append(var+'_'+str(w).rjust(3,'0')+'_mean')
     
-    f= open(os.path.join(dir,"model_param_output.txt"),"w+")
+    f = open(os.path.join(dir,"model_param_output.txt"),"w+")
     f.write("Date: %s\r\n" % date.today().strftime("%b-%d-%Y"))
     f.write("Feature List: %s\r\n" % inputs_log)
     f.write("Include antecedant variable: %s\r\n" % inc_ante)
-    f.write("Epochs: %d\r\n" % n_epochs_pre)
-    f.write("Learning rate: %f\r\n" % learn_rate_pre)
+    f.write("Epochs: %d\r\n" % n_epochs)
+    f.write("Learning rate: %f\r\n" % learn_rate)
     f.write("Sequence Length: %d\r\n" % seq_len)
     f.write("Cells: %d\r\n" % hidden_units)
     f.write("Recurrent Dropout: %f\r\n" % recur_dropout)
@@ -365,7 +375,7 @@ def write_model_params(out_dir, run_id, inputs, n_epochs_pre,
 
 def train_model(prepped_model_io_data_file, inputs, seq_len,
                 hidden_units, recur_dropout, 
-                dropout, n_epochs_pre, learn_rate_pre, 
+                dropout, n_epochs, learn_rate, 
                 out_dir, run_id,                       
                 train_start_date, train_end_date,
                 val_start_date, val_end_date,
@@ -387,9 +397,9 @@ def train_model(prepped_model_io_data_file, inputs, seq_len,
         fraction of the units to drop from the cell update vector
     dropout : float
         fraction of the units to drop from the input
-    n_epochs_pre : int
+    n_epochs : int
         number of epochs to run model
-    learn_rate_pre : float
+    learn_rate : float
         learning rate
     out_dir : str
         directory where model results will be saved
@@ -417,8 +427,9 @@ def train_model(prepped_model_io_data_file, inputs, seq_len,
     None.
 
     '''
-    write_model_params(out_dir, run_id, inputs, n_epochs_pre,
-                           learn_rate_pre, seq_len, hidden_units,
+    write_model_params(out_dir, run_id, inputs, n_epochs,
+                           learn_rate, seq_len, hidden_units,
+                           recur_dropout, dropout,
                            train_start_date, train_end_date,
                            val_start_date, val_end_date,
                            test_start_date, test_end_date, inc_ante)
@@ -435,10 +446,10 @@ def train_model(prepped_model_io_data_file, inputs, seq_len,
                                                               y = prepped_model_io_data['train_targets'], 
                                                               x_val = prepped_model_io_data['val_features'], 
                                                               y_val = prepped_model_io_data['val_targets'], 
-                                                              epochs = n_epochs_pre, 
+                                                              epochs = n_epochs, 
                                                               loss_fn = rmse_masked, 
                                                               optimizer = torch.optim.Adam(pretrain_model.parameters(), 
-                                                                                           lr = learn_rate_pre))
+                                                                                           lr = learn_rate))
     
     torch.save(pretrain_model.state_dict(), os.path.join(out_dir, run_id, 'weights.pt'))
     
@@ -451,7 +462,7 @@ def train_model(prepped_model_io_data_file, inputs, seq_len,
 
 def make_predictions(prepped_model_io_data_file, 
                      hidden_units, recur_dropout, dropout, 
-                     n_epochs_pre, learn_rate_pre, out_dir, run_id,
+                     n_epochs, learn_rate, out_dir, run_id,
                      train_start_date, train_end_date,
                      val_start_date, val_end_date,
                      test_start_date, test_end_date):
@@ -468,9 +479,9 @@ def make_predictions(prepped_model_io_data_file,
         fraction of the units to drop from the cell update vector
     dropout : float
         fraction of the units to drop from the input
-    n_epochs_pre : int
+    n_epochs : int
         number of epochs to run model
-    learn_rate_pre : float
+    learn_rate : float
         learning rate
     out_dir : str
         directory where model results will be saved
@@ -590,7 +601,7 @@ def run_replicates(n_reps, prepped_model_io_data_file):
         
         train_model(prepped_model_io_data_file, inputs, seq_len,
                         hidden_units, recur_dropout, 
-                        dropout, n_epochs_pre, learn_rate_pre, 
+                        dropout, n_epochs, learn_rate, 
                         out_dir, run_id,                       
                         train_start_date, train_end_date,
                         val_start_date, val_end_date,
@@ -598,12 +609,48 @@ def run_replicates(n_reps, prepped_model_io_data_file):
         
         predictions = make_predictions(prepped_model_io_data_file, 
                              hidden_units, recur_dropout, dropout, 
-                             n_epochs_pre, learn_rate_pre, out_dir, run_id,
+                             n_epochs, learn_rate, out_dir, run_id,
                              train_start_date, train_end_date,
                              val_start_date, val_end_date,
                              test_start_date, test_end_date)
         
         plot_save_predictions(predictions, out_dir, run_id)
+
+# A function for training the model on weighted training data
+# def train_high():
+#     out_dir = os.path.join(config['out_dir'],config['run_id'],'train_high')
+#     inputs_xarray_high, target_xarray_high = select_inputs_targets(inputs, target, train_start_date, test_end_date, out_dir, inc_ante, train_high = True) 
+      
+#     prep_input_target_data(inputs_xarray_high, target_xarray_high, train_start_date, train_end_date, 
+#                            val_start_date, val_end_date, test_start_date, test_end_date, 
+#                            seq_len, offset, out_dir)
+    
+#     prepped_model_io_data_file = os.path.join(out_dir,'prepped_model_io_data')
+    
+#     train_model(prepped_model_io_data_file, inputs, seq_len,
+#                     hidden_units, recur_dropout, 
+#                     dropout, n_epochs, learn_rate, 
+#                     out_dir, run_id,                       
+#                     train_start_date, train_end_date,
+#                     val_start_date, val_end_date,
+#                     test_start_date, test_end_date, inc_ante)
+    
+#     out_dir = os.path.join(config['out_dir'],config['run_id'],'predict all')
+#     inputs_xarray, target_xarray = select_inputs_targets(inputs, target, train_start_date, test_end_date, out_dir, inc_ante, train_high = False) 
+    
+#     prep_input_target_data(inputs_xarray_high, target_xarray_high, train_start_date, train_end_date, 
+#                            val_start_date, val_end_date, test_start_date, test_end_date, 
+#                            seq_len, offset, out_dir)
+    
+#     prepped_model_io_data_file = os.path.join(out_dir,'prepped_model_io_data')
+#     predictions = make_predictions(prepped_model_io_data_file, 
+#                          hidden_units, recur_dropout, dropout, 
+#                          n_epochs, learn_rate, out_dir, run_id,
+#                          train_start_date, train_end_date,
+#                          val_start_date, val_end_date,
+#                          test_start_date, test_end_date)
+    
+#     plot_save_predictions(predictions, out_dir, run_id)
     
     
 
@@ -633,7 +680,7 @@ def main():
     
     train_model(prepped_model_io_data_file, inputs, seq_len,
                     hidden_units, recur_dropout, 
-                    dropout, n_epochs_pre, learn_rate_pre, 
+                    dropout, n_epochs, learn_rate, 
                     out_dir, run_id,                       
                     train_start_date, train_end_date,
                     val_start_date, val_end_date,
@@ -641,7 +688,7 @@ def main():
     
     predictions = make_predictions(prepped_model_io_data_file, 
                          hidden_units, recur_dropout, dropout, 
-                         n_epochs_pre, learn_rate_pre, out_dir, run_id,
+                         n_epochs, learn_rate, out_dir, run_id,
                          train_start_date, train_end_date,
                          val_start_date, val_end_date,
                          test_start_date, test_end_date)
