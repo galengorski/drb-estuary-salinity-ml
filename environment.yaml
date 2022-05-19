@@ -5,10 +5,7 @@ channels:
   - pytorch
   - plotly
   - conda-forge
-<<<<<<< HEAD
   - pypi
-=======
->>>>>>> bc79a579525dc0c959fb9f39c86213e480f831c2
 dependencies:
   - numpy
   - pandas
