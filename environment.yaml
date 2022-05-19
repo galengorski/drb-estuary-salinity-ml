@@ -1,6 +1,10 @@
 name: drb_estuary_salinity
 channels:
   - defaults
+  - bioconda
+  - pytorch
+  - plotly
+  - conda-forge
 dependencies:
   - numpy
   - pandas
@@ -28,4 +32,3 @@ dependencies:
   - seaborn
   - dask
   - scikit-learn
-
