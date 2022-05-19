@@ -5,6 +5,7 @@ channels:
   - pytorch
   - plotly
   - conda-forge
+  - pypi
 dependencies:
   - numpy
   - pandas
@@ -32,4 +33,8 @@ dependencies:
   - seaborn
   - dask
   - scikit-learn
+  - pip=21.2.2
+  - pip:
+      - pypi_install
+      - sciencebasepy
 
