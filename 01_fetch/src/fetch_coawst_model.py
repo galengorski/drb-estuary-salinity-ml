@@ -1,3 +1,5 @@
+import time
+import datetime
 import xarray as xr
 import pandas as pd
 import numpy as np
@@ -115,7 +117,7 @@ def main():
     # initialize empty variable to use as combinded df
     combined_df = None
     for file_num in range(1,num_files+1):
-        print(f'fetching file {file_num}/{num_files}')
+        print(f'fetching file {file_num}/{num_files}, time:', datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
         # make the formatted data url and fetch data
         file_num_str = str(file_num).zfill(5)
         url = base_url.format(file_num=file_num_str)
