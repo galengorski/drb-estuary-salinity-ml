@@ -31,8 +31,3 @@ coawst_run_catalog: {
 }
 
 river_mile_coords_filepath: './01_fetch/in/river_mile_coords.csv'
-
-model_run: 'only'
-# model runs: 'waves', 'subtidal_signal'
-
-model_run_year: '2019'
