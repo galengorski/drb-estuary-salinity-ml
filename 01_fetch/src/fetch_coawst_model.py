@@ -36,7 +36,7 @@ def load_COAWST_model_run(url):
     print(f'Size: {ds.nbytes / (-10**9)} GB')
     return ds
 
-def salt_front_timeseries(ds, river_mile_coords_filepath, run_number):
+def salt_front_timeseries(combined_df, ds, river_mile_coords_filepath, run_number):
     # read river mile coordinates csv, which contains geospatial
     # information about the locations want to read data from
     # in the COAWST model
@@ -84,8 +84,15 @@ def salt_front_timeseries(ds, river_mile_coords_filepath, run_number):
     df.reset_index(inplace=True)
     df.rename({'ocean_time':'datetime'}, axis=1)
 
+    # initliaze or append to combinded df
+    if combined_df:
+        combined_df.append(df)
+    else:
+        combined_df = df.copy()
+
+    # save locally
     saltfront_data = os.path.join('.', '01_fetch', 'out', f'salt_front_location_from_COAWST_run_{run_number}.csv')
-    df.to_csv(saltfront_data, index=False)
+    combined_df.to_csv(saltfront_data, index=False)
 
     # upload csv with salt front data to S3
     if write_location == 'S3':
@@ -94,15 +101,26 @@ def salt_front_timeseries(ds, river_mile_coords_filepath, run_number):
 
 def main():
     # define model run
-    url = config['url']
-    u = url.split('/')
+    coawst_run_name = config['coawst_run_name']
+    coawst_run_info = config['coawst_run_catalog'][coawst_run_name]
+
+    base_url = coawst_run_info['url']
+    num_files = coawst_run_info['num_files']
+    u = base_url.split('/')
     run_number = u[12]
 
     # define csv with river mile coordinates
     river_mile_coords_filepath = config['river_mile_coords_filepath']
-
-    ds = load_COAWST_model_run(url)
-    salt_front_timeseries(ds, river_mile_coords_filepath, run_number)
+    
+    # initialize empty variable to use as combinded df
+    combined_df = None
+    for file_num in range(1,num_files+1):
+        # make the formatted data url and fetch data
+        file_num_str = str(file_num).zfill(5)
+        url = base_url.format(file_num=file_num_str)
+        ds = load_COAWST_model_run(url)
+        # process and append the data
+        combined_df = salt_front_timeseries(combined_df, ds, river_mile_coords_filepath, run_number)
 
 if __name__ == '__main__':
     main()
