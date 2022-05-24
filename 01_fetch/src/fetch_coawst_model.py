@@ -100,6 +100,7 @@ def salt_front_timeseries(combined_df, ds, river_mile_coords_filepath, run_numbe
     if write_location == 'S3':
         print('uploading to s3')
         s3_client.upload_file(saltfront_data, s3_bucket, '01_fetch/out/'+os.path.basename(saltfront_data))
+    return combined_df
 
 def main():
     # define model run
