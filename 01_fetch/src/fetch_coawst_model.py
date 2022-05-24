@@ -88,7 +88,7 @@ def salt_front_timeseries(combined_df, ds, river_mile_coords_filepath, run_numbe
 
     # initliaze or append to combinded df
     if combined_df is not None:
-        combined_df.append(df)
+        combined_df = combined_df.append(df)
     else:
         combined_df = df.copy()
 
