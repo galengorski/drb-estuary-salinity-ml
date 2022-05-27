@@ -74,10 +74,10 @@ def salt_front_timeseries(combined_df, ds, river_mile_coords_filepath, run_numbe
     df = saltfront_location.to_dataframe()
 
     # drop points index column so we only have one index (ocean_time)
-    df = df.droplevel(level=1)
+    df = df.droplevel(level=1).sort_index()
 
-    s = df.groupby(pd.Grouper(freq='H'))['salt'].transform('max')
-    df = df[df['salt'].sort_index() == s.sort_index()]
+    s = df.groupby(pd.Grouper(freq='H'))['salt'].transform('max').sort_index()
+    df = df[df['salt'] == s]
 
     # take daily average by averaging hourly location throughout day 
     df = df.resample('1D').mean()
