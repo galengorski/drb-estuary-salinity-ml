@@ -64,36 +64,41 @@ def salt_front_timeseries(combined_df, ds, river_mile_coords_filepath, run_numbe
     # assign river mile distance as a new coordinate in dataset
     salt = salt.assign_coords({'dist_mile': dist_mile})
 
-    # locate values where salinity is at or below saltfront value (0.53)
-    saltfront = salt.where(salt.salt < 0.53)
+    # model does not resolve well sometimes and only produces low values of salinity everywhere
+    # we can't really tell where the salt front should be at these times
+    # we want to mask these low values so they don't skew the location estimate
+    salt_trusted = salt.where(salt.salt > 0.4)
 
-    # subset salt variable
-    saltfront_location = saltfront.salt
-
-    # convert to dataframe
-    df = saltfront_location.to_dataframe()
+    # convert salt variable to dataframe
+    df = salt_trusted.salt.to_dataframe()
 
     # drop points index column so we only have one index (ocean_time)
-    df = df.droplevel(level=1).sort_index()
+    df_drop = df.droplevel(level=1).sort_index()
 
-    s = df.groupby(pd.Grouper(freq='H'))['salt'].transform('max').sort_index()
-    df = df[df['salt'] == s]
+    # get the value closest to 0.52
+    df_drop['abs_salt_diff_052'] = np.fabs(df_drop['salt'] - 0.52)
+    s = df_drop.groupby(pd.Grouper(freq='H'))['abs_salt_diff_052'].transform('min').sort_index()
+    df_sf = df_drop[df_drop['abs_salt_diff_052'] == s]
+    df_sf.drop('abs_salt_diff_052', axis=1, inplace=True)
+
+    # drop any rows that have more than one value for the hour still
+    df_sf_first = df_sf.groupby(pd.Grouper(freq='H')).first()
 
     # take daily average by averaging hourly location throughout day 
-    df = df.resample('1D').mean()
+    df_mean = df_sf_first.resample('1D').mean()
 
     # rename datetime column
-    df.reset_index(inplace=True)
-    df.rename({'ocean_time':'datetime'}, axis=1)
+    df_mean.reset_index(inplace=True)
+    df_mean.rename({'ocean_time':'datetime'}, axis=1, inplace=True)
 
     # initliaze or append to combinded df
     if combined_df is not None:
-        combined_df = combined_df.append(df)
+        combined_df = combined_df.append(df_mean)
     else:
-        combined_df = df.copy()
+        combined_df = df_mean.copy()
 
     # save locally
-    saltfront_data = os.path.join('.', '01_fetch', 'out', f'salt_front_location_from_COAWST_run_{run_number}.csv')
+    saltfront_data = os.path.join('.', '01_fetch', 'out', f'salt_front_location_from_COAWST_{run_number}.csv')
     combined_df.to_csv(saltfront_data, index=False)
 
     # upload csv with salt front data to S3
