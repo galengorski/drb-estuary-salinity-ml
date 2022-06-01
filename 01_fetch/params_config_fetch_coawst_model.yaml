@@ -7,17 +7,27 @@ s3_bucket: 'drb-estuary-salinity'
 #set up AWS client
 s3_client: utils.prep_write_location(write_location, aws_profile)
 
-#select COAWST model run
-url: 'http://geoport.whoi.edu/thredds/dodsC/vortexfs1/usgs/users/scook/proj/DE_Bay/run07/run07C/ocean_deb_his_run07C_tsvar_00010.nc'
-# Other model run options:
-# Model Output with Subtidal Signal
-# url: https://geoport.whoi.edu/thredds/catalog/vortexfs1/usgs/users/scook/proj/DE_Bay/run07/run07C/run07C_tide_subtidal/ocean_deb_his_run07C_tsvar_00010.
-# Model Output with Waves -
-# url: https://geoport.whoi.edu/thredds/catalog/vortexfs1/usgs/users/scook/proj/DE_Bay/run07/run07C/run07C_waves/era5_2019/catalog.html?  dataset=vortexfs1/usgs/users/scook/proj/DE_Bay/run07/run07C/run07C_waves/era5_2019/ocean_deb_his_run07C_waves_tsvar_2019_00012.nc
+# select COAWST model run
+# options: tide, tide_subtidal, tide_subtidal_bulk
+coawst_run_name: 'tide_subtidal_bulk'
+
+# define COAWST model run source catalog
+# for the runs specified above, includes base url for files and 
+# number of files needed to pull to get the complete time 
+# series for the run
+coawst_run_catalog: {
+  'tide': {
+    url: 'https://geoport.whoi.edu/thredds/dodsC/vortexfs1/usgs/users/scook/proj/DE_Bay/run07/run07C/testcoawst/tide/model_output/ocean_deb_his_run07C_tsvar_testcoawst_tide_{file_num}.nc',
+    num_files: 13
+    },
+  'tide_subtidal': {
+    url: 'https://geoport.whoi.edu/thredds/dodsC/vortexfs1/usgs/users/scook/proj/DE_Bay/run07/run07C/testcoawst/tide_subtidal/model_output/ocean_deb_his_run07C_tsvar_testcoawst_{file_num}.nc',
+    num_files: 13
+    },
+  'tide_subtidal_bulk': {
+    url: 'https://geoport.whoi.edu/thredds/dodsC/vortexfs1/usgs/users/scook/proj/DE_Bay/run07/run07C/testcoawst/bulk/obcfac/model_output/ocean_deb_his_run07C_tsvar_testcoawst_bulk_{file_num}.nc',
+    num_files: 12
+  },
+}
 
 river_mile_coords_filepath: './01_fetch/in/river_mile_coords.csv'
-
-model_run: 'only'
-# model runs: 'waves', 'subtidal_signal'
-
-model_run_year: '2019'

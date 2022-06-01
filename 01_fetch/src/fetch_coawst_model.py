@@ -1,3 +1,5 @@
+import time
+import datetime
 import xarray as xr
 import pandas as pd
 import numpy as np
@@ -36,7 +38,16 @@ def load_COAWST_model_run(url):
     print(f'Size: {ds.nbytes / (-10**9)} GB')
     return ds
 
-def salt_front_timeseries(ds, river_mile_coords_filepath, run_number):
+def get_nearest(df, col, value, agg):
+    # get the value closest to 0.52
+    df.sort_index(inplace=True)
+    df['abs_var_diff'] = np.fabs(df[col] - value)
+    s = df.groupby(pd.Grouper(freq=agg))['abs_var_diff'].transform('min').sort_index()
+    df_nearest = df.sort_index()[df['abs_var_diff'] == s]
+    df_nearest.drop('abs_var_diff', axis=1, inplace=True)
+    return df_nearest
+
+def fetch_hourly_sf(combined_df, ds, river_mile_coords_filepath, run_number):
     # read river mile coordinates csv, which contains geospatial
     # information about the locations want to read data from
     # in the COAWST model
@@ -62,47 +73,91 @@ def salt_front_timeseries(ds, river_mile_coords_filepath, run_number):
     # assign river mile distance as a new coordinate in dataset
     salt = salt.assign_coords({'dist_mile': dist_mile})
 
-    # locate values where salinity is at or below saltfront value (0.53)
-    saltfront = salt.where(salt.salt < 0.53)
+    # model does not resolve well sometimes and only produces low values of salinity everywhere
+    # we can't really tell where the salt front should be at these times
+    # we want to mask these low values so they don't skew the location estimate
+    salt_trusted = salt.where(salt.salt > 0.4)
 
-    # subset salt variable
-    saltfront_location = saltfront.salt
-
-    # convert to dataframe
-    df = saltfront_location.to_dataframe()
+    # convert salt variable to dataframe
+    df = salt_trusted.salt.to_dataframe()
 
     # drop points index column so we only have one index (ocean_time)
-    df = df.droplevel(level=1)
+    df_drop = df.droplevel(level=1).sort_index()
 
-    s = df.groupby(pd.Grouper(freq='H'))['salt'].transform('max')
-    df = df[df['salt'].sort_index() == s.sort_index()]
+    # get the value of the dataframe where salinity is nearest 0.52,
+    # for each hour
+    df_sf = get_nearest(df_drop, 'salt', 0.52, 'H')
+
+    # initliaze or append to combinded df
+    if combined_df is not None:
+        combined_df = combined_df.append(df_sf)
+    else:
+        combined_df = df_sf.copy()
+    
+    # save locally
+    salinity_data = os.path.join('.', '01_fetch', 'out', f'hourly_salinity_052_from_COAWST_{run_number}.csv')
+    combined_df.to_csv(salinity_data)
+
+    # upload csv with salt front data to S3
+    if write_location == 'S3':
+        print('uploading to s3')
+        s3_client.upload_file(salinity_data, s3_bucket, '01_fetch/out/'+os.path.basename(salinity_data))
+    return combined_df
+
+
+def calculate_avg_daily_sf(hourly_sf_df, run_number):
+    # check again to make sure we have the value of the dataframe where salinity 
+    # is nearest 0.52, for each hour - some days carry over between source files,
+    # so we need to check again that we have only one value per hour
+    hourly_sf_df = get_nearest(hourly_sf_df, 'salt', 0.52, 'H')
+
+    # drop any rows that have more than one value for the hour still
+    hourly_sf_df_first = hourly_sf_df.groupby(pd.Grouper(freq='H')).first()
 
     # take daily average by averaging hourly location throughout day 
-    df = df.resample('1D').mean()
+    mean_daily_sf_df = hourly_sf_df_first.resample('1D').mean()
 
     # rename datetime column
-    df.reset_index(inplace=True)
-    df.rename({'ocean_time':'datetime'}, axis=1)
+    mean_daily_sf_df.reset_index(inplace=True)
+    mean_daily_sf_df.rename({'ocean_time':'datetime'}, axis=1, inplace=True)
 
-    saltfront_data = os.path.join('.', '01_fetch', 'out', f'salt_front_location_from_COAWST_run_{run_number}.csv')
-    df.to_csv(saltfront_data, index=False)
+    # save locally
+    saltfront_data = os.path.join('.', '01_fetch', 'out', f'salt_front_location_from_COAWST_{run_number}.csv')
+    mean_daily_sf_df.to_csv(saltfront_data, index=False)
 
     # upload csv with salt front data to S3
     if write_location == 'S3':
         print('uploading to s3')
         s3_client.upload_file(saltfront_data, s3_bucket, '01_fetch/out/'+os.path.basename(saltfront_data))
+    return mean_daily_sf_df
 
 def main():
     # define model run
-    url = config['url']
-    u = url.split('/')
+    coawst_run_name = config['coawst_run_name']
+    coawst_run_info = config['coawst_run_catalog'][coawst_run_name]
+
+    base_url = coawst_run_info['url']
+    num_files = coawst_run_info['num_files']
+    u = base_url.split('/')
     run_number = u[12]
 
     # define csv with river mile coordinates
     river_mile_coords_filepath = config['river_mile_coords_filepath']
+    
+    # initialize empty variable to use as combinded df
+    hourly_sf_df = None
+    # fetch each data file and get the approximate salt front location by hour
+    for file_num in range(1,num_files+1):
+        print(f'fetching file {file_num}/{num_files}, time:', datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
+        # make the formatted data url and fetch data
+        file_num_str = str(file_num).zfill(5)
+        url = base_url.format(file_num=file_num_str)
+        ds = load_COAWST_model_run(url)
+        # process and append the data
+        hourly_sf_df = fetch_hourly_sf(hourly_sf_df, ds, river_mile_coords_filepath, run_number)
 
-    ds = load_COAWST_model_run(url)
-    salt_front_timeseries(ds, river_mile_coords_filepath, run_number)
+    # calculate average daily salt front from hourly data
+    mean_daily_sf_df = calculate_avg_daily_sf(hourly_sf_df, run_number)
 
 if __name__ == '__main__':
     main()
