@@ -15,22 +15,60 @@ These functions were developed borrowing code and ideas from:
 from joblib import Parallel, delayed
 import math
 import numpy as np
+from scipy.stats.stats import pearsonr
 
 #%%
-#used for some testing
-#x1 = np.random.rand(10)
-#x2 = np.random.rand(10)
-#x3 = [1400, 1500, 1600, np.nan, np.nan, np.nan ,1700, 700, 430, 650]
-#y = x1+x2
+class pre_proc_func:
+    '''this class of functions preprocesses the data to remove unwanted signals
+    and prepare the data for information theory calculations'''
+    def __init__(self):
+        pass
 
-M = np.stack((x1,y), axis = 1)
-#%%
-def calc2Dpdf(M,nbins = 11):
+    def log10(self, sr):
+        l10 = np.log10(sr+1e-6)
+        return l10
+    
+    def standardize(self, sr):
+        standardized = (sr - np.nanmean(sr))/np.nanstd(sr, ddof = 1)
+        return standardized
+
+    def normalize(self, sr):
+        normalized = (sr-np.nanmin(sr))/(np.nanmax(sr)-np.nanmin(sr))
+        return normalized
+    
+    def anomaly(self, sr):
+        anomaly = sr - np.nanmean(sr)
+        return anomaly
+
+    def remove_seasonal_signal(self, sr):
+        #calculate doy for sr
+        sr_doy = sr.index.strftime('%j')
+        #convert sr_historical to df
+        sr_historical_df = sr.to_frame().copy()
+        #calculate doy
+        sr_historical_df['doy'] = list(sr.index.strftime('%j'))
+        #calculate the doy means
+        doy_means = sr_historical_df.groupby('doy').mean()
+        #convert the index (doy) to int64
+        doy_means.index = doy_means.index.astype('int64')
+        seasonal_removed = list()
+        for i in range(len(sr)):
+            if math.isnan(sr[i]):
+                seasonal_removed.append(np.nan)
+            else:
+                doy = int(sr_doy[i])
+                doy_mean = doy_means.loc[doy]
+                value = sr.iloc[i]-doy_mean[0]
+                seasonal_removed.append(value)
+        return seasonal_removed
+    
+
+def calc2Dpdf(M,nbins):
     '''calculates the 3 pdfs, one for x, one for y and a joint pdf for x and y 
     M: a numpy array of shape (nobs, 2) where nobs is the number of observations
     this assumes that the data are arrange such that the first column is the source (x) and
     the second column is the sink (y).
-    nbins: is the number of bins used for estimating the pdf with a default of 11'''
+    nbins: is the number of bins used for estimating the pdf '''
     
     counts, binEdges = np.histogramdd(M,bins=nbins)
     p_xy = counts/np.sum(counts)
@@ -40,12 +78,12 @@ def calc2Dpdf(M,nbins = 11):
     
     return p_x, p_y, p_xy
 
-def calc3Dpdfs(M, nbins = 11):
+def calc3Dpdfs(M, nbins):
     '''calculates the 7 pdfs, one each for x, y, and z, one each for their individual
     joint distributions, and one for the 3d joint distributions. Right now it only returns
     the 3d joint distribution for simplicity
     M: a numpy array of shape (nobs, 3) where nobs is the number of observations.
-    nbins: is the number of bins used for estimating the pdf with a default of 11'''
+    nbins: is the number of bins used for estimating the pdf '''
     # use numpy histogram as pdf
     pdf,edges = np.histogramdd(M,bins=nbins)
     p_xyz = pdf/np.sum(pdf)
@@ -70,16 +108,16 @@ def calcEntropy(pdf):
     return H
 
 
-def calcMI(M, nbins = 11):
+def calcMI(M, nbins):
     '''calculate mutual information of two variables
     M: a numpy array of shape (nobs, 2) where nobs is the number of observations
     this assumes that the data are arrange such that the first column is the source and
     the second column is the sink.
-    nbins: is the number of bins used for estimating the pdf with a default of 11
+    nbins: is the number of bins used for estimating the pdf 
     the mutual information is normalized by the entropy of the sink'''
     
     
-    p_x, p_y, p_xy = calc2Dpdf(M, nbins = 11)
+    p_x, p_y, p_xy = calc2Dpdf(M, nbins = nbins)
     
     Hx = calcEntropy(p_x)
     Hy = calcEntropy(p_y)
@@ -89,12 +127,12 @@ def calcMI(M, nbins = 11):
     
     return MI
 
-def calcMI_shuffled(M, nbins = 11):
+def calcMI_shuffled(M, nbins):
     '''shuffles the input dataset to destroy temporal relationships for signficance testing
     M: a numpy array of shape (nobs, 2) where nobs is the number of observations
     this assumes that the data are arrange such that the first column is the source and
     the second column is the sink.
-    nbins: is the number of bins used for estimating the pdf with a default of 11
+    nbins: is the number of bins used for estimating the pdf 
     the mutual information is normalized by the entropy of the sink
     returns a single MI value for a numpy array the same size and shape as M, 
     but with the order shuffled'''
@@ -106,18 +144,18 @@ def calcMI_shuffled(M, nbins = 11):
         R = np.random.rand(np.shape(n_nans)[0],1)
         I = np.argsort(R,axis=0)
         Mss[n_nans[:,0],n] = M[n_nans[I[:],0],n].reshape(np.shape(M[n_nans[I[:],0],n])[0],)
-    MI_shuff = calcMI(Mss, nbins = 11)
+    MI_shuff = calcMI(Mss, nbins = nbins)
     return MI_shuff
     
-def calcMI_crit(M, nbins = 11, alpha = 0.05, numiter = 1000, ncores = 2):
+def calcMI_crit(M, nbins, alpha = 0.01, numiter = 500, ncores = 2):
     '''calculate the critical threshold of mutual information
     M: a numpy array of shape (nobs, 2) where nobs is the number of observations
     this assumes that the data are arrange such that the first column is the source and
     the second column is the sink.
-    nbins: is the number of bins used for estimating the pdf with a default of 11
+    nbins: is the number of bins used for estimating the pdf 
     the mutual information is normalized by the entropy of the sink
-    alpha: sigficance threshold, default = 0.05
-    numiter: number of iterations, default = 1000
+    alpha: significance threshold, default = 0.05
+    numiter: number of iterations, default = 500
     ncores: number of cores, default = 2'''
     
     MIss = Parallel(n_jobs=ncores)(delayed(calcMI_shuffled)(M, nbins) for ii in range(numiter))
@@ -133,22 +171,22 @@ def lag_data(M, shift):
     the second column is the sink.
     shift: the number of time steps you want to lag the sink by, must be a positive integer
     returns M_lagged of dimensions [length(M)-shift, 3]
-    M_lagged[,1] = source_lagged: source[1:n-shift]
+    M_lagged[,1] = source_lagged: source[0:n-shift]
     M_lagged[,2] = sink_unlagged: sink[shift:n]
-    M_lagged[,3] = sink_lagged: sink[1:n-shift]
-    => H(Xt-T, Yt, Yt-T)'''
+    M_lagged[,3] = sink_lagged: sink[1:n-1]
+    => H(Xt-T, Yt, Yt-1)'''
     
     length_M = M.shape[0]
     cols_M = M.shape[1]
-    newlength_M = length_M - shift 
+    newlength_M = length_M - shift - 1
     M_lagged = np.nan*np.ones([newlength_M, cols_M+1]) 
     
-    M_lagged[:,0] = M[0:(length_M-shift), 0]
-    M_lagged[:,1] = M[shift:(length_M),1]
-    M_lagged[:,2] = M[0:(length_M-shift),1]
+    M_lagged[:,0] = M[1:(length_M-shift), 0]
+    M_lagged[:,1] = M[shift+1:(length_M),1]
+    M_lagged[:,2] = M[(shift):(length_M-1),1]
     return M_lagged
 
-def calcTE(M, shift, nbins = 11):
+def calcTE(M, shift, nbins):
     '''calculate the transfer entropy from source lagged by shift to sink
     M: a numpy array of shape (nobs, 2) where nobs is the number of observations
     this assumes that the data are arrange such that the first column is the source and
@@ -156,16 +194,16 @@ def calcTE(M, shift, nbins = 11):
     shift: the amount of time steps to lag the source and sink, this assumes that the shift for
     both is the same, it doesn't have to be for TE, but for simplicity we keep it that way here, 
     could be changed in the future
-    nbins: is the number of bins used for estimating the pdf with a default of 11
+    nbins: is the number of bins used for estimating the pdf 
     the mutual information is normalized by the entropy of the sink'''
     #lag data
     M_lagged = lag_data(M,shift)
     #remove any rows where there is an nan value
     M_short =  M_lagged[~np.isnan(M_lagged).any(axis=1)]
     
-    M1 = M_short[:,(0,2)]  # [source_lagged(1:n-shift), sink_lagged(1:n-shift)]  =>H(Xt-T,Yt-T)
-    M2 = M_short[:,(1,2)] # [sink_unlagged(shift:n), sink_lagged(1:n-shift)]    =>H(Yt,Yt-T)
-    M3 = M_short[:,2]      # [sink_unlagged(1:n-shift)] =>H(Yt-T) 
+    M1 = M_short[:,(0,2)]  # [source_lagged(1:n-shift), sink_lagged(1:n-shift)]  =>H(Xt-T,Yt-1)
+    M2 = M_short[:,(1,2)] # [sink_unlagged(shift:n), sink_lagged(1:n-shift)]    =>H(Yt,Yt-1)
+    M3 = M_short[:,2]      # [sink_unlagged(1:n-shift)] =>H(Yt-1) 
     
     #calc joint entropy of H(Xt-T,Yt-T)
     _, _, p_xlyl = calc2Dpdf(M1, nbins)
@@ -186,12 +224,12 @@ def calcTE(M, shift, nbins = 11):
     
     return T
 
-def calcTE_shuffled(M, shift, nbins = 11):
+def calcTE_shuffled(M, shift, nbins):
     '''shuffles the input dataset to destroy temporal relationships for signficance testing
     M: a numpy array of shape (nobs, 2) where nobs is the number of observations
     this assumes that the data are arranged such that the first column is the source and
     the second column is the sink.
-    nbins: is the number of bins used for estimating the pdf with a default of 11
+    nbins: is the number of bins used for estimating the pdf 
     the transfer entropy is normalized by the entropy of the sink
     returns a single TE value for a numpy array the same size and shape as M, 
     but with the order shuffled'''
@@ -203,19 +241,19 @@ def calcTE_shuffled(M, shift, nbins = 11):
         R = np.random.rand(np.shape(n_nans)[0],1)
         I = np.argsort(R,axis=0)
         Mss[n_nans[:,0],n] = M[n_nans[I[:],0],n].reshape(np.shape(M[n_nans[I[:],0],n])[0],)
-    TE_shuff = calcTE(Mss, shift, nbins = 11)
+    TE_shuff = calcTE(Mss, shift, nbins)
     return TE_shuff
 
-def calcTE_crit(M, shift, nbins = 11, alpha = 0.05, numiter = 1000, ncores = 2):
+def calcTE_crit(M, shift, nbins, alpha = 0.01, numiter = 500, ncores = 2):
     '''calculate the critical threshold of transfer entropy
     M: a numpy array of shape (nobs, 2) where nobs is the number of observations
     this assumes that the data are arrange such that the first column is the source and
     the second column is the sink.
     shift: time lag that should be considered
-    nbins: is the number of bins used for estimating the pdf with a default of 11
+    nbins: is the number of bins used for estimating the pdf 
     the transfer entropy is normalized by the entropy of the sink
-    alpha: sigficance threshold, default = 0.05
-    numiter: number of iterations, default = 1000
+    alpha: significance threshold, default = 0.05
+    numiter: number of iterations, default = 500
     ncores: number of cores, default = 2'''
     
     TEss = Parallel(n_jobs=ncores)(delayed(calcTE_shuffled)(M, shift, nbins) for ii in range(numiter))
@@ -224,3 +262,55 @@ def calcTE_crit(M, shift, nbins = 11, alpha = 0.05, numiter = 1000, ncores = 2):
     TEcrit = TEss[math.ceil((1-alpha)*numiter)] 
     return(TEcrit)
 
+def calc_it_metrics(M, Mswap, n_lags, nbins, calc_swap = True, alpha = 0.01):
+    '''wrapper function for calculating mutual information and transfer entropy 
+    (for both x -> y and y -> x) across a range of time lags. It also calculates
+    a significance threshold for mutual information and transfer entropy using the 
+    shuffled surrogate method
+    M: a numpy array of shape (nobs, 2) where nobs is the number of observations
+    this assumes that the data are arrange such that the first column is the source and
+    the second column is the sink.
+    Mswap: a numpy array identical to M except the two columns have been swapped
+    n_lags: number of time lag that should be considered, will calculate from 0-n_lags
+    nbins: is the number of bins used for estimating the pdf 
+    the transfer entropy is normalized by the entropy of the sink
+    alpha: significance threshold, default = 0.05
+    '''
+    
+    MI = []
+    MIcrit = []
+    corr = []
+    TE = []
+    TEcrit = []
+    TEswap = []
+    TEcritswap = []
+    for i in range(0,n_lags):
+        #lag data
+        M_lagged = lag_data(M,shift = i)
+        #remove any rows where there is an nan value
+        M_short =  M_lagged[~np.isnan(M_lagged).any(axis=1)]
+        MItemp = calcMI(M_short[:,(0,1)], nbins)
+        MI.append(MItemp)
+        MIcrittemp = calcMI_crit(M_short[:,(0,1)], nbins, ncores = 8, alpha = 0.01)
+        MIcrit.append(MIcrittemp)
+        
+        corrtemp = pearsonr(M_short[:,0], M_short[:,1])[0]
+        corr.append(corrtemp)
+        
+        TEtemp = calcTE(M, shift = i, nbins = nbins)
+        TE.append(TEtemp)
+        TEcrittemp = calcTE_crit(M, shift = i, nbins = nbins, ncores = 8, alpha = 0.01)
+        TEcrit.append(TEcrittemp)
+        
+        if calc_swap:
+            TEtempswap = calcTE(Mswap, shift = i)
+            TEswap.append(TEtempswap)
+            TEcrittempswap = calcTE_crit(Mswap, shift = i, nbins = nbins, ncores = 8, alpha = 0.01)
+            TEcritswap.append(TEcrittempswap)
+        
+    it_metrics = {'MI':MI, 'MIcrit':MIcrit,
+                  'TE':TE, 'TEcrit':TEcrit,
+                  'TEswap':TEswap, 'TEcritswap':TEcritswap,
+                  'corr':corr}
+    
+    return it_metrics

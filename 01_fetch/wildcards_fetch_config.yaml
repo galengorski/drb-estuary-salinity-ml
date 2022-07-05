@@ -1,0 +1,41 @@
+fetch_usgs_nwis.py:
+  sites:
+    #- '01411390' # Cape May Harbor at Cape May NJ
+    - '01463500' # Delaware River at Trenton NJ
+    #- '01464040' # Delaware River at Marine Terminal at Trenton NJ
+    #- '014670261' # Delaware River at Pennypack Woods PA
+    #- '01467059' # Delaware River at Riverton NJ
+    #- '01467200' # Delaware River at Penn's Landing, Philadelphia, PA
+    - '01474500' # Schuylkill River at Philadelphia, PA
+    #- '01474703' # Delaware River at Fort Mifflin at Philadelphia, PA
+    #- '01477050' # DELAWARE RIVER AT CHESTER PA
+    #- '01482695' # C AND D CANAL NR DELAWARE CITY, DE
+    #- '01482800' # Delaware River at Reedy Island Jetty, DE
+
+fetch_noaa_nos.py:
+  sites:
+    #- '8536110' # Cape May
+    - '8557380' # Lewes
+    #- '8548989' # Newbold, PA
+    #- '8539094' # Burlington, NJ
+    #- '8546252' # Bridesburg, NJ
+    #- '8545240' # Philadelphia, PA
+    #- '8540433' # Marcus Hook, PA
+    #- '8551762' # Delaware City, DE
+    #- '8551910' # Reedy Point, DE
+    #- '8537121' # Ship John Shoal, NJ
+    #- '8555889' # Brandywine Shoal Lighthouse, DE
+
+  products:
+    # options: water_level, air_temperature, water_temperature, wind, air_pressure, air_gap, conductivity, visibility,
+    # humidity, salinity, hourly_height, high_low, daily_mean, monthly_mean, one_minute_water_level, predictions, datums,
+    # currents, and currents_predictions.
+    - 'water_level'
+    - 'conductivity'
+    - 'predictions'
+    - 'air_pressure'
+    #- 'air_temperature'
+
+fetch_noaa_nerrs.py:
+  sites:
+    - 'delsjmet'

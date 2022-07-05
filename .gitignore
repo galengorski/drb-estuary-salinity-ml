@@ -4,6 +4,9 @@ _targets
 #All model output
 */out/*
 
+#All model inputs
+*/in/*
+
 #R files
 # History files
 .Rhistory
@@ -57,3 +60,10 @@ __pycache__/
 
 # pycharm files
 .idea/
+
+#netcdf_files
+*.nc
+.ipynb_checkpoints
+
+#dask
+dask-worker-space/

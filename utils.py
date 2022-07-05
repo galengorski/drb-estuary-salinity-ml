@@ -43,3 +43,45 @@ def process_to_timestep(df, cols, agg_level, prop_obs_required):
     # only keep averages where we have enough measurements
     df.where(prop_df.gt(prop_obs_required), inplace=True)
     return df
+
+def local_to_s3_pathname(local_pathname):
+    '''
+    takes a local file path name and converts it to the
+    properly formatted s3 file path name
+    '''
+    return local_pathname.replace('.\\','').replace('\\', '/')
+
+def download_s3_to_local(s3_dir_prefix, local_outdir, file_id):
+    '''download data files from s3 bucket to local machine for development
+    file_id - a file identifier substring that is contained within all 
+    the file names you want to download. For example 'usgs_nwis' will 
+    download all files with 'usgs_nwis' in the file name'''
+    
+    # assumes we are using a credential profile names 'dev'
+    write_location = 'local'
+    aws_profile = 'dev'
+    s3_client = prep_write_location(write_location, aws_profile)
+    # end the name of the bucket you want to read/write to:
+    s3_bucket = 'drb-estuary-salinity'
+    
+    # create the output file directory on your local
+    os.makedirs(local_outdir, exist_ok=True)
+
+    # loop through all objects with this prefix that contain .csv and file_id and download
+    for obj in s3_client.list_objects_v2(Bucket=s3_bucket, Prefix=s3_dir_prefix)['Contents']:
+        s3_fpath = obj['Key']
+        if ".csv" and file_id not in s3_fpath:
+            continue
+        local_fpath = os.path.join(local_outdir,obj['Key'].split('/')[2])
+        s3_client.download_file(s3_bucket, s3_fpath, local_fpath)
+        print(s3_fpath+' Downloaded to local')
+
+def get_datafile_list(read_location, s3_client=None, s3_bucket=None):
+    raw_datafiles = {}
+    if read_location=='S3':
+        raw_datafiles = [obj['Key'] for obj in s3_client.list_objects_v2(Bucket=s3_bucket, Prefix='01_fetch/out/usgs_nwis_0')['Contents']]
+    elif read_location=='local':
+        prefix = os.path.join('01_fetch', 'out')
+        file_prefix='usgs_nwis_0'
+        raw_datafiles = [os.path.join(prefix, f) for f in os.listdir(prefix) if f.startswith(file_prefix)]
+    return raw_datafiles
