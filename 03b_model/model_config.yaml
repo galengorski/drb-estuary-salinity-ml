@@ -2,14 +2,14 @@ out_dir: '03b_model/out'
 run_id: 'Run_04'  
 inputs: ['discharge_01463500', 
                 #'specific_conductance_01463500',
-                'discharge_01474500']#, 
+                'discharge_01474500', 
                 #'specific_conductance_01474500', 
-                #'wl_range_8557380','wl_max_8557380','wl_obs_pred_8557380','wl_filtered_8557380',
-                #'air_pressure_delsjmet', 
-                #'temperature_delsjmet',
+                'wl_range_8557380','wl_max_8557380','wl_obs_pred_8557380','wl_filtered_8557380',
+                'air_pressure_delsjmet', 
+                'temperature_delsjmet',
                 #'precipitation_delsjmet',
-                #'wind_direction_delsjmet',
-                #'wind_speed_delsjmet','wind_speed_direction_delsjmet']                    
+                'wind_direction_delsjmet',
+                'wind_speed_delsjmet','wind_speed_direction_delsjmet']                    
  #the sinks to be analyzed, this will likely be the salt front location
 target: 'saltfront_daily'
 
@@ -26,8 +26,8 @@ test_end_date: '2019-12-31'
 seq_len: 365
 offset: 1.0
 hidden_units: 10
-n_epochs_pre: 5
+n_epochs_pre: 300
 learn_rate_pre: 0.001
-recur_dropout: 0.25
-dropout: 0.25
+recur_dropout: 0.0
+dropout: 0.1
 
