@@ -191,6 +191,9 @@ def calcTE(M, shift, nbins):
     M: a numpy array of shape (nobs, 2) where nobs is the number of observations
     this assumes that the data are arrange such that the first column is the source and
     the second column is the sink.
+    shift: the amount of time steps to lag the source and sink, this assumes that the shift for
+    both is the same, it doesn't have to be for TE, but for simplicity we keep it that way here, 
+    could be changed in the future
     nbins: is the number of bins used for estimating the pdf 
     the mutual information is normalized by the entropy of the sink'''
     #lag data
