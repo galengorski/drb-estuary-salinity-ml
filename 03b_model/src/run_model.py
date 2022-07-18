@@ -358,6 +358,7 @@ def write_model_params(out_dir, run_id, inputs, n_epochs,
     f = open(os.path.join(dir,"model_param_output.txt"),"w+")
     f.write("Date: %s\r\n" % date.today().strftime("%b-%d-%Y"))
     f.write("Feature List: %s\r\n" % inputs_log)
+    f.write("Target: %s\r\n" % target)
     f.write("Include antecedant variable: %s\r\n" % inc_ante)
     f.write("Epochs: %d\r\n" % n_epochs)
     f.write("Learning rate: %f\r\n" % learn_rate)
