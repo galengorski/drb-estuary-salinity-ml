@@ -9,7 +9,7 @@ fetch_usgs_nwis.py:
     - '01474500' # Schuylkill River at Philadelphia, PA
     #- '01474703' # Delaware River at Fort Mifflin at Philadelphia, PA
     #- '01477050' # DELAWARE RIVER AT CHESTER PA
-    #- '01482695' # C AND D CANAL NR DELAWARE CITY, DE
+    - '01482695' # C AND D CANAL NR DELAWARE CITY, DE
     #- '01482800' # Delaware River at Reedy Island Jetty, DE
 
 fetch_noaa_nos.py:
