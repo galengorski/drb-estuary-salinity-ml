@@ -151,6 +151,11 @@ def munge_single_site_data(site_num):
     prop_obs_required = config['prop_obs_required']
     #should air pressure anomalies in NERR be filled with NOS data
     fill_anom_w_nos = config['fill_anom_w_nos']
+
+    # make output directories if they don't exist
+    os.makedirs('02_munge/out', exist_ok=True)
+    os.makedirs(f'02_munge/out/{agg_level}', exist_ok=True)
+
     # process raw data files into csv
     site_raw_datafiles = get_datafile_list(site_num, read_location=read_location)
     

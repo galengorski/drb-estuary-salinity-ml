@@ -89,6 +89,10 @@ def fetch_param_file():
     params_df = process_params_to_csv(params_outfile_txt, params_outfile_csv)
 
 def fetch_single_site_data(site_num):
+    # make output directories if they don't exist
+    os.makedirs('01_fetch/out', exist_ok=True)
+    os.makedirs('01_fetch/out/metadata', exist_ok=True)
+
     # site data comes in from snakemake as a set, get single value from set
     if type(site_num)==set:
         site_num = list(site_num)[0]
