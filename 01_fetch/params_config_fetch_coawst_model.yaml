@@ -9,24 +9,39 @@ s3_client: utils.prep_write_location(write_location, aws_profile)
 
 # select COAWST model run
 # options: tide, tide_subtidal, tide_subtidal_bulk
-coawst_run_name: 'tide_subtidal_bulk'
+coawst_run_name: '2019_tide_subtidal_bulk'
 
 # define COAWST model run source catalog
 # for the runs specified above, includes base url for files and 
 # number of files needed to pull to get the complete time 
 # series for the run
 coawst_run_catalog: {
-  'tide': {
+  '2019_tide': {
     url: 'https://geoport.whoi.edu/thredds/dodsC/vortexfs1/usgs/users/scook/proj/DE_Bay/run07/run07C/testcoawst/tide/model_output/ocean_deb_his_run07C_tsvar_testcoawst_tide_{file_num}.nc',
     num_files: 13
     },
-  'tide_subtidal': {
+  '2019_tide_subtidal': {
     url: 'https://geoport.whoi.edu/thredds/dodsC/vortexfs1/usgs/users/scook/proj/DE_Bay/run07/run07C/testcoawst/tide_subtidal/model_output/ocean_deb_his_run07C_tsvar_testcoawst_{file_num}.nc',
     num_files: 13
     },
-  'tide_subtidal_bulk': {
+  '2019_tide_subtidal_bulk': {
     url: 'https://geoport.whoi.edu/thredds/dodsC/vortexfs1/usgs/users/scook/proj/DE_Bay/run07/run07C/testcoawst/bulk/obcfac/model_output/ocean_deb_his_run07C_tsvar_testcoawst_bulk_{file_num}.nc',
-    num_files: 12
+    num_files: 13
+  },
+  '2016_tide': {
+    url: 'https://geoport.whoi.edu/thredds/dodsC/vortexfs1/usgs/users/scook/proj/DE_Bay/run07/run07E/run07E_tide/model_output/ocean_deb_his_run07E_tide_{file_num}.nc',
+    num_files: 13
+    },
+  '2016_tide_subtidal': {
+    url: 'https://geoport.whoi.edu/thredds/dodsC/vortexfs1/usgs/users/scook/proj/DE_Bay/run07/run07E/run07E_tide_subtidal/model_output/ocean_deb_his_run07E_subtidal_{file_num}.nc',
+    num_files: 13
+    },
+  # the 2016 bulk model is not performing as expected
+  # we probably shouldn't use this data without checking in with Salme to see if it
+  # has been fixed
+  '2016_tide_subtidal_bulk': {
+    url: 'https://geoport.whoi.edu/thredds/dodsC/vortexfs1/usgs/users/scook/proj/DE_Bay/run07/run07E/run07E_bulk/model_output/ocean_deb_his_run07E_bulk_{file_num}.nc',
+    num_files: 13
   },
 }
 
