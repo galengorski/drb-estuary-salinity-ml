@@ -6,6 +6,7 @@ channels:
   - plotly
   - conda-forge
   - pypi
+
 dependencies:
   - numpy
   - pandas
@@ -37,4 +38,5 @@ dependencies:
   - pip:
       - pypi_install
       - sciencebasepy
+  - scikit-learn
 
