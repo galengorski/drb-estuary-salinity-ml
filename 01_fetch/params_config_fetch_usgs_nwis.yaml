@@ -8,4 +8,4 @@ s3_bucket: 'drb-estuary-salinity'
 # start and end dates for data fetch
 # should be in the format 'YYYY-MM-DD'
 start_dt: '2000-01-01'
-end_dt: '2019-12-31'
+end_dt: '2021-12-31'

@@ -40,4 +40,4 @@ units: 'metric'
 file_format: 'json'
 
 start_year: '2000'
-end_year: '2019'
+end_year: '2021'

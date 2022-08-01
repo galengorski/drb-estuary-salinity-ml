@@ -85,7 +85,7 @@ def prep_input_target_data(inputs_xarray, target_xarray,
                            train_start_date, train_end_date, 
                            val_start_date, val_end_date, 
                            test_start_date, test_end_date, 
-                           seq_len, offset, out_dir):
+                           seq_len, offset, out_dir, return_data):
     
     #split into train val test sets
     y_trn, y_val, y_tst = separate_trn_tst(target_xarray,'datetime',train_start_date, train_end_date,
@@ -153,6 +153,8 @@ def prep_input_target_data(inputs_xarray, target_xarray,
                              'trainval_features':trainval_features, 'trainval_targets':trainval_targets,
                              'test_features':test_features, 'test_targets':test_targets,
                              'means_stds':means_stds}
+    if return_data:
+        return prepped_model_io_data
     
     with open(os.path.join(out_dir,'prepped_model_io_data'), 'wb') as handle:
         pickle.dump(prepped_model_io_data, handle)
@@ -327,12 +329,7 @@ def main():
     if os.path.exists(os.path.join(out_dir,'prepped_model_io_data')):
        prepped_model_io_data_file = os.path.join(out_dir,'prepped_model_io_data')
     
-    write_model_params(out_dir, run_id, inputs, n_epochs_pre,
-                           learn_rate_pre, seq_len, hidden_units,
-                           train_start_date, train_end_date,
-                           val_start_date, val_end_date,
-                           test_start_date, test_end_date)
-    
+      
     train_model(prepped_model_io_data_file, inputs, seq_len,
                     hidden_units, recur_dropout, 
                     dropout, n_epochs_pre, learn_rate_pre, 
