@@ -42,6 +42,6 @@ hidden_units: 10
 learn_rate: 0.001
 recur_dropout: 0.0
 dropout: 0.1
-n_epochs: 5
+n_epochs: 500
 learn_rate: 0.001
 
