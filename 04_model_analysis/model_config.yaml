@@ -1,0 +1,47 @@
+out_dir: '03b_model/out'
+run_id: 'Run_29'  
+inputs: ['discharge_01463500', 
+                #'specific_conductance_01463500',
+                'discharge_01474500', 
+                #'specific_conductance_01474500', 
+                'wl_range_8557380','wl_max_8557380','wl_obs_pred_8557380','wl_filtered_8557380',
+                'air_pressure_delsjmet', 
+                'temperature_delsjmet',
+                #'precipitation_delsjmet',
+                'wind_direction_delsjmet',
+                'wind_speed_delsjmet']#,'wind_speed_direction_delsjmet']                    
+
+#the sinks to be analyzed, this will likely be the salt front location
+target: 'saltfront7_weekly'
+replicates: 5
+#train on only extreme obs
+train_high: False
+
+#explicitly including summary antecedant data
+#window_size and antecedant_variables must be in a list
+#as they are iterated over
+include_antecedant_data: False
+window_size: [60]
+antecedant_variables: ['discharge']
+
+
+#select the split dates
+train_start_date: '2001-01-01'
+train_end_date: '2010-12-31'
+val_start_date: '2011-01-01'
+val_end_date: '2015-12-31'
+test_start_date: '2016-01-01'
+test_end_date: '2019-12-31'
+
+#model parameters
+seq_len: 180
+offset: 1
+hidden_units: 10
+
+
+learn_rate: 0.001
+recur_dropout: 0.0
+dropout: 0.1
+n_epochs: 500
+learn_rate: 0.001
+
