@@ -6,6 +6,7 @@ Created on Tue Mar 15 15:44:55 2022
 """
 
 from datetime import date
+import itertools
 from LSTMDA_torch import LSTMDA, fit_torch_model, rmse_masked
 import math
 import matplotlib.pyplot as plt
@@ -616,6 +617,58 @@ def run_replicates(n_reps, prepped_model_io_data_file):
                              test_start_date, test_end_date)
         
         plot_save_predictions(predictions, out_dir, run_id)
+        
+
+def test_hyperparameters():
+    with open("03b_model/hyperparameter_config.yaml", 'r') as stream:
+        hp_config = yaml.safe_load(stream)
+        
+    inputs_xarray, target_xarray = select_inputs_targets(inputs, target, train_start_date, test_end_date, out_dir, inc_ante) 
+
+    hyper_params = hp_config['hyper_params']
+    #print('Hyperparameters being tested: '+ hyper_params)
+    
+    sl = hp_config['seq_len']
+    hu = hp_config['hidden_units']
+    lr = hp_config['learn_rate']
+    do = hp_config['dropout']
+
+    hp_tune_vals = list(itertools.product(sl, hu, lr, do))
+
+    for j in range(len(hp_tune_vals)):
+        seq_len = hp_tune_vals[j][0]
+        hidden_units = hp_tune_vals[j][1]
+        learn_rate = hp_tune_vals[j][2]
+        dropout = hp_tune_vals[j][3]
+        
+        prep_input_target_data(inputs_xarray, target_xarray, train_start_date, train_end_date, 
+                               val_start_date, val_end_date, test_start_date, test_end_date, 
+                               seq_len, offset, out_dir)
+        
+        if os.path.exists(os.path.join(out_dir,'prepped_model_io_data')):
+           prepped_model_io_data_file = os.path.join(out_dir,'prepped_model_io_data')
+        
+        for i in range(config['replicates']):
+            
+            run_id = os.path.join(config['run_id'], str(i).rjust(2,'0'))
+            
+            train_model(prepped_model_io_data_file, inputs, seq_len,
+                            hidden_units, recur_dropout, 
+                            dropout, n_epochs, learn_rate, 
+                            out_dir, run_id,                       
+                            train_start_date, train_end_date,
+                            val_start_date, val_end_date,
+                            test_start_date, test_end_date, inc_ante)
+            
+            predictions = make_predictions(prepped_model_io_data_file, 
+                                 hidden_units, recur_dropout, dropout, 
+                                 n_epochs, learn_rate, out_dir, run_id,
+                                 train_start_date, train_end_date,
+                                 val_start_date, val_end_date,
+                                 test_start_date, test_end_date)
+            
+            plot_save_predictions(predictions, out_dir, run_id)
+
 
 # A function for training the model on weighted training data
 # def train_high():
