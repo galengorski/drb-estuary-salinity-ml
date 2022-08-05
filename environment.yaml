@@ -35,6 +35,6 @@ dependencies:
   - scikit-learn
   - pip=21.2.2
   - pip:
-      - sciencebasepy
+    - sciencebasepy
 
 
