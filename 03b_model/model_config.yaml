@@ -1,5 +1,8 @@
 out_dir: '03b_model/out'
+
 run_id: 'Run_29'  
+ 
+
 inputs: ['discharge_01463500', 
                 #'specific_conductance_01463500',
                 'discharge_01474500', 
@@ -35,15 +38,15 @@ test_start_date: '2016-01-01'
 test_end_date: '2019-12-31'
 
 #model parameters
+
 seq_len: 180
 offset: 1
 hidden_units: 10
-
-
 learn_rate: 0.001
 recur_dropout: 0.0
 dropout: 0.1
 n_epochs: 500
 learn_rate: 0.001
+
 
 
