@@ -1,6 +1,6 @@
 out_dir: '03b_model/out'
 
-run_id: 'Run_29'  
+run_id: 'Run_02'  
  
 
 inputs: ['discharge_01463500', 
@@ -45,7 +45,7 @@ hidden_units: 10
 learn_rate: 0.001
 recur_dropout: 0.0
 dropout: 0.1
-n_epochs: 500
+n_epochs: 6
 learn_rate: 0.001
 
 

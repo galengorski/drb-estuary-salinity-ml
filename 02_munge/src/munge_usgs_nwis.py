@@ -17,6 +17,8 @@ write_location = config['write_location']
 s3_client = utils.prep_write_location(write_location, config['aws_profile'])
 s3_bucket = config['s3_bucket']
 
+os.makedirs('02_munge/in', exist_ok=True)
+
 def param_code_to_name(df, params_df):
     for col in df.columns:
         # get 5-digit parameter code from column name
