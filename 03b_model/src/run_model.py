@@ -5,7 +5,7 @@ Created on Tue Mar 15 15:44:55 2022
 @author: ggorski
 """
 
-from datetime import date
+from datetime import date, datetime
 import itertools
 from LSTMDA_torch import LSTMDA, fit_torch_model, rmse_masked
 import math
@@ -135,7 +135,7 @@ def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_d
     
     #read in the salt front record
     target_df = pd.read_csv(os.path.join('03a_it_analysis', 'in', 'saltfront.csv'), parse_dates = True, index_col = 'datetime')
-    target_df = target_df['saltfront_daily'].to_frame()
+    target_df = target_df['saltfront7_weekly'].to_frame()
     target_df.index = pd.to_datetime(target_df.index.date)
     target_df = target_df[str(inputs_df.index[0]):test_end_date]
     target_df.index = target_df.index.rename('datetime')
@@ -149,8 +149,8 @@ def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_d
     # else:
     #     mask = target_df_c['saltfront_daily'] < 54
     #     target_df_c.loc[mask,'saltfront_daily'] = np.nan
-    mask = target_df_c['saltfront_daily'] < 54
-    target_df_c.loc[mask,'saltfront_daily'] = np.nan
+    mask = target_df_c['saltfront7_weekly'] < 54
+    target_df_c.loc[mask,'saltfront7_weekly'] = np.nan
        
     inputs_xarray = inputs_df.to_xarray()
     target_xarray = target_df_c.to_xarray()
@@ -528,10 +528,10 @@ def make_predictions(prepped_model_io_data_file,
     #unnormalize
     #predictions for train val set
     preds_trainval_c  = preds_trainval.detach().numpy().reshape(preds_trainval.shape[0]*preds_trainval.shape[1],preds_trainval.shape[2])
-    unnorm_trainval = ((preds_trainval_c*means_stds['y_std_trnval']['saltfront_daily'].data)+means_stds['y_mean_trnval']['saltfront_daily'].data).squeeze()
+    unnorm_trainval = ((preds_trainval_c*means_stds['y_std_trnval']['saltfront7_weekly'].data)+means_stds['y_mean_trnval']['saltfront7_weekly'].data).squeeze()
     #known values for trainval set
     known_trainval_c = prepped_model_io_data['trainval_targets'].detach().numpy().reshape(prepped_model_io_data['trainval_targets'].shape[0]*prepped_model_io_data['trainval_targets'].shape[1], prepped_model_io_data['trainval_targets'].shape[2]).squeeze()
-    unnorm_known_trainval = (known_trainval_c*means_stds['y_std_trnval']['saltfront_daily'].data)+means_stds['y_mean_trnval']['saltfront_daily'].data
+    unnorm_known_trainval = (known_trainval_c*means_stds['y_std_trnval']['saltfront7_weekly'].data)+means_stds['y_mean_trnval']['saltfront7_weekly'].data
     trainval_dates = pd.date_range(start = train_start_date, periods = known_trainval_c.shape[0], freq = 'D')
     
     
@@ -622,24 +622,51 @@ def run_replicates(n_reps, prepped_model_io_data_file):
 def test_hyperparameters():
     with open("03b_model/hyperparameter_config.yaml", 'r') as stream:
         hp_config = yaml.safe_load(stream)
-        
-    inputs_xarray, target_xarray = select_inputs_targets(inputs, target, train_start_date, test_end_date, out_dir, inc_ante) 
+    
+    out_dir = hp_config['out_dir']
+    #these probably won't change from running the model without
+    #hp tuning but they will be read from the hp_config file
+    inputs = hp_config['inputs']
+    target = hp_config['target']
+    inc_ante = hp_config['include_antecedant_data']
+
+   
+    train_start_date = hp_config['train_start_date']
+    train_end_date = hp_config['train_end_date']
+    val_start_date = hp_config['val_start_date']
+    val_end_date = hp_config['val_end_date']
+    test_start_date = hp_config['test_start_date']
+    test_end_date = hp_config['test_end_date']
+    
+    #not used in hyperparamter training
+    offset = hp_config['offset']
+    n_epochs = hp_config['n_epochs']
+    recur_dropout = hp_config['recur_dropout']
+    inc_ante = hp_config['include_antecedant_data']
 
     hyper_params = hp_config['hyper_params']
-    #print('Hyperparameters being tested: '+ hyper_params)
-    
+    print('Hyperparameters being tested:')
+    print(hyper_params)
+    #used in hyperparameter training
     sl = hp_config['seq_len']
     hu = hp_config['hidden_units']
     lr = hp_config['learn_rate']
     do = hp_config['dropout']
+    
+    inputs_xarray, target_xarray = select_inputs_targets(inputs, target, train_start_date, test_end_date, out_dir, inc_ante) 
 
     hp_tune_vals = list(itertools.product(sl, hu, lr, do))
 
     for j in range(len(hp_tune_vals)):
+        now = datetime.now()
+        current_time = now.strftime("%H:%M:%S")
+        print(current_time)
+        print('Running hyperparameter combination '+str(j+1)+' of '+str(len(hp_tune_vals)))
         seq_len = hp_tune_vals[j][0]
         hidden_units = hp_tune_vals[j][1]
         learn_rate = hp_tune_vals[j][2]
         dropout = hp_tune_vals[j][3]
+        hp_id = "HP_Run_"+str(j).zfill(2)
         
         prep_input_target_data(inputs_xarray, target_xarray, train_start_date, train_end_date, 
                                val_start_date, val_end_date, test_start_date, test_end_date, 
@@ -648,9 +675,15 @@ def test_hyperparameters():
         if os.path.exists(os.path.join(out_dir,'prepped_model_io_data')):
            prepped_model_io_data_file = os.path.join(out_dir,'prepped_model_io_data')
         
-        for i in range(config['replicates']):
-            
-            run_id = os.path.join(config['run_id'], str(i).rjust(2,'0'))
+        for i in range(hp_config['replicates']):
+            now = datetime.now()
+            current_time = now.strftime("%H:%M:%S")
+            print(current_time)
+            print('Running replicate '+str(i+1)+' of '+str(hp_config['replicates']))
+            print('------------------------------------------------------------------')
+            print('Running hyperparameter-replicate combination '+str((j+1)*(i+1))+' of '+str(len(hp_tune_vals)*hp_config['replicates']))
+
+            run_id = os.path.join(hp_id, str(i).rjust(2,'0'))
             
             train_model(prepped_model_io_data_file, inputs, seq_len,
                             hidden_units, recur_dropout, 
