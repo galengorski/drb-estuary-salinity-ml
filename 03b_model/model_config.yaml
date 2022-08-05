@@ -9,7 +9,9 @@ inputs: ['discharge_01463500',
                 'temperature_delsjmet',
                 #'precipitation_delsjmet',
                 'wind_direction_delsjmet',
-                'wind_speed_delsjmet']#,'wind_speed_direction_delsjmet']                    
+                'wind_speed_delsjmet','wind_speed_direction_delsjmet']                    
+                 
+
  #the sinks to be analyzed, this will likely be the salt front location
 target: 'saltfront_daily'
 replicates: 5
@@ -40,4 +42,5 @@ n_epochs: 500
 learn_rate: 0.001
 recur_dropout: 0.25
 dropout: 0.25
+
 

@@ -59,3 +59,6 @@ prop_obs_required: 0.05
 # options come from data offsets found here:
 # https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html
 agg_level: 'D'
+
+# should air pressure anomalies in NERR be filled with NOS data
+fill_anom_w_nos: True

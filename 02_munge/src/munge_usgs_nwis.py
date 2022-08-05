@@ -109,6 +109,11 @@ def munge_single_site_data(site_num):
     prop_obs_required = config['prop_obs_required']
     # timestep to aggregate to
     agg_level = config['agg_level']
+
+    # make output directories if they don't exist
+    os.makedirs('02_munge/out', exist_ok=True)
+    os.makedirs(f'02_munge/out/{agg_level}', exist_ok=True)
+
     # process raw data files into csv
     raw_datafile = os.path.join('01_fetch', 'out', f'usgs_nwis_{site_num}.txt')
     process_data_to_csv(raw_datafile, params_to_process, params_df, flags_to_drop, agg_level, prop_obs_required, read_location)

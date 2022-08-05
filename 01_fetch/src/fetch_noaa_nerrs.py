@@ -45,7 +45,12 @@ def fetch_all_sites_data():
     site_ids = site_config['sites']
     zip_folders = config['zip_folders']
     for station_id in site_ids:
-        zipfile_path = os.path.join('.', '01_fetch', 'in', '{}.zip'.format(zip_folders[site_num]))
+        zipfilename = '{}.zip'.format(zip_folders[station_id])
+        zipfile_path = os.path.join('01_fetch', 'in', zipfilename)
+        # download zip file of data from s3 if we don't have it
+        if not os.path.exists(zipfile_path):
+            utils.download_s3_to_local(os.path.dirname(zipfile_path).replace('\\', '/'), os.path.dirname(zipfile_path), zipfilename)
+        # get data for single site from zipfile
         fetch_single_site_data(station_id, zipfile_path)
 
 if __name__ == '__main__':

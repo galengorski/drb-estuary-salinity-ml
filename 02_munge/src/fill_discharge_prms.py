@@ -20,7 +20,8 @@ def download_unzip_sb(sb_url, prms_predictions, destination):
     :sb_url: [str] url for downloading zip file
     :prms_predictions: [str] specific file name 
     :destination: [str] where the file will be downloaded to'''
-    
+    # make input directory for data if it doesn't exist
+    os.makedirs(destination, exist_ok=True)
     if os.path.exists(os.path.join(destination,prms_predictions+'.zip')):
         print('File has already been downloaded')
     else:
