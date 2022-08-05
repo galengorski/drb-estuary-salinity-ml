@@ -88,6 +88,16 @@ def rmse_masked(y_true, y_pred):
     rmse_loss = torch.sqrt(sum_squared_errors / num_y_true)
     return rmse_loss
 
+def mse_masked(y_true, y_pred):
+    num_y_true = torch.count_nonzero(
+        ~torch.isnan(y_true)
+    )
+    zero_or_error = torch.where(
+        torch.isnan(y_true), torch.zeros_like(y_true), y_pred - y_true
+    )
+    sum_squared_errors = torch.sum(torch.square(zero_or_error))
+    mse_loss = sum_squared_errors / num_y_true
+    return mse_loss
 
 # def rmse_weighted(y_true, y_pred): # weighted by covariance matrix from DA; weights are concatonated onto y_true and need to separate out within function 
 #     raise(NotImplementedError)
