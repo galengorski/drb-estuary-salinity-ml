@@ -149,14 +149,10 @@ def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_d
     # else:
     #     mask = target_df_c['saltfront_daily'] < 54
     #     target_df_c.loc[mask,'saltfront_daily'] = np.nan
-<<<<<<< HEAD
+
     mask = target_df_c['saltfront7_weekly'] < 54
     target_df_c.loc[mask,'saltfront7_weekly'] = np.nan
-=======
-    mask = target_df_c['saltfront_daily'] < 54
-    target_df_c.loc[mask,'saltfront_daily'] = np.nan
->>>>>>> ba69d4c077cc19a40e3c4275ae19fec7a9fc1163
-       
+
     inputs_xarray = inputs_df.to_xarray()
     target_xarray = target_df_c.to_xarray()
     
@@ -364,10 +360,7 @@ def write_model_params(out_dir, run_id, inputs, n_epochs,
     f = open(os.path.join(dir,"model_param_output.txt"),"w+")
     f.write("Date: %s\r\n" % date.today().strftime("%b-%d-%Y"))
     f.write("Feature List: %s\r\n" % inputs_log)
-<<<<<<< HEAD
     f.write("Target: %s\r\n" % target)
-=======
->>>>>>> ba69d4c077cc19a40e3c4275ae19fec7a9fc1163
     f.write("Include antecedant variable: %s\r\n" % inc_ante)
     f.write("Epochs: %d\r\n" % n_epochs)
     f.write("Learning rate: %f\r\n" % learn_rate)
@@ -625,7 +618,6 @@ def run_replicates(n_reps, prepped_model_io_data_file):
                              test_start_date, test_end_date)
         
         plot_save_predictions(predictions, out_dir, run_id)
-
         
 
 def test_hyperparameters():
@@ -710,6 +702,7 @@ def test_hyperparameters():
                                  test_start_date, test_end_date)
             
             plot_save_predictions(predictions, out_dir, run_id)
+
 
 
 # A function for training the model on weighted training data

@@ -99,6 +99,7 @@ def mse_masked(y_true, y_pred):
     mse_loss = sum_squared_errors / num_y_true
     return mse_loss
 
+
 # def extreme_loss(y_true, y_pred):
 #     y_true_or_err = torch.where(
 #         torch.isnan(y_true), torch.Tensor([-9999]) , y_true
@@ -128,6 +129,7 @@ def mse_masked(y_true, y_pred):
     
 #     return loss_hi_low
     
+
 
 # def rmse_weighted(y_true, y_pred): # weighted by covariance matrix from DA; weights are concatonated onto y_true and need to separate out within function 
 #     raise(NotImplementedError)
