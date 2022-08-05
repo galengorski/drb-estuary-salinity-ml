@@ -303,7 +303,7 @@ def calc_it_metrics(M, Mswap, n_lags, nbins, calc_swap = True, alpha = 0.01):
         TEcrit.append(TEcrittemp)
         
         if calc_swap:
-            TEtempswap = calcTE(Mswap, shift = i)
+            TEtempswap = calcTE(Mswap, shift = i, nbins = nbins)
             TEswap.append(TEtempswap)
             TEcrittempswap = calcTE_crit(Mswap, shift = i, nbins = nbins, ncores = 8, alpha = 0.01)
             TEcritswap.append(TEcrittempswap)

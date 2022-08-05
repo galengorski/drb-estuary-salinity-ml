@@ -99,6 +99,38 @@ def mse_masked(y_true, y_pred):
     mse_loss = sum_squared_errors / num_y_true
     return mse_loss
 
+
+# def extreme_loss(y_true, y_pred):
+#     y_true_or_err = torch.where(
+#         torch.isnan(y_true), torch.Tensor([-9999]) , y_true
+#     )
+#     #-0.0138 is approx river mile 70 scaled by mean and sd of the training set
+#     low_zero_or_error = torch.where(
+#         (y_true_or_err >= -0.0138) | (y_true_or_err < -999), torch.zeros_like(y_true_or_err), y_pred - y_true_or_err
+#         )
+#     num_low_y_true = torch.count_nonzero(
+#         low_zero_or_error
+#         )
+#     high_zero_or_error = torch.where(
+#         (y_true_or_err < -0.0138) , torch.zeros_like(y_true_or_err), y_pred - y_true_or_err
+#         )
+#     num_high_y_true = torch.count_nonzero(
+#         high_zero_or_error
+#         )
+
+#     sum_squared_errors_low = torch.sum(torch.square(low_zero_or_error))
+#     loss_low = torch.sqrt(sum_squared_errors_low / num_low_y_true)
+    
+#     #cube the errors where river mile is high
+#     sum_cubed_errors_high = torch.sum(torch.pow(high_zero_or_error,4))
+#     loss_high = (sum_cubed_errors_high / num_high_y_true)
+    
+#     loss_hi_low = loss_low.add(loss_high)
+    
+#     return loss_hi_low
+    
+
+
 # def rmse_weighted(y_true, y_pred): # weighted by covariance matrix from DA; weights are concatonated onto y_true and need to separate out within function 
 #     raise(NotImplementedError)
 #     return rmse_loss

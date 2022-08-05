@@ -1,8 +1,5 @@
-out_dir: '03b_model/out'
-
+out_dir: '03b_model/out/HP_Tune'
 run_id: 'Run_29'  
- 
-
 inputs: ['discharge_01463500', 
                 #'specific_conductance_01463500',
                 'discharge_01474500', 
@@ -14,10 +11,9 @@ inputs: ['discharge_01463500',
                 'wind_direction_delsjmet',
                 'wind_speed_delsjmet']#,'wind_speed_direction_delsjmet']                    
 
-
 #the sinks to be analyzed, this will likely be the salt front location
 target: 'saltfront7_weekly'
-replicates: 5
+replicates: 3
 #train on only extreme obs
 train_high: False
 
@@ -37,16 +33,14 @@ val_end_date: '2015-12-31'
 test_start_date: '2016-01-01'
 test_end_date: '2019-12-31'
 
-#model parameters
-
-seq_len: 180
+#model parameters that you would like to tune over
+hyper_params: ['seq_len','hidden_units','learn_rate','dropout']
+seq_len: [60,180,365]
 offset: 1
-hidden_units: 10
-learn_rate: 0.001
+hidden_units: [5,10,20]
+
+n_epochs: 250
+learn_rate: [0.001, 0.003, 0.005]
 recur_dropout: 0.0
-dropout: 0.1
-n_epochs: 500
-learn_rate: 0.001
-
-
+dropout: [0.1, 0.3, 0.5]
 
