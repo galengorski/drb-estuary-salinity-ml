@@ -135,7 +135,7 @@ def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_d
     
     #read in the salt front record
     target_df = pd.read_csv(os.path.join('03a_it_analysis', 'in', 'saltfront.csv'), parse_dates = True, index_col = 'datetime')
-    target_df = target_df['saltfront7_weekly'].to_frame()
+    target_df = target_df[target].to_frame()
     target_df.index = pd.to_datetime(target_df.index.date)
     target_df = target_df[str(inputs_df.index[0]):test_end_date]
     target_df.index = target_df.index.rename('datetime')
@@ -150,8 +150,8 @@ def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_d
     #     mask = target_df_c['saltfront_daily'] < 54
     #     target_df_c.loc[mask,'saltfront_daily'] = np.nan
 
-    mask = target_df_c['saltfront7_weekly'] < 54
-    target_df_c.loc[mask,'saltfront7_weekly'] = np.nan
+    mask = target_df_c[target] < 54
+    target_df_c.loc[mask,target] = np.nan
 
     inputs_xarray = inputs_df.to_xarray()
     target_xarray = target_df_c.to_xarray()
@@ -463,7 +463,7 @@ def train_model(prepped_model_io_data_file, inputs, seq_len,
     plt.savefig(os.path.join(out_dir,run_id,'losses.png'))
     plt.close()
 
-def make_predictions(prepped_model_io_data_file, 
+def make_predictions(prepped_model_io_data_file, target, 
                      hidden_units, recur_dropout, dropout, 
                      n_epochs, learn_rate, out_dir, run_id,
                      train_start_date, train_end_date,
@@ -529,10 +529,10 @@ def make_predictions(prepped_model_io_data_file,
     #unnormalize
     #predictions for train val set
     preds_trainval_c  = preds_trainval.detach().numpy().reshape(preds_trainval.shape[0]*preds_trainval.shape[1],preds_trainval.shape[2])
-    unnorm_trainval = ((preds_trainval_c*means_stds['y_std_trnval']['saltfront7_weekly'].data)+means_stds['y_mean_trnval']['saltfront7_weekly'].data).squeeze()
+    unnorm_trainval = ((preds_trainval_c*means_stds['y_std_trnval'][target].data)+means_stds['y_mean_trnval'][target].data).squeeze()
     #known values for trainval set
     known_trainval_c = prepped_model_io_data['trainval_targets'].detach().numpy().reshape(prepped_model_io_data['trainval_targets'].shape[0]*prepped_model_io_data['trainval_targets'].shape[1], prepped_model_io_data['trainval_targets'].shape[2]).squeeze()
-    unnorm_known_trainval = (known_trainval_c*means_stds['y_std_trnval']['saltfront7_weekly'].data)+means_stds['y_mean_trnval']['saltfront7_weekly'].data
+    unnorm_known_trainval = (known_trainval_c*means_stds['y_std_trnval'][target].data)+means_stds['y_mean_trnval'][target].data
     trainval_dates = pd.date_range(start = train_start_date, periods = known_trainval_c.shape[0], freq = 'D')
     
     
@@ -610,7 +610,7 @@ def run_replicates(n_reps, prepped_model_io_data_file):
                         val_start_date, val_end_date,
                         test_start_date, test_end_date, inc_ante)
         
-        predictions = make_predictions(prepped_model_io_data_file, 
+        predictions = make_predictions(prepped_model_io_data_file, target,
                              hidden_units, recur_dropout, dropout, 
                              n_epochs, learn_rate, out_dir, run_id,
                              train_start_date, train_end_date,
@@ -705,7 +705,7 @@ def test_hyperparameters():
                             val_start_date, val_end_date,
                             test_start_date, test_end_date, inc_ante)
             
-            predictions = make_predictions(prepped_model_io_data_file, 
+            predictions = make_predictions(prepped_model_io_data_file, target, 
                                  hidden_units, recur_dropout, dropout, 
                                  n_epochs, learn_rate, out_dir, run_id,
                                  train_start_date, train_end_date,
@@ -786,7 +786,7 @@ def main():
                     val_start_date, val_end_date,
                     test_start_date, test_end_date, inc_ante)
     
-    predictions = make_predictions(prepped_model_io_data_file, 
+    predictions = make_predictions(prepped_model_io_data_file, target,
                          hidden_units, recur_dropout, dropout, 
                          n_epochs, learn_rate, out_dir, run_id,
                          train_start_date, train_end_date,

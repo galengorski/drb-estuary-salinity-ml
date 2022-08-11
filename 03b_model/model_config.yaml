@@ -1,6 +1,6 @@
 out_dir: '03b_model/out'
 
-run_id: 'Run_32'  
+run_id: 'Run_33'  
 
 inputs: ['discharge_01463500', 
                 #'specific_conductance_01463500',
@@ -42,7 +42,7 @@ hidden_units: 5
 learn_rate: 0.005
 recur_dropout: 0.5
 dropout: 0.5
-n_epochs: 500
+n_epochs: 5
 
 
 
