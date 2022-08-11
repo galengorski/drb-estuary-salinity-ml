@@ -55,9 +55,9 @@ def fetch_noaa_nos_data(station_id, product, start_year, end_year, datum, time_z
                 # otherwise, append the new month of data to the df
                 else:
                     try:
-                        data_df = data_df.append(pd.DataFrame(data_json['data']))
+                        data_df = data_df.concat(pd.DataFrame(data_json['data']))
                     except KeyError:
-                        data_df = data_df.append(pd.DataFrame(data_json[product]))
+                        data_df = data_df.concat(pd.DataFrame(data_json[product]))
                 i+=1
             except:
                 continue

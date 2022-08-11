@@ -5,7 +5,8 @@ Created on Tue Mar 15 15:44:55 2022
 @author: ggorski
 """
 
-from datetime import date
+from datetime import date, datetime
+import itertools
 from LSTMDA_torch import LSTMDA, fit_torch_model, rmse_masked
 import math
 import matplotlib.pyplot as plt
@@ -13,11 +14,15 @@ import numpy as np
 import os
 import pandas as pd
 import pickle
+import random
 from river_dl.preproc_utils import separate_trn_tst, scale, split_into_batches
 import shutil
 import torch
 import yaml
 
+
+#set seed for reprodubility
+random.seed(10)
 
 with open("03b_model/model_config.yaml", 'r') as stream:
     config = yaml.safe_load(stream)
@@ -44,6 +49,25 @@ learn_rate = config['learn_rate']
 recur_dropout = config['recur_dropout']
 dropout = config['dropout']
 inc_ante = config['include_antecedant_data']
+seed_set = config['seed_set']
+
+def set_seed(seed):
+    '''
+    Set random seed in different libraries for reproducibility
+    Parameters
+    ----------
+    seed : int
+        number to set the seed with
+
+    Returns
+    -------
+    None.
+
+    '''
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.manual_seed(seed)
+
 
 
 ###
@@ -134,7 +158,7 @@ def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_d
     
     #read in the salt front record
     target_df = pd.read_csv(os.path.join('03a_it_analysis', 'in', 'saltfront.csv'), parse_dates = True, index_col = 'datetime')
-    target_df = target_df['saltfront_daily'].to_frame()
+    target_df = target_df[target].to_frame()
     target_df.index = pd.to_datetime(target_df.index.date)
     target_df = target_df[str(inputs_df.index[0]):test_end_date]
     target_df.index = target_df.index.rename('datetime')
@@ -148,9 +172,10 @@ def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_d
     # else:
     #     mask = target_df_c['saltfront_daily'] < 54
     #     target_df_c.loc[mask,'saltfront_daily'] = np.nan
-    mask = target_df_c['saltfront_daily'] < 54
-    target_df_c.loc[mask,'saltfront_daily'] = np.nan
-       
+
+    mask = target_df_c[target] < 54
+    target_df_c.loc[mask,target] = np.nan
+
     inputs_xarray = inputs_df.to_xarray()
     target_xarray = target_df_c.to_xarray()
     
@@ -358,6 +383,7 @@ def write_model_params(out_dir, run_id, inputs, n_epochs,
     f = open(os.path.join(dir,"model_param_output.txt"),"w+")
     f.write("Date: %s\r\n" % date.today().strftime("%b-%d-%Y"))
     f.write("Feature List: %s\r\n" % inputs_log)
+    f.write("Target: %s\r\n" % target)
     f.write("Include antecedant variable: %s\r\n" % inc_ante)
     f.write("Epochs: %d\r\n" % n_epochs)
     f.write("Learning rate: %f\r\n" % learn_rate)
@@ -379,7 +405,7 @@ def train_model(prepped_model_io_data_file, inputs, seq_len,
                 out_dir, run_id,                       
                 train_start_date, train_end_date,
                 val_start_date, val_end_date,
-                test_start_date, test_end_date, inc_ante):
+                test_start_date, test_end_date, inc_ante, seed_set):
     '''
     write modeling parameters to a .txt file within out_dir/run_id, train the model,
     save the weights, and save a plot of the losses
@@ -421,12 +447,17 @@ def train_model(prepped_model_io_data_file, inputs, seq_len,
         flag to determine if antecedant conditions should be explicitly included, if True, 
         a rolling look back average of the last n days will be included as an input variable, 
         the number of days and variable are written in the config file
+    seed_set : bool
+        should the seed be set for reproducibility
 
     Returns
     -------
     None.
 
     '''
+    if seed_set:
+        set_seed(42)
+    
     write_model_params(out_dir, run_id, inputs, n_epochs,
                            learn_rate, seq_len, hidden_units,
                            recur_dropout, dropout,
@@ -438,20 +469,20 @@ def train_model(prepped_model_io_data_file, inputs, seq_len,
         prepped_model_io_data = pickle.load(f)
     
     n_batch, seq_len, n_feat  = prepped_model_io_data['train_features'].shape
-    pretrain_model = LSTMDA(n_feat, hidden_units, recur_dropout, dropout)
-    pretrain_model.train() # ensure that dropout layers are active
+    model = LSTMDA(n_feat, hidden_units, recur_dropout, dropout)
+    model.train() # ensure that dropout layers are active
     print("fitting model")
-    pretrain_model, preds_train, rl_t, rl_v = fit_torch_model(model = pretrain_model, 
+    model, preds_train, rl_t, rl_v = fit_torch_model(model = model, 
                                                               x = prepped_model_io_data['train_features'], 
                                                               y = prepped_model_io_data['train_targets'], 
                                                               x_val = prepped_model_io_data['val_features'], 
                                                               y_val = prepped_model_io_data['val_targets'], 
                                                               epochs = n_epochs, 
                                                               loss_fn = rmse_masked, 
-                                                              optimizer = torch.optim.Adam(pretrain_model.parameters(), 
+                                                              optimizer = torch.optim.Adam(model.parameters(), 
                                                                                            lr = learn_rate))
     
-    torch.save(pretrain_model.state_dict(), os.path.join(out_dir, run_id, 'weights.pt'))
+    torch.save(model.state_dict(), os.path.join(out_dir, run_id, 'weights.pt'))
     
     plt.plot(rl_t, 'b', label = 'training')
     plt.plot(rl_v,'r', label = 'validation')
@@ -460,7 +491,7 @@ def train_model(prepped_model_io_data_file, inputs, seq_len,
     plt.savefig(os.path.join(out_dir,run_id,'losses.png'))
     plt.close()
 
-def make_predictions(prepped_model_io_data_file, 
+def make_predictions(prepped_model_io_data_file, target, 
                      hidden_units, recur_dropout, dropout, 
                      n_epochs, learn_rate, out_dir, run_id,
                      train_start_date, train_end_date,
@@ -502,8 +533,8 @@ def make_predictions(prepped_model_io_data_file,
 
     Returns
     -------
-    trainval_df : TYPE
-        DESCRIPTION.
+    trainval_df : dataframe
+        dataframe of training and validation predictions
 
     '''
     
@@ -513,12 +544,12 @@ def make_predictions(prepped_model_io_data_file,
     
     n_batch, seq_len, n_feat  = prepped_model_io_data['train_features'].shape
     
-    pretrain_model = LSTMDA(n_feat, hidden_units, recur_dropout, dropout)
+    model = LSTMDA(n_feat, hidden_units, recur_dropout, dropout)
     
-    pretrain_model.load_state_dict(torch.load(os.path.join(out_dir,run_id,'weights.pt'))) # ensure that dropout layers are active
+    model.load_state_dict(torch.load(os.path.join(out_dir,run_id,'weights.pt'))) # ensure that dropout layers are active
     
     #for prediction+validation period
-    preds_trainval, loss_trainval = pretrain_model.evaluate(x_val = prepped_model_io_data['trainval_features'], y_val = prepped_model_io_data['trainval_targets'])
+    preds_trainval, loss_trainval = model.evaluate(x_val = prepped_model_io_data['trainval_features'], y_val = prepped_model_io_data['trainval_targets'])
     
     #get means and standard deviations from input
     means_stds = prepped_model_io_data['means_stds']
@@ -526,10 +557,10 @@ def make_predictions(prepped_model_io_data_file,
     #unnormalize
     #predictions for train val set
     preds_trainval_c  = preds_trainval.detach().numpy().reshape(preds_trainval.shape[0]*preds_trainval.shape[1],preds_trainval.shape[2])
-    unnorm_trainval = ((preds_trainval_c*means_stds['y_std_trnval']['saltfront_daily'].data)+means_stds['y_mean_trnval']['saltfront_daily'].data).squeeze()
+    unnorm_trainval = ((preds_trainval_c*means_stds['y_std_trnval'][target].data)+means_stds['y_mean_trnval'][target].data).squeeze()
     #known values for trainval set
     known_trainval_c = prepped_model_io_data['trainval_targets'].detach().numpy().reshape(prepped_model_io_data['trainval_targets'].shape[0]*prepped_model_io_data['trainval_targets'].shape[1], prepped_model_io_data['trainval_targets'].shape[2]).squeeze()
-    unnorm_known_trainval = (known_trainval_c*means_stds['y_std_trnval']['saltfront_daily'].data)+means_stds['y_mean_trnval']['saltfront_daily'].data
+    unnorm_known_trainval = (known_trainval_c*means_stds['y_std_trnval'][target].data)+means_stds['y_mean_trnval'][target].data
     trainval_dates = pd.date_range(start = train_start_date, periods = known_trainval_c.shape[0], freq = 'D')
     
     
@@ -581,7 +612,7 @@ def plot_save_predictions(trainval_df, out_dir, run_id):
     
 def run_replicates(n_reps, prepped_model_io_data_file):
     '''
-    run model replicates to understand variability
+    run model replicates to understand variability and saves the results and error plots to sub-directories in run_id
     Parameters
     ----------
     n_reps : int
@@ -605,9 +636,9 @@ def run_replicates(n_reps, prepped_model_io_data_file):
                         out_dir, run_id,                       
                         train_start_date, train_end_date,
                         val_start_date, val_end_date,
-                        test_start_date, test_end_date, inc_ante)
+                        test_start_date, test_end_date, inc_ante, seed_set)
         
-        predictions = make_predictions(prepped_model_io_data_file, 
+        predictions = make_predictions(prepped_model_io_data_file, target,
                              hidden_units, recur_dropout, dropout, 
                              n_epochs, learn_rate, out_dir, run_id,
                              train_start_date, train_end_date,
@@ -615,6 +646,103 @@ def run_replicates(n_reps, prepped_model_io_data_file):
                              test_start_date, test_end_date)
         
         plot_save_predictions(predictions, out_dir, run_id)
+        
+
+def test_hyperparameters():
+    '''
+    using grid search test a set of hyperparamters listed in the hyperparameter_config.yaml file
+
+    Returns
+    -------
+    The function doesn't return anything but the results are written to the out_dir/run_id directory
+    specified within the hyperparameter_config.yaml file
+
+    '''
+    with open("03b_model/hyperparameter_config.yaml", 'r') as stream:
+        hp_config = yaml.safe_load(stream)
+    
+    out_dir = hp_config['out_dir']
+    #these probably won't change from running the model without
+    #hp tuning but they will be read from the hp_config file
+    inputs = hp_config['inputs']
+    target = hp_config['target']
+    inc_ante = hp_config['include_antecedant_data']
+
+   
+    train_start_date = hp_config['train_start_date']
+    train_end_date = hp_config['train_end_date']
+    val_start_date = hp_config['val_start_date']
+    val_end_date = hp_config['val_end_date']
+    test_start_date = hp_config['test_start_date']
+    test_end_date = hp_config['test_end_date']
+    
+    #not used in hyperparamter training
+    offset = hp_config['offset']
+    n_epochs = hp_config['n_epochs']
+    recur_dropout = hp_config['recur_dropout']
+    inc_ante = hp_config['include_antecedant_data']
+
+    hyper_params = hp_config['hyper_params']
+    print('Hyperparameters being tested:')
+    print(hyper_params)
+    #used in hyperparameter training
+    sl = hp_config['seq_len']
+    hu = hp_config['hidden_units']
+    lr = hp_config['learn_rate']
+    do = hp_config['dropout']
+    rco = hp_config['recur_dropout']
+    
+    inputs_xarray, target_xarray = select_inputs_targets(inputs, target, train_start_date, test_end_date, out_dir, inc_ante) 
+
+    hp_tune_vals = list(itertools.product(sl, hu, lr, do, rco))
+
+    for j in range(len(hp_tune_vals)):
+        now = datetime.now()
+        current_time = now.strftime("%H:%M:%S")
+        print(current_time)
+        print('Running hyperparameter combination '+str(j+1)+' of '+str(len(hp_tune_vals)))
+        seq_len = hp_tune_vals[j][0]
+        hidden_units = hp_tune_vals[j][1]
+        learn_rate = hp_tune_vals[j][2]
+        dropout = hp_tune_vals[j][3]
+        recur_dropout = hp_tune_vals[j][4]
+        hp_id = "HP_Run_"+str(j).zfill(2)
+        
+        prep_input_target_data(inputs_xarray, target_xarray, train_start_date, train_end_date, 
+                               val_start_date, val_end_date, test_start_date, test_end_date, 
+                               seq_len, offset, out_dir)
+        
+        if os.path.exists(os.path.join(out_dir,'prepped_model_io_data')):
+           prepped_model_io_data_file = os.path.join(out_dir,'prepped_model_io_data')
+        
+        for i in range(hp_config['replicates']):
+            now = datetime.now()
+            current_time = now.strftime("%H:%M:%S")
+            print(current_time)
+            print('Running replicate '+str(i+1)+' of '+str(hp_config['replicates']))
+            print('------------------------------------------------------------------')
+            print('Running hyperparameter-replicate combination '+str((j+1)*(i+1))+' of '+str(len(hp_tune_vals)*hp_config['replicates']))
+
+            run_id = os.path.join(hp_id, str(i).rjust(2,'0'))
+            
+            train_model(prepped_model_io_data_file, inputs, seq_len,
+                            hidden_units, recur_dropout, 
+                            dropout, n_epochs, learn_rate, 
+                            out_dir, run_id,                       
+                            train_start_date, train_end_date,
+                            val_start_date, val_end_date,
+                            test_start_date, test_end_date, inc_ante, seed_set)
+            
+            predictions = make_predictions(prepped_model_io_data_file, target, 
+                                 hidden_units, recur_dropout, dropout, 
+                                 n_epochs, learn_rate, out_dir, run_id,
+                                 train_start_date, train_end_date,
+                                 val_start_date, val_end_date,
+                                 test_start_date, test_end_date)
+            
+            plot_save_predictions(predictions, out_dir, run_id)
+
+
 
 # A function for training the model on weighted training data
 # def train_high():
@@ -684,9 +812,9 @@ def main():
                     out_dir, run_id,                       
                     train_start_date, train_end_date,
                     val_start_date, val_end_date,
-                    test_start_date, test_end_date, inc_ante)
+                    test_start_date, test_end_date, inc_ante, seed_set)
     
-    predictions = make_predictions(prepped_model_io_data_file, 
+    predictions = make_predictions(prepped_model_io_data_file, target,
                          hidden_units, recur_dropout, dropout, 
                          n_epochs, learn_rate, out_dir, run_id,
                          train_start_date, train_end_date,
