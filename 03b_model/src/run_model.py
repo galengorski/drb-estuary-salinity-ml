@@ -14,11 +14,15 @@ import numpy as np
 import os
 import pandas as pd
 import pickle
+import random
 from river_dl.preproc_utils import separate_trn_tst, scale, split_into_batches
 import shutil
 import torch
 import yaml
 
+
+#set seed for reprodubility
+#random.seed(10)
 
 with open("03b_model/model_config.yaml", 'r') as stream:
     config = yaml.safe_load(stream)
