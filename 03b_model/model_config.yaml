@@ -1,6 +1,6 @@
 out_dir: '03b_model/out'
 
-run_id: 'Run_29'  
+run_id: 'Run_32'  
  
 
 inputs: ['discharge_01463500', 
@@ -18,8 +18,6 @@ inputs: ['discharge_01463500',
 #the sinks to be analyzed, this will likely be the salt front location
 target: 'saltfront7_weekly'
 replicates: 5
-#train on only extreme obs
-train_high: False
 
 #explicitly including summary antecedant data
 #window_size and antecedant_variables must be in a list
@@ -31,22 +29,22 @@ antecedant_variables: ['discharge']
 
 #select the split dates
 train_start_date: '2001-01-01'
-train_end_date: '2010-12-31'
-val_start_date: '2011-01-01'
-val_end_date: '2015-12-31'
+train_end_date: '2015-12-31'
+val_start_date: '2016-01-01'
+val_end_date: '2019-12-31'
 test_start_date: '2016-01-01'
 test_end_date: '2019-12-31'
 
 #model parameters
 
-seq_len: 180
+seq_len: 60
 offset: 1
-hidden_units: 10
-learn_rate: 0.001
-recur_dropout: 0.0
-dropout: 0.1
+hidden_units: 5
+learn_rate: 0.005
+recur_dropout: 0.5
+dropout: 0.5
 n_epochs: 500
-learn_rate: 0.001
+
 
 
 

@@ -441,20 +441,20 @@ def train_model(prepped_model_io_data_file, inputs, seq_len,
         prepped_model_io_data = pickle.load(f)
     
     n_batch, seq_len, n_feat  = prepped_model_io_data['train_features'].shape
-    pretrain_model = LSTMDA(n_feat, hidden_units, recur_dropout, dropout)
-    pretrain_model.train() # ensure that dropout layers are active
+    model = LSTMDA(n_feat, hidden_units, recur_dropout, dropout)
+    model.train() # ensure that dropout layers are active
     print("fitting model")
-    pretrain_model, preds_train, rl_t, rl_v = fit_torch_model(model = pretrain_model, 
+    model, preds_train, rl_t, rl_v = fit_torch_model(model = model, 
                                                               x = prepped_model_io_data['train_features'], 
                                                               y = prepped_model_io_data['train_targets'], 
                                                               x_val = prepped_model_io_data['val_features'], 
                                                               y_val = prepped_model_io_data['val_targets'], 
                                                               epochs = n_epochs, 
                                                               loss_fn = rmse_masked, 
-                                                              optimizer = torch.optim.Adam(pretrain_model.parameters(), 
+                                                              optimizer = torch.optim.Adam(model.parameters(), 
                                                                                            lr = learn_rate))
     
-    torch.save(pretrain_model.state_dict(), os.path.join(out_dir, run_id, 'weights.pt'))
+    torch.save(model.state_dict(), os.path.join(out_dir, run_id, 'weights.pt'))
     
     plt.plot(rl_t, 'b', label = 'training')
     plt.plot(rl_v,'r', label = 'validation')
@@ -505,8 +505,8 @@ def make_predictions(prepped_model_io_data_file,
 
     Returns
     -------
-    trainval_df : TYPE
-        DESCRIPTION.
+    trainval_df : dataframe
+        dataframe of training and validation predictions
 
     '''
     
@@ -516,12 +516,12 @@ def make_predictions(prepped_model_io_data_file,
     
     n_batch, seq_len, n_feat  = prepped_model_io_data['train_features'].shape
     
-    pretrain_model = LSTMDA(n_feat, hidden_units, recur_dropout, dropout)
+    model = LSTMDA(n_feat, hidden_units, recur_dropout, dropout)
     
-    pretrain_model.load_state_dict(torch.load(os.path.join(out_dir,run_id,'weights.pt'))) # ensure that dropout layers are active
+    model.load_state_dict(torch.load(os.path.join(out_dir,run_id,'weights.pt'))) # ensure that dropout layers are active
     
     #for prediction+validation period
-    preds_trainval, loss_trainval = pretrain_model.evaluate(x_val = prepped_model_io_data['trainval_features'], y_val = prepped_model_io_data['trainval_targets'])
+    preds_trainval, loss_trainval = model.evaluate(x_val = prepped_model_io_data['trainval_features'], y_val = prepped_model_io_data['trainval_targets'])
     
     #get means and standard deviations from input
     means_stds = prepped_model_io_data['means_stds']
@@ -584,7 +584,7 @@ def plot_save_predictions(trainval_df, out_dir, run_id):
     
 def run_replicates(n_reps, prepped_model_io_data_file):
     '''
-    run model replicates to understand variability
+    run model replicates to understand variability and saves the results and error plots to sub-directories in run_id
     Parameters
     ----------
     n_reps : int
@@ -621,6 +621,15 @@ def run_replicates(n_reps, prepped_model_io_data_file):
         
 
 def test_hyperparameters():
+    '''
+    using grid search test a set of hyperparamters listed in the hyperparameter_config.yaml file
+
+    Returns
+    -------
+    The function doesn't return anything but the results are written to the out_dir/run_id directory
+    specified within the hyperparameter_config.yaml file
+
+    '''
     with open("03b_model/hyperparameter_config.yaml", 'r') as stream:
         hp_config = yaml.safe_load(stream)
     
@@ -653,10 +662,11 @@ def test_hyperparameters():
     hu = hp_config['hidden_units']
     lr = hp_config['learn_rate']
     do = hp_config['dropout']
+    rco = hp_config['recur_dropout']
     
     inputs_xarray, target_xarray = select_inputs_targets(inputs, target, train_start_date, test_end_date, out_dir, inc_ante) 
 
-    hp_tune_vals = list(itertools.product(sl, hu, lr, do))
+    hp_tune_vals = list(itertools.product(sl, hu, lr, do, rco))
 
     for j in range(len(hp_tune_vals)):
         now = datetime.now()
@@ -667,6 +677,7 @@ def test_hyperparameters():
         hidden_units = hp_tune_vals[j][1]
         learn_rate = hp_tune_vals[j][2]
         dropout = hp_tune_vals[j][3]
+        recur_dropout = hp_tune_vals[j][4]
         hp_id = "HP_Run_"+str(j).zfill(2)
         
         prep_input_target_data(inputs_xarray, target_xarray, train_start_date, train_end_date, 
