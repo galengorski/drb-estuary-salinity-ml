@@ -1,6 +1,6 @@
 out_dir: '03b_model/out'
 
-run_id: 'Run_33'  
+run_id: 'Run_39'  
 
 inputs: ['discharge_01463500', 
                 #'specific_conductance_01463500',
@@ -25,6 +25,8 @@ include_antecedant_data: False
 window_size: [60]
 antecedant_variables: ['discharge']
 
+#set the seed for reproducibility
+seed_set: False
 
 #select the split dates
 train_start_date: '2001-01-01'

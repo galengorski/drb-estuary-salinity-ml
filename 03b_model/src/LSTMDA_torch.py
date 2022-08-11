@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import time
 
+torch.random_seed(10)
+
 
 # Simple LSTM made from scratch
 class LSTMDA(nn.Module):

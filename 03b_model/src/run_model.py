@@ -22,7 +22,7 @@ import yaml
 
 
 #set seed for reprodubility
-#random.seed(10)
+random.seed(10)
 
 with open("03b_model/model_config.yaml", 'r') as stream:
     config = yaml.safe_load(stream)
@@ -49,6 +49,25 @@ learn_rate = config['learn_rate']
 recur_dropout = config['recur_dropout']
 dropout = config['dropout']
 inc_ante = config['include_antecedant_data']
+seed_set = config['seed_set']
+
+def set_seed(seed):
+    '''
+    Set random seed in different libraries for reproducibility
+    Parameters
+    ----------
+    seed : int
+        number to set the seed with
+
+    Returns
+    -------
+    None.
+
+    '''
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.manual_seed(seed)
+
 
 
 ###
@@ -386,7 +405,7 @@ def train_model(prepped_model_io_data_file, inputs, seq_len,
                 out_dir, run_id,                       
                 train_start_date, train_end_date,
                 val_start_date, val_end_date,
-                test_start_date, test_end_date, inc_ante):
+                test_start_date, test_end_date, inc_ante, seed_set):
     '''
     write modeling parameters to a .txt file within out_dir/run_id, train the model,
     save the weights, and save a plot of the losses
@@ -428,12 +447,17 @@ def train_model(prepped_model_io_data_file, inputs, seq_len,
         flag to determine if antecedant conditions should be explicitly included, if True, 
         a rolling look back average of the last n days will be included as an input variable, 
         the number of days and variable are written in the config file
+    seed_set : bool
+        should the seed be set for reproducibility
 
     Returns
     -------
     None.
 
     '''
+    if seed_set:
+        set_seed(42)
+    
     write_model_params(out_dir, run_id, inputs, n_epochs,
                            learn_rate, seq_len, hidden_units,
                            recur_dropout, dropout,
@@ -612,7 +636,7 @@ def run_replicates(n_reps, prepped_model_io_data_file):
                         out_dir, run_id,                       
                         train_start_date, train_end_date,
                         val_start_date, val_end_date,
-                        test_start_date, test_end_date, inc_ante)
+                        test_start_date, test_end_date, inc_ante, seed_set)
         
         predictions = make_predictions(prepped_model_io_data_file, target,
                              hidden_units, recur_dropout, dropout, 
@@ -707,7 +731,7 @@ def test_hyperparameters():
                             out_dir, run_id,                       
                             train_start_date, train_end_date,
                             val_start_date, val_end_date,
-                            test_start_date, test_end_date, inc_ante)
+                            test_start_date, test_end_date, inc_ante, seed_set)
             
             predictions = make_predictions(prepped_model_io_data_file, target, 
                                  hidden_units, recur_dropout, dropout, 
@@ -788,7 +812,7 @@ def main():
                     out_dir, run_id,                       
                     train_start_date, train_end_date,
                     val_start_date, val_end_date,
-                    test_start_date, test_end_date, inc_ante)
+                    test_start_date, test_end_date, inc_ante, seed_set)
     
     predictions = make_predictions(prepped_model_io_data_file, target,
                          hidden_units, recur_dropout, dropout, 
