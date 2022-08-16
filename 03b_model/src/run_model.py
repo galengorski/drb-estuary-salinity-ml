@@ -157,7 +157,7 @@ def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_d
     
     
     #read in the salt front record
-    target_df = pd.read_csv(os.path.join('03a_it_analysis', 'in', 'saltfront.csv'), parse_dates = True, index_col = 'datetime')
+    target_df = pd.read_csv(os.path.join('03a_it_analysis', 'in', 'saltfront_updated.csv'), parse_dates = True, index_col = 'datetime')
     target_df = target_df[target].to_frame()
     target_df.index = pd.to_datetime(target_df.index.date)
     target_df = target_df[str(inputs_df.index[0]):test_end_date]

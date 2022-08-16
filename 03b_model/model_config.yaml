@@ -38,13 +38,13 @@ test_end_date: '2019-12-31'
 
 #model parameters
 
-seq_len: 60
+seq_len: 180
 offset: 1
-hidden_units: 5
+hidden_units: 10
 learn_rate: 0.005
-recur_dropout: 0.5
+recur_dropout: 0.1
 dropout: 0.5
-n_epochs: 5
+n_epochs: 500
 
 
 
