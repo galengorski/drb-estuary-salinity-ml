@@ -1,6 +1,6 @@
 out_dir: '03b_model/out'
 
-run_id: 'Run_39'  
+run_id: 'Run_42'  
 
 inputs: ['discharge_01463500', 
                 #'specific_conductance_01463500',
@@ -26,25 +26,25 @@ window_size: [60]
 antecedant_variables: ['discharge']
 
 #set the seed for reproducibility
-seed_set: False
+seed_set: True
+seed: 24
 
 #select the split dates
 train_start_date: '2001-01-01'
 train_end_date: '2015-12-31'
 val_start_date: '2016-01-01'
-val_end_date: '2019-12-31'
+val_end_date: '2021-06-30'
 test_start_date: '2016-01-01'
-test_end_date: '2019-12-31'
+test_end_date: '2021-06-30'
 
 #model parameters
-
-seq_len: 180
+seq_len: 365
 offset: 1
-hidden_units: 10
-learn_rate: 0.005
-recur_dropout: 0.1
-dropout: 0.5
-n_epochs: 500
+hidden_units: 5
+learn_rate: 0.003
+recur_dropout: 0.3
+dropout: 0.3
+n_epochs: 5
 
 
 

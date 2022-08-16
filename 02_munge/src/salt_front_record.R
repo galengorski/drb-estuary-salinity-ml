@@ -1,6 +1,6 @@
 #===================================================================================#
 # NOTES: create a finalized record of the salf front location from data sent 
-# from Amy Shallcross of DRBC on 2/3/2022
+# from Amy Shallcross of DRBC on 8/16/2022
 #-----------------------------------------------------------------------------------#
 # Galen Gorski                                                                      #
 # ggorski@usgs.gov                                                                  #
@@ -19,7 +19,7 @@ library(lubridate)
 
 
 #===================================================================================#
-sfs <- read_excel('../../99_extra_data/saltfront_record/Copy of Saltfront_Historic_Official_Corrected_UPDATED_JAN_2022.xlsx')
+sfs <- read_excel('02_munge/in/Saltfront_Historic_Record_AvgRM_WithInterp_Updated_2022_08_15.xlsx')
 colnames(sfs) <- c('datetime','saltfront_daily','saltfront7_weekly')
 sfs <- sfs[sfs$datetime >= as_date('2000-01-01') ,]
 write_csv(sfs, '03a_it_analysis/in/saltfront_updated.csv')

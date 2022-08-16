@@ -50,6 +50,7 @@ recur_dropout = config['recur_dropout']
 dropout = config['dropout']
 inc_ante = config['include_antecedant_data']
 seed_set = config['seed_set']
+seed = config['seed']
 
 def set_seed(seed):
     '''
@@ -405,7 +406,7 @@ def train_model(prepped_model_io_data_file, inputs, seq_len,
                 out_dir, run_id,                       
                 train_start_date, train_end_date,
                 val_start_date, val_end_date,
-                test_start_date, test_end_date, inc_ante, seed_set):
+                test_start_date, test_end_date, inc_ante, seed_set, seed):
     '''
     write modeling parameters to a .txt file within out_dir/run_id, train the model,
     save the weights, and save a plot of the losses
@@ -456,7 +457,7 @@ def train_model(prepped_model_io_data_file, inputs, seq_len,
 
     '''
     if seed_set:
-        set_seed(42)
+        set_seed(seed)
     
     write_model_params(out_dir, run_id, inputs, n_epochs,
                            learn_rate, seq_len, hidden_units,
@@ -630,13 +631,14 @@ def run_replicates(n_reps, prepped_model_io_data_file):
         
         run_id = os.path.join(config['run_id'], str(i).rjust(2,'0'))
         
+        seed = i
         train_model(prepped_model_io_data_file, inputs, seq_len,
                         hidden_units, recur_dropout, 
                         dropout, n_epochs, learn_rate, 
                         out_dir, run_id,                       
                         train_start_date, train_end_date,
                         val_start_date, val_end_date,
-                        test_start_date, test_end_date, inc_ante, seed_set)
+                        test_start_date, test_end_date, inc_ante, seed_set, seed)
         
         predictions = make_predictions(prepped_model_io_data_file, target,
                              hidden_units, recur_dropout, dropout, 
@@ -724,14 +726,14 @@ def test_hyperparameters():
             print('Running hyperparameter-replicate combination '+str((j+1)*(i+1))+' of '+str(len(hp_tune_vals)*hp_config['replicates']))
 
             run_id = os.path.join(hp_id, str(i).rjust(2,'0'))
-            
+            seed = i
             train_model(prepped_model_io_data_file, inputs, seq_len,
                             hidden_units, recur_dropout, 
                             dropout, n_epochs, learn_rate, 
                             out_dir, run_id,                       
                             train_start_date, train_end_date,
                             val_start_date, val_end_date,
-                            test_start_date, test_end_date, inc_ante, seed_set)
+                            test_start_date, test_end_date, inc_ante, seed_set, seed)
             
             predictions = make_predictions(prepped_model_io_data_file, target, 
                                  hidden_units, recur_dropout, dropout, 
@@ -812,7 +814,7 @@ def main():
                     out_dir, run_id,                       
                     train_start_date, train_end_date,
                     val_start_date, val_end_date,
-                    test_start_date, test_end_date, inc_ante, seed_set)
+                    test_start_date, test_end_date, inc_ante, seed_set, seed)
     
     predictions = make_predictions(prepped_model_io_data_file, target,
                          hidden_units, recur_dropout, dropout, 
