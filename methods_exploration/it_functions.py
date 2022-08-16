@@ -178,12 +178,21 @@ def lag_data(M, shift):
     
     length_M = M.shape[0]
     cols_M = M.shape[1]
-    newlength_M = length_M - shift - 1
-    M_lagged = np.nan*np.ones([newlength_M, cols_M+1]) 
+    # newlength_M = length_M - shift - 1
+    # M_lagged = np.nan*np.ones([newlength_M, cols_M+1]) 
     
-    M_lagged[:,0] = M[1:(length_M-shift), 0]
-    M_lagged[:,1] = M[shift+1:(length_M),1]
-    M_lagged[:,2] = M[(shift):(length_M-1),1]
+    # M_lagged[:,0] = M[1:(length_M-shift), 0]
+    # M_lagged[:,1] = M[shift+1:(length_M),1]
+    # M_lagged[:,2] = M[(shift):(length_M-1),1]
+    
+    print('=> H(Xt-T, Yt, Yt-T)')
+    #this is for => H(Xt-T, Yt, Yt-T)
+    newlength_M = length_M - shift
+    M_lagged = np.nan*np.ones([newlength_M, cols_M+1])
+    M_lagged[:,0] = M[:(length_M-shift),0]
+    M_lagged[:,1] = M[shift:(length_M)+1,1]
+    M_lagged[:,2] = M[:(length_M-shift),1]
+    
     return M_lagged
 
 def calcTE(M, shift, nbins):
@@ -201,20 +210,20 @@ def calcTE(M, shift, nbins):
     #remove any rows where there is an nan value
     M_short =  M_lagged[~np.isnan(M_lagged).any(axis=1)]
     
-    M1 = M_short[:,(0,2)]  # [source_lagged(1:n-shift), sink_lagged(1:n-shift)]  =>H(Xt-T,Yt-1)
-    M2 = M_short[:,(1,2)] # [sink_unlagged(shift:n), sink_lagged(1:n-shift)]    =>H(Yt,Yt-1)
-    M3 = M_short[:,2]      # [sink_unlagged(1:n-shift)] =>H(Yt-1) 
+    M1 = M_short[:,(0,2)]  # [source_lagged(0:n-shift), sink_lagged(0:n-shift)]  =>H(Xt-T,Yt-T)
+    M2 = M_short[:,(1,2)] # [sink_unlagged(shift:n), sink_lagged(0:n-shift)]    =>H(Yt,Yt-T)
+    M3 = M_short[:,1]      # [sink_unlagged(0:n-shift)] =>H(Yt) 
     
     #calc joint entropy of H(Xt-T,Yt-T)
     _, _, p_xlyl = calc2Dpdf(M1, nbins)
     T1 = calcEntropy(p_xlyl)
     
-    #calc joint entropy of H(Yt-T) and H(Yt,Yt-T)
-    _, pyl, p_yulyl = calc2Dpdf(M2, nbins)
+    #calc joint entropy of H(Yt) and H(Yt-T)
+    py, pyl, p_yulyl = calc2Dpdf(M2, nbins)
     T2 = calcEntropy(p_yulyl)
     
-    #calc entropy of H(Yt-T)
-    T3 = calcEntropy(pyl)
+    #calc entropy of H(Y)
+    T3 = calcEntropy(py)
     
     #calc 3d joint entropy 
     p_xlyulyl = calc3Dpdfs(M_short, nbins)

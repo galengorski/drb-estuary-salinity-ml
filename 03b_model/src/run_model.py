@@ -696,7 +696,7 @@ def test_hyperparameters():
 
     hp_tune_vals = list(itertools.product(sl, hu, lr, do, rco))
 
-    for j in range(len(hp_tune_vals)):
+    for j in range(88,len(hp_tune_vals)):
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
         print(current_time)
