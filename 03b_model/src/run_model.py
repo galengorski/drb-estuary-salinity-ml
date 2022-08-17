@@ -634,21 +634,21 @@ def run_replicates(n_reps, prepped_model_io_data_file):
         
         run_id = os.path.join(config['run_id'], str(i).rjust(2,'0'))
         
-        seed = i
+        replicate_seed = i
         train_model(prepped_model_io_data_file, inputs, seq_len,
                         hidden_units, recur_dropout, 
                         dropout, n_epochs, learn_rate, 
                         out_dir, run_id,                       
                         train_start_date, train_end_date,
                         val_start_date, val_end_date,
-                        test_start_date, test_end_date, inc_ante, seed_set, seed)
+                        test_start_date, test_end_date, inc_ante, seed_set, replicate_seed)
         
         predictions = make_predictions(prepped_model_io_data_file, target,
                              hidden_units, recur_dropout, dropout, 
                              n_epochs, learn_rate, out_dir, run_id,
                              train_start_date, train_end_date,
                              val_start_date, val_end_date,
-                             test_start_date, test_end_date, seed_set, seed)
+                             test_start_date, test_end_date, seed_set, replicate_seed)
         
         plot_save_predictions(predictions, out_dir, run_id)
         
@@ -729,21 +729,21 @@ def test_hyperparameters():
             print('Running hyperparameter-replicate combination '+str((j+1)*(i+1))+' of '+str(len(hp_tune_vals)*hp_config['replicates']))
 
             run_id = os.path.join(hp_id, str(i).rjust(2,'0'))
-            seed = i
+            replicate_seed = i
             train_model(prepped_model_io_data_file, inputs, seq_len,
                             hidden_units, recur_dropout, 
                             dropout, n_epochs, learn_rate, 
                             out_dir, run_id,                       
                             train_start_date, train_end_date,
                             val_start_date, val_end_date,
-                            test_start_date, test_end_date, inc_ante, seed_set, seed)
+                            test_start_date, test_end_date, inc_ante, seed_set, replicate_seed)
             
             predictions = make_predictions(prepped_model_io_data_file, target, 
                                  hidden_units, recur_dropout, dropout, 
                                  n_epochs, learn_rate, out_dir, run_id,
                                  train_start_date, train_end_date,
                                  val_start_date, val_end_date,
-                                 test_start_date, test_end_date, seed_set, seed)
+                                 test_start_date, test_end_date, seed_set, replicate_seed)
             
             plot_save_predictions(predictions, out_dir, run_id)
     
