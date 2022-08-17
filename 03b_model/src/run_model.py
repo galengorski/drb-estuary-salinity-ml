@@ -561,10 +561,10 @@ def make_predictions(prepped_model_io_data_file, target,
     #unnormalize
     #predictions for train val set
     preds_trainval_c  = preds_trainval.detach().numpy().reshape(preds_trainval.shape[0]*preds_trainval.shape[1],preds_trainval.shape[2])
-    unnorm_trainval = ((preds_trainval_c*means_stds['y_std_trnval'][target].data)+means_stds['y_mean_trnval'][target].data).squeeze()
+    unnorm_trainval = ((preds_trainval_c*means_stds['y_std_trn'][target].data)+means_stds['y_mean_trn'][target].data).squeeze()
     #known values for trainval set
     known_trainval_c = prepped_model_io_data['trainval_targets'].detach().numpy().reshape(prepped_model_io_data['trainval_targets'].shape[0]*prepped_model_io_data['trainval_targets'].shape[1], prepped_model_io_data['trainval_targets'].shape[2]).squeeze()
-    unnorm_known_trainval = (known_trainval_c*means_stds['y_std_trnval'][target].data)+means_stds['y_mean_trnval'][target].data
+    unnorm_known_trainval = (known_trainval_c*means_stds['y_std_trn'][target].data)+means_stds['y_mean_trn'][target].data
     trainval_dates = pd.date_range(start = train_start_date, periods = known_trainval_c.shape[0], freq = 'D')
     
     
