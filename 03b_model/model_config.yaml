@@ -25,7 +25,11 @@ include_antecedant_data: False
 window_size: [60]
 antecedant_variables: ['discharge']
 
-#set the seed for reproducibility
+#set the seed for reproducibility for a single model run
+#if replicates are run using the run_replicates function
+#then the seed is set within the run_replicates function
+#as the iterator within each replicate loop
+#this ensures that each replicate is unique, but reproducible
 seed_set: True
 seed: 24
 

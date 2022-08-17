@@ -746,45 +746,6 @@ def test_hyperparameters():
                                  test_start_date, test_end_date, seed_set, seed)
             
             plot_save_predictions(predictions, out_dir, run_id)
-
-
-
-# A function for training the model on weighted training data
-# def train_high():
-#     out_dir = os.path.join(config['out_dir'],config['run_id'],'train_high')
-#     inputs_xarray_high, target_xarray_high = select_inputs_targets(inputs, target, train_start_date, test_end_date, out_dir, inc_ante, train_high = True) 
-      
-#     prep_input_target_data(inputs_xarray_high, target_xarray_high, train_start_date, train_end_date, 
-#                            val_start_date, val_end_date, test_start_date, test_end_date, 
-#                            seq_len, offset, out_dir)
-    
-#     prepped_model_io_data_file = os.path.join(out_dir,'prepped_model_io_data')
-    
-#     train_model(prepped_model_io_data_file, inputs, seq_len,
-#                     hidden_units, recur_dropout, 
-#                     dropout, n_epochs, learn_rate, 
-#                     out_dir, run_id,                       
-#                     train_start_date, train_end_date,
-#                     val_start_date, val_end_date,
-#                     test_start_date, test_end_date, inc_ante)
-    
-#     out_dir = os.path.join(config['out_dir'],config['run_id'],'predict all')
-#     inputs_xarray, target_xarray = select_inputs_targets(inputs, target, train_start_date, test_end_date, out_dir, inc_ante, train_high = False) 
-    
-#     prep_input_target_data(inputs_xarray_high, target_xarray_high, train_start_date, train_end_date, 
-#                            val_start_date, val_end_date, test_start_date, test_end_date, 
-#                            seq_len, offset, out_dir)
-    
-#     prepped_model_io_data_file = os.path.join(out_dir,'prepped_model_io_data')
-#     predictions = make_predictions(prepped_model_io_data_file, 
-#                          hidden_units, recur_dropout, dropout, 
-#                          n_epochs, learn_rate, out_dir, run_id,
-#                          train_start_date, train_end_date,
-#                          val_start_date, val_end_date,
-#                          test_start_date, test_end_date)
-    
-#     plot_save_predictions(predictions, out_dir, run_id)
-    
     
 
 def main():
