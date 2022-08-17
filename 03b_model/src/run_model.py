@@ -22,7 +22,7 @@ import yaml
 
 
 #set seed for reprodubility
-random.seed(10)
+#random.seed(10)
 
 with open("03b_model/model_config.yaml", 'r') as stream:
     config = yaml.safe_load(stream)
@@ -497,7 +497,7 @@ def make_predictions(prepped_model_io_data_file, target,
                      n_epochs, learn_rate, out_dir, run_id,
                      train_start_date, train_end_date,
                      val_start_date, val_end_date,
-                     test_start_date, test_end_date):
+                     test_start_date, test_end_date, seed_set, seed):
     '''
     read weights from file, and make predictions. output results as dataframe   
     
@@ -543,6 +543,9 @@ def make_predictions(prepped_model_io_data_file, target,
     with open(prepped_model_io_data_file, 'rb') as f:
         prepped_model_io_data = pickle.load(f)
     
+    if seed_set:
+        set_seed(seed)
+        
     n_batch, seq_len, n_feat  = prepped_model_io_data['train_features'].shape
     
     model = LSTMDA(n_feat, hidden_units, recur_dropout, dropout)
@@ -645,7 +648,7 @@ def run_replicates(n_reps, prepped_model_io_data_file):
                              n_epochs, learn_rate, out_dir, run_id,
                              train_start_date, train_end_date,
                              val_start_date, val_end_date,
-                             test_start_date, test_end_date)
+                             test_start_date, test_end_date, seed_set, seed)
         
         plot_save_predictions(predictions, out_dir, run_id)
         
@@ -740,7 +743,7 @@ def test_hyperparameters():
                                  n_epochs, learn_rate, out_dir, run_id,
                                  train_start_date, train_end_date,
                                  val_start_date, val_end_date,
-                                 test_start_date, test_end_date)
+                                 test_start_date, test_end_date, seed_set, seed)
             
             plot_save_predictions(predictions, out_dir, run_id)
 
@@ -821,7 +824,7 @@ def main():
                          n_epochs, learn_rate, out_dir, run_id,
                          train_start_date, train_end_date,
                          val_start_date, val_end_date,
-                         test_start_date, test_end_date)
+                         test_start_date, test_end_date, seed_set, seed)
     
     plot_save_predictions(predictions, out_dir, run_id)
     
