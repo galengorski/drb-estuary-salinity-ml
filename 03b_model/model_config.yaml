@@ -42,9 +42,9 @@ seq_len: 365
 offset: 1
 hidden_units: 5
 learn_rate: 0.003
-recur_dropout: 0.3
+recur_dropout: 0.1
 dropout: 0.3
-n_epochs: 5
+n_epochs: 500
 
 
 
