@@ -62,6 +62,33 @@ class pre_proc_func:
                 seasonal_removed.append(value)
         return seasonal_removed
     
+def find_bounds(data, lower,upper):
+    '''
+    finding the bounds to remove outliers from input array
+    Parameters
+    ----------
+    data : np.array
+        input data with potential outliers.
+    lower : float
+        lower bound of percentile range to keep (0-100)
+    upper : float
+        upper bound of percentile range to keep (0-100)
+
+    Returns
+    -------
+    float
+        lower bound value
+    float
+        upper bound value
+
+    '''
+    if (lower == None) & (upper == None):
+        return None, None
+    if lower == None:
+        return None, np.nanpercentile(data, upper)
+    if upper == None:
+        return np.nanpercentile(data, lower), None
+    return np.nanpercentile(data, lower), np.nanpercentile(data, upper)
 
 def calc2Dpdf(M,nbins):
     '''calculates the 3 pdfs, one for x, one for y and a joint pdf for x and y 
