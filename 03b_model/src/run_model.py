@@ -552,6 +552,9 @@ def make_predictions(prepped_model_io_data_file, target,
     
     model.load_state_dict(torch.load(os.path.join(out_dir,run_id,'weights.pt'))) # ensure that dropout layers are active
     
+    #put model in eval mode
+    model.eval()
+    
     #for prediction+validation period
     preds_trainval, loss_trainval = model.evaluate(x_val = prepped_model_io_data['trainval_features'], y_val = prepped_model_io_data['trainval_targets'])
     
