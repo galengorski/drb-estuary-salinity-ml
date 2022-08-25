@@ -174,7 +174,7 @@ def calcMI_shuffled(M, nbins):
     MI_shuff = calcMI(Mss, nbins = nbins)
     return MI_shuff
     
-def calcMI_crit(M, nbins, alpha = 0.01, numiter = 500, ncores = 2):
+def calcMI_crit(M, nbins, alpha = 0.05, numiter = 500, ncores = 2):
     '''calculate the critical threshold of mutual information
     M: a numpy array of shape (nobs, 2) where nobs is the number of observations
     this assumes that the data are arrange such that the first column is the source and
@@ -212,7 +212,7 @@ def lag_data(M, shift):
     # M_lagged[:,1] = M[shift+1:(length_M),1]
     # M_lagged[:,2] = M[(shift):(length_M-1),1]
     
-    print('=> H(Xt-T, Yt, Yt-T)')
+    #print('=> H(Xt-T, Yt, Yt-T)')
     #this is for => H(Xt-T, Yt, Yt-T)
     newlength_M = length_M - shift
     M_lagged = np.nan*np.ones([newlength_M, cols_M+1])
@@ -280,7 +280,7 @@ def calcTE_shuffled(M, shift, nbins):
     TE_shuff = calcTE(Mss, shift, nbins)
     return TE_shuff
 
-def calcTE_crit(M, shift, nbins, alpha = 0.01, numiter = 500, ncores = 2):
+def calcTE_crit(M, shift, nbins, alpha = 0.05, numiter = 500, ncores = 2):
     '''calculate the critical threshold of transfer entropy
     M: a numpy array of shape (nobs, 2) where nobs is the number of observations
     this assumes that the data are arrange such that the first column is the source and
@@ -298,7 +298,7 @@ def calcTE_crit(M, shift, nbins, alpha = 0.01, numiter = 500, ncores = 2):
     TEcrit = TEss[math.ceil((1-alpha)*numiter)] 
     return(TEcrit)
 
-def calc_it_metrics(M, Mswap, n_lags, nbins, calc_swap = True, alpha = 0.01):
+def calc_it_metrics(M, Mswap, n_lags, nbins, calc_swap = True, alpha = 0.05):
     '''wrapper function for calculating mutual information and transfer entropy 
     (for both x -> y and y -> x) across a range of time lags. It also calculates
     a significance threshold for mutual information and transfer entropy using the 
@@ -327,7 +327,7 @@ def calc_it_metrics(M, Mswap, n_lags, nbins, calc_swap = True, alpha = 0.01):
         M_short =  M_lagged[~np.isnan(M_lagged).any(axis=1)]
         MItemp = calcMI(M_short[:,(0,1)], nbins)
         MI.append(MItemp)
-        MIcrittemp = calcMI_crit(M_short[:,(0,1)], nbins, ncores = 8, alpha = 0.01)
+        MIcrittemp = calcMI_crit(M_short[:,(0,1)], nbins, ncores = 8, alpha = 0.05)
         MIcrit.append(MIcrittemp)
         
         corrtemp = pearsonr(M_short[:,0], M_short[:,1])[0]
@@ -335,13 +335,13 @@ def calc_it_metrics(M, Mswap, n_lags, nbins, calc_swap = True, alpha = 0.01):
         
         TEtemp = calcTE(M, shift = i, nbins = nbins)
         TE.append(TEtemp)
-        TEcrittemp = calcTE_crit(M, shift = i, nbins = nbins, ncores = 8, alpha = 0.01)
+        TEcrittemp = calcTE_crit(M, shift = i, nbins = nbins, ncores = 8, alpha = 0.05)
         TEcrit.append(TEcrittemp)
         
         if calc_swap:
             TEtempswap = calcTE(Mswap, shift = i, nbins = nbins)
             TEswap.append(TEtempswap)
-            TEcrittempswap = calcTE_crit(Mswap, shift = i, nbins = nbins, ncores = 8, alpha = 0.01)
+            TEcrittempswap = calcTE_crit(Mswap, shift = i, nbins = nbins, ncores = 8, alpha = 0.05)
             TEcritswap.append(TEcrittempswap)
         
     it_metrics = {'MI':MI, 'MIcrit':MIcrit,
