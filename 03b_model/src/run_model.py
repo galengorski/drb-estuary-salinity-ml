@@ -22,7 +22,7 @@ import yaml
 
 
 #set seed for reprodubility
-random.seed(10)
+#random.seed(10)
 
 with open("03b_model/model_config.yaml", 'r') as stream:
     config = yaml.safe_load(stream)
@@ -50,6 +50,7 @@ recur_dropout = config['recur_dropout']
 dropout = config['dropout']
 inc_ante = config['include_antecedant_data']
 seed_set = config['seed_set']
+seed = config['seed']
 
 def set_seed(seed):
     '''
@@ -157,7 +158,7 @@ def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_d
     
     
     #read in the salt front record
-    target_df = pd.read_csv(os.path.join('03a_it_analysis', 'in', 'saltfront.csv'), parse_dates = True, index_col = 'datetime')
+    target_df = pd.read_csv(os.path.join('03a_it_analysis', 'in', 'saltfront_updated.csv'), parse_dates = True, index_col = 'datetime')
     target_df = target_df[target].to_frame()
     target_df.index = pd.to_datetime(target_df.index.date)
     target_df = target_df[str(inputs_df.index[0]):test_end_date]
@@ -405,7 +406,7 @@ def train_model(prepped_model_io_data_file, inputs, seq_len,
                 out_dir, run_id,                       
                 train_start_date, train_end_date,
                 val_start_date, val_end_date,
-                test_start_date, test_end_date, inc_ante, seed_set):
+                test_start_date, test_end_date, inc_ante, seed_set, seed):
     '''
     write modeling parameters to a .txt file within out_dir/run_id, train the model,
     save the weights, and save a plot of the losses
@@ -456,7 +457,7 @@ def train_model(prepped_model_io_data_file, inputs, seq_len,
 
     '''
     if seed_set:
-        set_seed(42)
+        set_seed(seed)
     
     write_model_params(out_dir, run_id, inputs, n_epochs,
                            learn_rate, seq_len, hidden_units,
@@ -496,7 +497,7 @@ def make_predictions(prepped_model_io_data_file, target,
                      n_epochs, learn_rate, out_dir, run_id,
                      train_start_date, train_end_date,
                      val_start_date, val_end_date,
-                     test_start_date, test_end_date):
+                     test_start_date, test_end_date, seed_set, seed):
     '''
     read weights from file, and make predictions. output results as dataframe   
     
@@ -542,11 +543,17 @@ def make_predictions(prepped_model_io_data_file, target,
     with open(prepped_model_io_data_file, 'rb') as f:
         prepped_model_io_data = pickle.load(f)
     
+    if seed_set:
+        set_seed(seed)
+        
     n_batch, seq_len, n_feat  = prepped_model_io_data['train_features'].shape
     
     model = LSTMDA(n_feat, hidden_units, recur_dropout, dropout)
     
     model.load_state_dict(torch.load(os.path.join(out_dir,run_id,'weights.pt'))) # ensure that dropout layers are active
+    
+    #put model in eval mode
+    model.eval()
     
     #for prediction+validation period
     preds_trainval, loss_trainval = model.evaluate(x_val = prepped_model_io_data['trainval_features'], y_val = prepped_model_io_data['trainval_targets'])
@@ -557,10 +564,10 @@ def make_predictions(prepped_model_io_data_file, target,
     #unnormalize
     #predictions for train val set
     preds_trainval_c  = preds_trainval.detach().numpy().reshape(preds_trainval.shape[0]*preds_trainval.shape[1],preds_trainval.shape[2])
-    unnorm_trainval = ((preds_trainval_c*means_stds['y_std_trnval'][target].data)+means_stds['y_mean_trnval'][target].data).squeeze()
+    unnorm_trainval = ((preds_trainval_c*means_stds['y_std_trn'][target].data)+means_stds['y_mean_trn'][target].data).squeeze()
     #known values for trainval set
     known_trainval_c = prepped_model_io_data['trainval_targets'].detach().numpy().reshape(prepped_model_io_data['trainval_targets'].shape[0]*prepped_model_io_data['trainval_targets'].shape[1], prepped_model_io_data['trainval_targets'].shape[2]).squeeze()
-    unnorm_known_trainval = (known_trainval_c*means_stds['y_std_trnval'][target].data)+means_stds['y_mean_trnval'][target].data
+    unnorm_known_trainval = (known_trainval_c*means_stds['y_std_trn'][target].data)+means_stds['y_mean_trn'][target].data
     trainval_dates = pd.date_range(start = train_start_date, periods = known_trainval_c.shape[0], freq = 'D')
     
     
@@ -630,20 +637,21 @@ def run_replicates(n_reps, prepped_model_io_data_file):
         
         run_id = os.path.join(config['run_id'], str(i).rjust(2,'0'))
         
+        replicate_seed = i
         train_model(prepped_model_io_data_file, inputs, seq_len,
                         hidden_units, recur_dropout, 
                         dropout, n_epochs, learn_rate, 
                         out_dir, run_id,                       
                         train_start_date, train_end_date,
                         val_start_date, val_end_date,
-                        test_start_date, test_end_date, inc_ante, seed_set)
+                        test_start_date, test_end_date, inc_ante, seed_set, replicate_seed)
         
         predictions = make_predictions(prepped_model_io_data_file, target,
                              hidden_units, recur_dropout, dropout, 
                              n_epochs, learn_rate, out_dir, run_id,
                              train_start_date, train_end_date,
                              val_start_date, val_end_date,
-                             test_start_date, test_end_date)
+                             test_start_date, test_end_date, seed_set, replicate_seed)
         
         plot_save_predictions(predictions, out_dir, run_id)
         
@@ -696,7 +704,7 @@ def test_hyperparameters():
 
     hp_tune_vals = list(itertools.product(sl, hu, lr, do, rco))
 
-    for j in range(88,len(hp_tune_vals)):
+    for j in range(len(hp_tune_vals)):
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
         print(current_time)
@@ -724,62 +732,23 @@ def test_hyperparameters():
             print('Running hyperparameter-replicate combination '+str((j+1)*(i+1))+' of '+str(len(hp_tune_vals)*hp_config['replicates']))
 
             run_id = os.path.join(hp_id, str(i).rjust(2,'0'))
-            
+            replicate_seed = i
             train_model(prepped_model_io_data_file, inputs, seq_len,
                             hidden_units, recur_dropout, 
                             dropout, n_epochs, learn_rate, 
                             out_dir, run_id,                       
                             train_start_date, train_end_date,
                             val_start_date, val_end_date,
-                            test_start_date, test_end_date, inc_ante, seed_set)
+                            test_start_date, test_end_date, inc_ante, seed_set, replicate_seed)
             
             predictions = make_predictions(prepped_model_io_data_file, target, 
                                  hidden_units, recur_dropout, dropout, 
                                  n_epochs, learn_rate, out_dir, run_id,
                                  train_start_date, train_end_date,
                                  val_start_date, val_end_date,
-                                 test_start_date, test_end_date)
+                                 test_start_date, test_end_date, seed_set, replicate_seed)
             
             plot_save_predictions(predictions, out_dir, run_id)
-
-
-
-# A function for training the model on weighted training data
-# def train_high():
-#     out_dir = os.path.join(config['out_dir'],config['run_id'],'train_high')
-#     inputs_xarray_high, target_xarray_high = select_inputs_targets(inputs, target, train_start_date, test_end_date, out_dir, inc_ante, train_high = True) 
-      
-#     prep_input_target_data(inputs_xarray_high, target_xarray_high, train_start_date, train_end_date, 
-#                            val_start_date, val_end_date, test_start_date, test_end_date, 
-#                            seq_len, offset, out_dir)
-    
-#     prepped_model_io_data_file = os.path.join(out_dir,'prepped_model_io_data')
-    
-#     train_model(prepped_model_io_data_file, inputs, seq_len,
-#                     hidden_units, recur_dropout, 
-#                     dropout, n_epochs, learn_rate, 
-#                     out_dir, run_id,                       
-#                     train_start_date, train_end_date,
-#                     val_start_date, val_end_date,
-#                     test_start_date, test_end_date, inc_ante)
-    
-#     out_dir = os.path.join(config['out_dir'],config['run_id'],'predict all')
-#     inputs_xarray, target_xarray = select_inputs_targets(inputs, target, train_start_date, test_end_date, out_dir, inc_ante, train_high = False) 
-    
-#     prep_input_target_data(inputs_xarray_high, target_xarray_high, train_start_date, train_end_date, 
-#                            val_start_date, val_end_date, test_start_date, test_end_date, 
-#                            seq_len, offset, out_dir)
-    
-#     prepped_model_io_data_file = os.path.join(out_dir,'prepped_model_io_data')
-#     predictions = make_predictions(prepped_model_io_data_file, 
-#                          hidden_units, recur_dropout, dropout, 
-#                          n_epochs, learn_rate, out_dir, run_id,
-#                          train_start_date, train_end_date,
-#                          val_start_date, val_end_date,
-#                          test_start_date, test_end_date)
-    
-#     plot_save_predictions(predictions, out_dir, run_id)
-    
     
 
 def main():
@@ -812,14 +781,14 @@ def main():
                     out_dir, run_id,                       
                     train_start_date, train_end_date,
                     val_start_date, val_end_date,
-                    test_start_date, test_end_date, inc_ante, seed_set)
+                    test_start_date, test_end_date, inc_ante, seed_set, seed)
     
     predictions = make_predictions(prepped_model_io_data_file, target,
                          hidden_units, recur_dropout, dropout, 
                          n_epochs, learn_rate, out_dir, run_id,
                          train_start_date, train_end_date,
                          val_start_date, val_end_date,
-                         test_start_date, test_end_date)
+                         test_start_date, test_end_date, seed_set, seed)
     
     plot_save_predictions(predictions, out_dir, run_id)
     
