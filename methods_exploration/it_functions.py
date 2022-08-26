@@ -198,21 +198,14 @@ def lag_data(M, shift):
     the second column is the sink.
     shift: the number of time steps you want to lag the sink by, must be a positive integer
     returns M_lagged of dimensions [length(M)-shift, 3]
-    M_lagged[,1] = source_lagged: source[0:n-shift]
-    M_lagged[,2] = sink_unlagged: sink[shift:n]
-    M_lagged[,3] = sink_lagged: sink[1:n-1]
-    => H(Xt-T, Yt, Yt-1)'''
+    M_lagged[,0] = [source_lagged(0:n-shift)]  
+    M_lagged[,1] =  [sink_unlagged(shift:n)] 
+    M_lagged[,2] = [sink_lagged(0:n-shift)]
+    => H(Xt-T, Yt, Yt-T)'''
     
     length_M = M.shape[0]
     cols_M = M.shape[1]
-    # newlength_M = length_M - shift - 1
-    # M_lagged = np.nan*np.ones([newlength_M, cols_M+1]) 
-    
-    # M_lagged[:,0] = M[1:(length_M-shift), 0]
-    # M_lagged[:,1] = M[shift+1:(length_M),1]
-    # M_lagged[:,2] = M[(shift):(length_M-1),1]
-    
-    #print('=> H(Xt-T, Yt, Yt-T)')
+
     #this is for => H(Xt-T, Yt, Yt-T)
     newlength_M = length_M - shift
     M_lagged = np.nan*np.ones([newlength_M, cols_M+1])
