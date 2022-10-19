@@ -2,6 +2,7 @@ import pickle
 import os
 import sys
 sys.path.insert(0, '03a_it_analysis\\src')
+sys.path.append('methods_exploration')
 import estuary_salinity_functional_performance_func as esfp
 
 run_id = 'Run_45'
