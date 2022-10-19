@@ -1,7 +1,7 @@
 import pickle
 import os
 import sys
-sys.path.insert(0, 'C:\\Users\\ggorski\\OneDrive - DOI\\USGS_ML\\Estuary Salinity\\github\\drb-estuary-salinity-ml\\03a_it_analysis\\src')
+sys.path.insert(0, '03a_it_analysis\\src')
 import estuary_salinity_functional_performance_func as esfp
 
 run_id = 'Run_45'
