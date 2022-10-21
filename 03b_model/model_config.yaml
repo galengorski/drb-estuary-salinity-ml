@@ -1,6 +1,6 @@
 out_dir: '03b_model/out'
 
-run_id: 'Run_45'  
+run_id: 'Run_48'  
 
 inputs: ['discharge_01463500', 
                 #'specific_conductance_01463500',
@@ -24,6 +24,11 @@ replicates: 5
 include_antecedant_data: False
 window_size: [60]
 antecedant_variables: ['discharge']
+
+#include lagged input only for discharge
+include_lagged_input: True
+lag: 7
+
 
 #set the seed for reproducibility for a single model run
 #if replicates are run using the run_replicates function
