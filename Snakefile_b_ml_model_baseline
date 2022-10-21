@@ -135,7 +135,7 @@ rule make_plot_save_predictions:
 rule run_replicates:
     input:
         "03b_model/model_config.yaml", 
-        os.path.join(config['out_dir'],'prepped_model_io_data')
+        #os.path.join(config['out_dir'],'prepped_model_io_data')
     output:
         expand(os.path.join(config['out_dir'], config['run_id'], '{rep}/model_param_output.txt'), rep = replicates),
         expand(os.path.join(config['out_dir'], config['run_id'], '{rep}/losses.png'), rep = replicates),
