@@ -51,14 +51,13 @@ def create_cleaned_io_file(run_id):
     None.
 
     '''
-    #reps = ['00','01','02','03','04']
     reps = find_reps(run_id)
     ml_sf = pd.read_csv(os.path.join('03b_model/out',run_id,reps[0],'ModelResults.csv'), parse_dates = True, index_col = 'Unnamed: 0')
     for i,rep in enumerate(reps):
         temp = pd.read_csv(os.path.join('03b_model/out',run_id,rep,'ModelResults.csv'), parse_dates = True, index_col = 'Unnamed: 0')
         ml_sf['saltfront_pred_'+rep] = temp['saltfront_pred'].copy()
 
-    ml_sf_mean = ml_sf[['saltfront_pred','saltfront_pred_01','saltfront_pred_02','saltfront_pred_03','saltfront_pred_04']].mean(axis = 1)
+    ml_sf_mean = ml_sf.filter(regex='saltfront_pred_').mean(axis = 1)
     ml_sf = ml_sf.merge(ml_sf_mean.rename('ml_pred'), left_index = True, right_index = True)
 
     ml_sf = ml_sf[['saltfront_obs','ml_pred','train/val']]

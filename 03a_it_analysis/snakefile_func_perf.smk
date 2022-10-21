@@ -5,7 +5,7 @@ sys.path.insert(0, '03a_it_analysis\\src')
 sys.path.append('methods_exploration')
 import estuary_salinity_functional_performance_func as esfp
 
-run_id = 'Run_45'
+run_id = 'Run_48'
 sources = ['discharge_01474500','discharge_01463500']
 sinks = ['saltfront_obs', 'ml_pred','coawst_pred']
 years = ['2001','2002','2003','2004','2005','2006','2007','2008','2009','2010',
