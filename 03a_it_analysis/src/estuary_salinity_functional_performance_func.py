@@ -12,6 +12,29 @@ import pandas as pd
 import xarray as xr
 
 
+def find_reps(run_id):
+    '''
+    find the list of directories that house the replicates
+    Parameters
+    ----------
+    run_id : str
+        the run number to aggregate
+
+    Returns
+    -------
+    reps : list
+        list of replicates
+
+    '''
+    reps = list()
+    rootdir = os.path.join('03b_model/out',run_id)
+    for file in os.listdir(rootdir):
+        d = os.path.join(rootdir, file)
+        #replicates have to be in a directory with a two character name(e.g., "02")
+        if os.path.isdir(d) and len(file) == 2:
+            reps.append(file)
+    return reps
+
 def create_cleaned_io_file(run_id):
     '''
     creates a cleaned csv with aggregate results from 5 replicates and merges
@@ -28,7 +51,8 @@ def create_cleaned_io_file(run_id):
     None.
 
     '''
-    reps = ['00','01','02','03','04']
+    #reps = ['00','01','02','03','04']
+    reps = find_reps(run_id)
     ml_sf = pd.read_csv(os.path.join('03b_model/out',run_id,reps[0],'ModelResults.csv'), parse_dates = True, index_col = 'Unnamed: 0')
     for i,rep in enumerate(reps):
         temp = pd.read_csv(os.path.join('03b_model/out',run_id,rep,'ModelResults.csv'), parse_dates = True, index_col = 'Unnamed: 0')
@@ -62,7 +86,7 @@ def calc_it_metrics_for_pairs(data_loc, sources, sinks, years, write_loc):
     '''
      Generate pairs of sources and sinks from the list for each year (or range of years) listed, 
      then calculate the transfer entropy (TE), mutual information (MI), and correlation for those pairs at
-     time lags of 0 to 10 days (hard coded now). Critical values for TE and MI are calculated as well. 
+     time lags of 0 to 9 days (hard coded now). Critical values for TE and MI are calculated as well. 
      The raw data are preprocessed using the preprocessing functions in it_funcitons.py. 
      The results are then converted to a dataframe and written to the file
     Parameters
@@ -138,6 +162,7 @@ def calc_it_metrics_for_pairs(data_loc, sources, sinks, years, write_loc):
                 xl10 = ppf.log10(x)
                 x_ss = ppf.standardize(xl10)
             else:
+                #no seasonal signal removed because only one year of anlaysis
                 x = xy_data.iloc[:,0]
                 x_ss = ppf.standardize(x)
            #no seasonal signal removed because only one year of anlaysis
