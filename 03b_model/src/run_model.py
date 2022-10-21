@@ -156,6 +156,10 @@ def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_d
         
         inputs_df = inputs_df.dropna()
     
+    #include lagged inputs, fill NAs with median values
+    if config['include_lagged_input']:
+        inputs_df['discharge_01463500'+'_lag'+str(config['lag'])] = inputs_df['discharge_01463500'].shift(config['lag']).fillna(10107.86)
+        inputs_df['discharge_01474500'+'_lag'+str(config['lag'])] = inputs_df['discharge_01474500'].shift(config['lag']).fillna(2316.667)
     
     #read in the salt front record
     target_df = pd.read_csv(os.path.join('03a_it_analysis', 'in', 'saltfront_updated.csv'), parse_dates = True, index_col = 'datetime')
