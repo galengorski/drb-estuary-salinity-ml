@@ -44,9 +44,9 @@ rule all_b_ml_model_baseline:
 rule prepare_inputs_targets:
     input:
         "03b_model/model_config.yaml",
-        expand("02_munge/out/D/usgs_nwis_{usgs_nwis_site}.csv", usgs_nwis_site = usgs_nwis_sites),
-        expand("02_munge/out/daily_summaries/noaa_nos_{noaa_nos_site}.csv", noaa_nos_site = noaa_nos_sites),
-        expand("02_munge/out/D/noaa_nerrs_{noaa_nerr_site}.csv", noaa_nerr_site = noaa_nerr_site)
+        #expand("02_munge/out/D/usgs_nwis_{usgs_nwis_site}.csv", usgs_nwis_site = usgs_nwis_sites),
+        #expand("02_munge/out/daily_summaries/noaa_nos_{noaa_nos_site}.csv", noaa_nos_site = noaa_nos_sites),
+        #expand("02_munge/out/D/noaa_nerrs_{noaa_nerr_site}.csv", noaa_nerr_site = noaa_nerr_site)
     output:
         directory("03b_model/out/inputs.zarr"),
         directory("03b_model/out/target.zarr"),
