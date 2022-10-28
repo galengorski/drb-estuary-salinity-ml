@@ -15,6 +15,7 @@ These functions were developed borrowing code and ideas from:
 from joblib import Parallel, delayed
 import math
 import numpy as np
+import os
 from scipy.stats.stats import pearsonr
 
 #%%
@@ -62,6 +63,33 @@ class pre_proc_func:
                 seasonal_removed.append(value)
         return seasonal_removed
     
+def find_bounds(data, lower,upper):
+    '''
+    finding the bounds to remove outliers from input array
+    Parameters
+    ----------
+    data : np.array
+        input data with potential outliers.
+    lower : float
+        lower bound of percentile range to keep (0-100)
+    upper : float
+        upper bound of percentile range to keep (0-100)
+
+    Returns
+    -------
+    float
+        lower bound value
+    float
+        upper bound value
+
+    '''
+    if (lower is None) & (upper is None):
+        return None, None
+    if lower is None:
+        return None, np.nanpercentile(data, upper)
+    if upper is None:
+        return np.nanpercentile(data, lower), None
+    return np.nanpercentile(data, lower), np.nanpercentile(data, upper)
 
 def calc2Dpdf(M,nbins):
     '''calculates the 3 pdfs, one for x, one for y and a joint pdf for x and y 
@@ -147,16 +175,18 @@ def calcMI_shuffled(M, nbins):
     MI_shuff = calcMI(Mss, nbins = nbins)
     return MI_shuff
     
-def calcMI_crit(M, nbins, alpha = 0.01, numiter = 500, ncores = 2):
+def calcMI_crit(M, nbins, alpha, ncores, numiter = 500):
     '''calculate the critical threshold of mutual information
     M: a numpy array of shape (nobs, 2) where nobs is the number of observations
     this assumes that the data are arrange such that the first column is the source and
     the second column is the sink.
     nbins: is the number of bins used for estimating the pdf 
     the mutual information is normalized by the entropy of the sink
-    alpha: significance threshold, default = 0.05
+    alpha: significance threshold
+    ncores: number of cores
     numiter: number of iterations, default = 500
-    ncores: number of cores, default = 2'''
+    '''
+    assert ncores < os.cpu_count()
     
     MIss = Parallel(n_jobs=ncores)(delayed(calcMI_shuffled)(M, nbins) for ii in range(numiter))
     MIss = np.sort(MIss)
@@ -171,19 +201,21 @@ def lag_data(M, shift):
     the second column is the sink.
     shift: the number of time steps you want to lag the sink by, must be a positive integer
     returns M_lagged of dimensions [length(M)-shift, 3]
-    M_lagged[,1] = source_lagged: source[0:n-shift]
-    M_lagged[,2] = sink_unlagged: sink[shift:n]
-    M_lagged[,3] = sink_lagged: sink[1:n-1]
-    => H(Xt-T, Yt, Yt-1)'''
+    M_lagged[,0] = [source_lagged(0:n-shift)]  
+    M_lagged[,1] =  [sink_unlagged(shift:n)] 
+    M_lagged[,2] = [sink_lagged(0:n-shift)]
+    => H(Xt-T, Yt, Yt-T)'''
     
     length_M = M.shape[0]
     cols_M = M.shape[1]
-    newlength_M = length_M - shift - 1
-    M_lagged = np.nan*np.ones([newlength_M, cols_M+1]) 
+
+    #this is for => H(Xt-T, Yt, Yt-T)
+    newlength_M = length_M - shift
+    M_lagged = np.nan*np.ones([newlength_M, cols_M+1])
+    M_lagged[:,0] = M[:(length_M-shift),0]
+    M_lagged[:,1] = M[shift:(length_M)+1,1]
+    M_lagged[:,2] = M[:(length_M-shift),1]
     
-    M_lagged[:,0] = M[1:(length_M-shift), 0]
-    M_lagged[:,1] = M[shift+1:(length_M),1]
-    M_lagged[:,2] = M[(shift):(length_M-1),1]
     return M_lagged
 
 def calcTE(M, shift, nbins):
@@ -201,20 +233,20 @@ def calcTE(M, shift, nbins):
     #remove any rows where there is an nan value
     M_short =  M_lagged[~np.isnan(M_lagged).any(axis=1)]
     
-    M1 = M_short[:,(0,2)]  # [source_lagged(1:n-shift), sink_lagged(1:n-shift)]  =>H(Xt-T,Yt-1)
-    M2 = M_short[:,(1,2)] # [sink_unlagged(shift:n), sink_lagged(1:n-shift)]    =>H(Yt,Yt-1)
-    M3 = M_short[:,2]      # [sink_unlagged(1:n-shift)] =>H(Yt-1) 
+    M1 = M_short[:,(0,2)]  # [source_lagged(0:n-shift), sink_lagged(0:n-shift)]  =>H(Xt-T,Yt-T)
+    M2 = M_short[:,(1,2)] # [sink_unlagged(shift:n), sink_lagged(0:n-shift)]    =>H(Yt,Yt-T)
+    M3 = M_short[:,1]      # [sink_unlagged(0:n-shift)] =>H(Yt) 
     
     #calc joint entropy of H(Xt-T,Yt-T)
     _, _, p_xlyl = calc2Dpdf(M1, nbins)
     T1 = calcEntropy(p_xlyl)
     
-    #calc joint entropy of H(Yt-T) and H(Yt,Yt-T)
-    _, pyl, p_yulyl = calc2Dpdf(M2, nbins)
+    #calc joint entropy of H(Yt) and H(Yt-T)
+    py, pyl, p_yulyl = calc2Dpdf(M2, nbins)
     T2 = calcEntropy(p_yulyl)
     
-    #calc entropy of H(Yt-T)
-    T3 = calcEntropy(pyl)
+    #calc entropy of H(Y)
+    T3 = calcEntropy(py)
     
     #calc 3d joint entropy 
     p_xlyulyl = calc3Dpdfs(M_short, nbins)
@@ -244,7 +276,7 @@ def calcTE_shuffled(M, shift, nbins):
     TE_shuff = calcTE(Mss, shift, nbins)
     return TE_shuff
 
-def calcTE_crit(M, shift, nbins, alpha = 0.01, numiter = 500, ncores = 2):
+def calcTE_crit(M, shift, nbins, alpha, ncores, numiter = 500):
     '''calculate the critical threshold of transfer entropy
     M: a numpy array of shape (nobs, 2) where nobs is the number of observations
     this assumes that the data are arrange such that the first column is the source and
@@ -252,17 +284,18 @@ def calcTE_crit(M, shift, nbins, alpha = 0.01, numiter = 500, ncores = 2):
     shift: time lag that should be considered
     nbins: is the number of bins used for estimating the pdf 
     the transfer entropy is normalized by the entropy of the sink
-    alpha: significance threshold, default = 0.05
-    numiter: number of iterations, default = 500
-    ncores: number of cores, default = 2'''
+    alpha: significance threshold
+    ncores: number of cores
+    numiter: number of iterations, default = 500'''
+    
+    assert ncores < os.cpu_count()
     
     TEss = Parallel(n_jobs=ncores)(delayed(calcTE_shuffled)(M, shift, nbins) for ii in range(numiter))
     TEss = np.sort(TEss)
-    #print(MIss)
     TEcrit = TEss[math.ceil((1-alpha)*numiter)] 
     return(TEcrit)
 
-def calc_it_metrics(M, Mswap, n_lags, nbins, calc_swap = True, alpha = 0.01):
+def calc_it_metrics(M, Mswap, n_lags, nbins, alpha, ncores, calc_swap = True):
     '''wrapper function for calculating mutual information and transfer entropy 
     (for both x -> y and y -> x) across a range of time lags. It also calculates
     a significance threshold for mutual information and transfer entropy using the 
@@ -273,8 +306,10 @@ def calc_it_metrics(M, Mswap, n_lags, nbins, calc_swap = True, alpha = 0.01):
     Mswap: a numpy array identical to M except the two columns have been swapped
     n_lags: number of time lag that should be considered, will calculate from 0-n_lags
     nbins: is the number of bins used for estimating the pdf 
-    the transfer entropy is normalized by the entropy of the sink
-    alpha: significance threshold, default = 0.05
+    the transfer entropy is normalized by the entropy of the sink variable
+    alpha: significance threshold
+    ncores: number of cores
+    calc_swap: boolean should the reverse transfer entropy be calculated as well (Y -> X)?
     '''
     
     MI = []
@@ -291,7 +326,7 @@ def calc_it_metrics(M, Mswap, n_lags, nbins, calc_swap = True, alpha = 0.01):
         M_short =  M_lagged[~np.isnan(M_lagged).any(axis=1)]
         MItemp = calcMI(M_short[:,(0,1)], nbins)
         MI.append(MItemp)
-        MIcrittemp = calcMI_crit(M_short[:,(0,1)], nbins, ncores = 8, alpha = 0.01)
+        MIcrittemp = calcMI_crit(M_short[:,(0,1)], nbins, ncores = ncores, alpha = alpha)
         MIcrit.append(MIcrittemp)
         
         corrtemp = pearsonr(M_short[:,0], M_short[:,1])[0]
@@ -299,13 +334,13 @@ def calc_it_metrics(M, Mswap, n_lags, nbins, calc_swap = True, alpha = 0.01):
         
         TEtemp = calcTE(M, shift = i, nbins = nbins)
         TE.append(TEtemp)
-        TEcrittemp = calcTE_crit(M, shift = i, nbins = nbins, ncores = 8, alpha = 0.01)
+        TEcrittemp = calcTE_crit(M, shift = i, nbins = nbins, ncores = ncores, alpha = alpha)
         TEcrit.append(TEcrittemp)
         
         if calc_swap:
             TEtempswap = calcTE(Mswap, shift = i, nbins = nbins)
             TEswap.append(TEtempswap)
-            TEcrittempswap = calcTE_crit(Mswap, shift = i, nbins = nbins, ncores = 8, alpha = 0.01)
+            TEcrittempswap = calcTE_crit(Mswap, shift = i, nbins = nbins, ncores = ncores, alpha = alpha)
             TEcritswap.append(TEcrittempswap)
         
     it_metrics = {'MI':MI, 'MIcrit':MIcrit,
