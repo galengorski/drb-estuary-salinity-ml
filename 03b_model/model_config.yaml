@@ -1,10 +1,8 @@
 out_dir: '03b_model/out'
 
-<<<<<<< HEAD
+
 run_id: 'Run_51'  
-=======
-run_id: 'Run_48'  
->>>>>>> 614972a (add lagged input option)
+
 
 inputs: ['discharge_01463500', 
                 #'specific_conductance_01463500',
@@ -31,7 +29,7 @@ antecedant_variables: ['discharge']
 
 #include lagged input only for discharge
 include_lagged_input: True
-lag: 7
+lag: [7,8]
 
 
 #set the seed for reproducibility for a single model run

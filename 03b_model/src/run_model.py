@@ -158,8 +158,11 @@ def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_d
     
     #include lagged inputs, fill NAs with median values
     if config['include_lagged_input']:
-        inputs_df['discharge_01463500'+'_lag'+str(config['lag'])] = inputs_df['discharge_01463500'].shift(config['lag']).fillna(10107.86)
-        inputs_df['discharge_01474500'+'_lag'+str(config['lag'])] = inputs_df['discharge_01474500'].shift(config['lag']).fillna(2316.667)
+        inputs_df['discharge_01463500'+'_lag'+str(config['lag'][0])] = inputs_df['discharge_01463500'].shift(config['lag'][0]).fillna(10107.86)
+        inputs_df['discharge_01474500'+'_lag'+str(config['lag'][1])] = inputs_df['discharge_01474500'].shift(config['lag'][1]).fillna(2316.667)
+        #inputs_df = inputs_df.drop(columns = 'discharge_01463500')
+        #inputs_df = inputs_df.drop(columns = 'discharge_01474500')
+
     
     #read in the salt front record
     target_df = pd.read_csv(os.path.join('03a_it_analysis', 'in', 'saltfront_updated.csv'), parse_dates = True, index_col = 'datetime')
@@ -384,6 +387,10 @@ def write_model_params(out_dir, run_id, inputs, n_epochs,
         for var in config['antecedant_variables']: 
             for w in config['window_size']: 
                 inputs_log.append(var+'_'+str(w).rjust(3,'0')+'_mean')
+    
+    if config['include_lagged_input']:
+        inputs_log.append('discharge_01463500'+'_lag'+str(config['lag'][0]))
+        inputs_log.append('discharge_01474500'+'_lag'+str(config['lag'][1]))
     
     f = open(os.path.join(dir,"model_param_output.txt"),"w+")
     f.write("Date: %s\r\n" % date.today().strftime("%b-%d-%Y"))
