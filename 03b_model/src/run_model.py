@@ -156,7 +156,7 @@ def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_d
         
         inputs_df = inputs_df.dropna()
     
-    #include lagged inputs, fill NAs with median values
+    #include lagged inputs, drop the first `lag` number of days from the record
     if config['include_lagged_input']:
         inputs_df['discharge_01463500'+'_lag'+str(config['lag'][0])] = inputs_df['discharge_01463500'].shift(config['lag'][0])
         inputs_df['discharge_01474500'+'_lag'+str(config['lag'][1])] = inputs_df['discharge_01474500'].shift(config['lag'][1])
