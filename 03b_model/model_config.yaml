@@ -27,6 +27,7 @@ antecedant_variables: ['discharge']
 
 #include lagged input only for discharge
 include_lagged_input: True
+#list of the lags for Delaware and Schuylkill
 lag: [7,8]
 
 
