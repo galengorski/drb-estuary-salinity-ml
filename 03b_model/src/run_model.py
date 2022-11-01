@@ -156,6 +156,16 @@ def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_d
         
         inputs_df = inputs_df.dropna()
     
+    #include lagged inputs, drop the first `lag` number of days from the record
+    if config['include_lagged_input']:
+        inputs_df['discharge_01463500'+'_lag'+str(config['lag'][0])] = inputs_df['discharge_01463500'].shift(config['lag'][0])
+        inputs_df['discharge_01474500'+'_lag'+str(config['lag'][1])] = inputs_df['discharge_01474500'].shift(config['lag'][1])
+        
+        inputs_df.drop(inputs_df.index[0:max(config['lag'])], inplace = True)
+        
+        #inputs_df = inputs_df.drop(columns = 'discharge_01463500')
+        #inputs_df = inputs_df.drop(columns = 'discharge_01474500')
+
     
     #read in the salt front record
     target_df = pd.read_csv(os.path.join('03a_it_analysis', 'in', 'saltfront_updated.csv'), parse_dates = True, index_col = 'datetime')
@@ -176,7 +186,11 @@ def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_d
 
     mask = target_df_c[target] < 54
     target_df_c.loc[mask,target] = np.nan
-
+    
+    #if lagged inputs are included then remove the nans
+    if config['include_lagged_input']:
+        target_df_c.drop(target_df_c.index[0:max(config['lag'])], inplace = True)
+        
     inputs_xarray = inputs_df.to_xarray()
     target_xarray = target_df_c.to_xarray()
     
@@ -380,6 +394,10 @@ def write_model_params(out_dir, run_id, inputs, n_epochs,
         for var in config['antecedant_variables']: 
             for w in config['window_size']: 
                 inputs_log.append(var+'_'+str(w).rjust(3,'0')+'_mean')
+    
+    if config['include_lagged_input']:
+        inputs_log.append('discharge_01463500'+'_lag'+str(config['lag'][0]))
+        inputs_log.append('discharge_01474500'+'_lag'+str(config['lag'][1]))
     
     f = open(os.path.join(dir,"model_param_output.txt"),"w+")
     f.write("Date: %s\r\n" % date.today().strftime("%b-%d-%Y"))
