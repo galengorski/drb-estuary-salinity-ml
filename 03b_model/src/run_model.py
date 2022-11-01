@@ -158,8 +158,11 @@ def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_d
     
     #include lagged inputs, fill NAs with median values
     if config['include_lagged_input']:
-        inputs_df['discharge_01463500'+'_lag'+str(config['lag'][0])] = inputs_df['discharge_01463500'].shift(config['lag'][0]).fillna(10107.86)
-        inputs_df['discharge_01474500'+'_lag'+str(config['lag'][1])] = inputs_df['discharge_01474500'].shift(config['lag'][1]).fillna(2316.667)
+        inputs_df['discharge_01463500'+'_lag'+str(config['lag'][0])] = inputs_df['discharge_01463500'].shift(config['lag'][0])
+        inputs_df['discharge_01474500'+'_lag'+str(config['lag'][1])] = inputs_df['discharge_01474500'].shift(config['lag'][1])
+        
+        inputs_df.drop(inputs_df.index[0:max(config['lag'])], inplace = True)
+        
         #inputs_df = inputs_df.drop(columns = 'discharge_01463500')
         #inputs_df = inputs_df.drop(columns = 'discharge_01474500')
 
@@ -183,7 +186,11 @@ def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_d
 
     mask = target_df_c[target] < 54
     target_df_c.loc[mask,target] = np.nan
-
+    
+    #if lagged inputs are included then remove the nans
+    if config['include_lagged_input']:
+        target_df_c.drop(target_df_c.index[0:max(config['lag'])], inplace = True)
+        
     inputs_xarray = inputs_df.to_xarray()
     target_xarray = target_df_c.to_xarray()
     
