@@ -1,0 +1,3 @@
+[submodule "03b_model/src/river-dl"]
+	path = 03b_model/src/river-dl
+	url = https://github.com/USGS-R/river-dl.git
