@@ -32,7 +32,7 @@ rule fetch_usgs_nwis:
         "01_fetch/out/usgs_nwis_{usgs_nwis_sites}.txt"
     run:
         fetch = importlib.import_module('01_fetch.src.fetch_usgs_nwis')
-        fetch.fetch_single_site_data({wildcards.usgs_nwis_sites})
+        fetch.fetch_all_sites_data()
         fetch.fetch_param_file()
 
 rule fetch_noaa_nos:
