@@ -7,8 +7,7 @@ The steps for reproducing the results from the manuscript are detailed below. To
 #### Steps for reproducibility:
 
 1) clone this repo using `git clone git@github.com:USGS-R/drb-estuary-salinity-ml.git --recurse-submodules`, the `--recurse-submodules` command initiates and updates the `river-dl` submodule housed in `03_model/src/` directory 
-2) add the file `953860.zip` into the `01_fetch/in` folder, the file can be found on S3 in drb_estuary_salinity/01_fetch/in
-3) from within the github cloned directory create the environment using `conda env create -f environment.yaml` or `conda env update --file environment.yaml –prune` if you have already created the environment and just need to update it
+2) from within the github cloned directory create the environment using `conda env create -f environment.yaml` or `conda env update --file environment.yaml –prune` if you have already created the environment and just need to update it
 
 #### To (re)train the model:  
 

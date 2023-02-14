@@ -4,9 +4,6 @@ _targets
 #All model output
 */out/*
 
-#All model inputs
-*/in/*
-
 #R files
 # History files
 .Rhistory
