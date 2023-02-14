@@ -2,8 +2,6 @@
 
 Code repo for Delaware River Basin information theory code and machine learning models that predict estuary salinity
 
-This information is preliminary or provisional and is subject to revision. It is being provided to meet the need for timely best science. The information has not received final approval by the U.S. Geological Survey (USGS) and is provided on the condition that neither the USGS nor the U.S. Government shall be held liable for any damages resulting from the authorized or unauthorized use of the information.
-
 The steps for reproducing the results from the manuscript are detailed below. To retrain a new model use all steps. To analyze results from the manuscript run steps 1-3, then use steps 9-10 for analysis. Model ouptut used for the manuscript is located in `03_model/out/Manuscript_Results` 
 
 #### Steps for reproducibility:
