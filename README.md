@@ -13,8 +13,7 @@ The steps for reproducing the results from the manuscript are detailed below. To
 
 4) run `snakemake -s Snakefile_fetch_munge -j` (-j runs the job on the available number of cpus cores, use -j 2 for fewer)
 5) you might have to rerun the same command if there is an error that pops up, this is because snakemake doesn't run rules in order and some directories need to be created
-6) ensure that the `saltfront_updated.csv` is located in `03_model/in` directory
-7) now open the file `03_model/model_config.yaml` and adjust modeling parameters, and change the run_id to whatever you want to name the test run, say Test_Run
+7) now open the file `03_model/model_config.yaml` and adjust modeling parameters, and change the run_id to whatever you want to name the test run, for example `Test_Run`
 8) run `snakemake -s Snakefile_run_ml_model run_replicates -j`, you should see the training progress in the command window and you should have model results written to `03_model/out/Test_Run/`
 
 #### To analyze model output and (re)produce figures:
