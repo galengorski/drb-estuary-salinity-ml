@@ -19,7 +19,6 @@ The steps for reproducing the results from the manuscript are detailed below. To
 #### To analyze model output and (re)produce figures:
 
 7) To calculate functional performance for model output:
-    - ensure that COAWST model output are in `03_model/in/COAWST_model_runs/processed`
     - make sure that the parameters in `Snakefile_model_analysis` lines 9-13 describe the desired model run, sources, sinks, and years for analysis. Note: functional performance is calculated on an annual basis
     - run `snakemake -s Snakefile_model_analysis calc_functional_performance_wrapper -j` and the results should be written to `04_analysis/out/"run_id"`
 8) To reproduce manuscript figures:
