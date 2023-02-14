@@ -4,8 +4,9 @@ _targets
 #All model output
 */out/*
 
-#All model inputs
-*/in/*
+#Certain model inputs
+02_munge/in/*
+03_model/in/COAWST_model_runs/raw/*
 
 #R files
 # History files
