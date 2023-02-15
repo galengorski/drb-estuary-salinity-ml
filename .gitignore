@@ -3,10 +3,13 @@ _targets
 
 #All model output
 */out/*
+#Except modeling results from manuscript
+!03_model/out/Run_Manuscript_Results/*
 
 #Certain model inputs
 02_munge/in/*
 03_model/in/COAWST_model_runs/raw/*
+03_model/out/
 
 #R files
 # History files

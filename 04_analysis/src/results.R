@@ -42,7 +42,7 @@ dir.create('04_analysis/fig', showWarnings = FALSE)
 #===================================================================================#
 
 #run id
-run <- 'Run_00'
+run <- 'Run_Manuscript_Results'
 #number and ids of reps
 reps <- c( '00', '01', '02', '03', '04', '05', '06', '07', '08', '09')
 #aggregate results from replicates
