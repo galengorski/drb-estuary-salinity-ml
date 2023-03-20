@@ -35,8 +35,8 @@ def process_to_timestep(df, cols, agg_level, prop_obs_required):
     must have datetimes in a column named 'datetime'
     '''
     # get proportion of measurements available for timestep
-    expected_measurements = df.resample(agg_level, on='datetime').count().mode()[cols].loc[0]
-    observed_measurements = df.resample(agg_level, on='datetime').count()[cols].loc[:]
+    expected_measurements = df.resample(agg_level, on='datetime').count().mode().loc[0]
+    observed_measurements = df.resample(agg_level, on='datetime').count().loc[:]
     prop_df = observed_measurements / expected_measurements
     # calculate averages for timestep
     df = df.resample(agg_level, on='datetime').mean()
