@@ -28,8 +28,8 @@ def download_unzip_sb(sb_url, prms_predictions, destination):
         os.makedirs(destination, exist_ok=True)
         sb = sciencebasepy.SbSession()
         sb.download_file(sb_url, prms_predictions+'.zip', destination)
-        with zipfile.ZipFile(os.path.join(destination,prms_predictions+'.zip'), 'r') as zip_ref:
-            zip_ref.extractall(destination)
+    with zipfile.ZipFile(os.path.join(destination,prms_predictions+'.zip'), 'r') as zip_ref:
+        zip_ref.extractall(destination)
         
 
 
