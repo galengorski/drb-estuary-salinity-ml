@@ -1,0 +1,24 @@
+name: rdl_torch_tf
+channels:
+    - pytorch
+    - conda-forge
+    - defaults
+    - bioconda
+dependencies:
+    - git
+    - pytorch
+    - torchvision
+    - torchaudio
+    - pip
+    - jupyterlab
+    - matplotlib
+    - pandas
+    - pyarrow
+    - scikit-learn
+    - snakemake
+    - xarray
+    - zarr
+    - tqdm
+    - dask
+    - pip:
+          - tensorflow # or tensorflow-gpu
