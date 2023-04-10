@@ -1,0 +1,16 @@
+Date: Oct-28-2022
+Feature List: ['discharge_01463500', 'discharge_01474500', 'wl_range_8557380', 'wl_max_8557380', 'wl_obs_pred_8557380', 'wl_filtered_8557380', 'air_pressure_delsjmet', 'temperature_delsjmet', 'wind_direction_delsjmet', 'wind_speed_delsjmet']
+Target: saltfront7_weekly
+Include antecedant variable: False
+Epochs: 500
+Learning rate: 0.003000
+Sequence Length: 365
+Cells: 20
+Recurrent Dropout: 0.300000
+Dropout: 0.100000
+Train date start: 2001-01-01
+Train date end: 2015-12-31
+Validation date start: 2016-01-01
+Validation date end: 2021-06-30
+Test date start: 2016-01-01
+Test date end: 2021-06-30

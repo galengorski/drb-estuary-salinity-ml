@@ -1,7 +1,0 @@
-make_heatmap_matrix.py:
-    #lagged sources from file
-    srcs_lagged_pickle: '03a_it_analysis/out/srcs_proc_lagged'
-    #sinks from file
-    snks_list_pickle: '03a_it_analysis/out/snks_proc'
-    #directory to save the correlation matrix
-    out_dir: '03a_it_analysis/out/'
