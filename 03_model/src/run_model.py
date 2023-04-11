@@ -15,10 +15,13 @@ import os
 import pandas as pd
 import pickle
 import random
-from river_dl.preproc_utils import separate_trn_tst, scale, split_into_batches
 import shutil
 import torch
 import yaml
+
+import sys
+sys.path.insert(0, os.path.join('03_model', 'src'))
+from river_dl.preproc_utils import separate_trn_tst, scale, split_into_batches
 
 
 
@@ -584,7 +587,6 @@ def run_replicates(n_reps, prepped_model_io_data_file):
     None.
 
     '''
-    
     for i in range(config['replicates']):
         
         run_id = os.path.join(config['run_id'], str(i).rjust(2,'0'))
