@@ -1,9 +1,8 @@
 import importlib
 import os
 import sys
+sys.path.insert(0, os.path.join(os.getcwd(), '03_model', 'src'))
 from river_dl.preproc_utils import prep_all_data
-#sys.path.append('03_model/src')
-sys.path.insert(0,'C:/Users/ggorski/OneDrive - DOI/USGS_ML/Estuary Salinity/github/data_release/drb-estuary-salinity-ml/03_model/src')
 import run_model
 
 
@@ -90,7 +89,7 @@ rule hyperparameter_testing:
 rule run_replicates:
     input:
         "03_model/model_config.yaml", 
-        #os.path.join(config['out_dir'],'prepped_model_io_data')
+        os.path.join(config['out_dir'],'prepped_model_io_data')
     output:
         expand(os.path.join(config['out_dir'], config['run_id'], '{rep}/model_param_output.txt'), rep = replicates),
         expand(os.path.join(config['out_dir'], config['run_id'], '{rep}/losses.png'), rep = replicates),
