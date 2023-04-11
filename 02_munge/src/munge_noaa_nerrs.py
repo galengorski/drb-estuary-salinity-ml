@@ -2,6 +2,8 @@ import os
 import pandas as pd
 import numpy as np
 import yaml
+import sys
+sys.path.insert(0, os.path.join('01_fetch', 'src'))
 import utils
 
 # import config
