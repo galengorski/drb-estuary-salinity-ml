@@ -1,12 +1,14 @@
 import pickle
 import os
 import sys
-sys.path.insert(0, '04_analysis\\src')
+sys.path.insert(0, os.path.join('04_analysis', 'src'))
 import estuary_salinity_functional_performance_func as esfp
 import XAI_functions
 
+configfile: "03_model/model_config.yaml"
 
-run_id = 'Run_00'
+
+run_id = config['run_id']
 sources = ['discharge_01474500','discharge_01463500']
 sinks = ['saltfront_obs', 'ml_pred','coawst_pred']
 years = ['2001','2002','2003','2004','2005','2006','2007','2008','2009','2010',
@@ -15,16 +17,16 @@ years = ['2001','2002','2003','2004','2005','2006','2007','2008','2009','2010',
 
 rule all_model_analysis:
     input:
-        os.path.join('03_model/out',run_id,'ML_COAWST_Results_Input_Cleaned.csv'),
-        os.path.join('04_analysis/out',run_id+'_it_df.csv'),
-        os.path.join('04_analysis/out', run_id+'_functional_performance_df.csv')
+        os.path.join('03_model','out',run_id,'ML_COAWST_Results_Input_Cleaned.csv'),
+        os.path.join('04_analysis','out',run_id+'_it_df.csv'),
+        os.path.join('04_analysis','out', run_id+'_functional_performance_df.csv')
 
 ###########################################################################################                        
 #SUMMARIZE MODEL RESULTS AND PREPARE DATA FOR CALCULATIONS
 ########################################################################################### 
 rule create_cleaned_io_file:
     output:
-        os.path.join('03_model/out',run_id,'ML_COAWST_Results_Input_Cleaned.csv')
+        os.path.join('03_model','out',run_id,'ML_COAWST_Results_Input_Cleaned.csv')
     run:
         esfp.create_cleaned_io_file(run_id)
 ##---------------------------------------------------------------------------------------##  
@@ -34,9 +36,9 @@ rule create_cleaned_io_file:
 ########################################################################################### 
 rule calc_it_metrics_for_pairs:
     input:
-        os.path.join('03_model/out',run_id,'ML_COAWST_Results_Input_Cleaned.csv')
+        os.path.join('03_model','out',run_id,'ML_COAWST_Results_Input_Cleaned.csv')
     output:
-        os.path.join('04_analysis/out',run_id+'_it_df.csv')
+        os.path.join('04_analysis','out',run_id+'_it_df.csv')
     run:
         esfp.calc_it_metrics_for_pairs(data_loc = input[0], 
                                     sources = sources, 
@@ -50,9 +52,9 @@ rule calc_it_metrics_for_pairs:
 ########################################################################################### 
 rule calc_functional_performance:
     input:
-        os.path.join('04_analysis/out/',run_id+'_it_df.csv')
+        os.path.join('04_analysis','out',run_id+'_it_df.csv')
     output:
-        os.path.join('04_analysis/out', run_id+'_functional_performance_df.csv')
+        os.path.join('04_analysis', 'out', run_id+'_functional_performance_df.csv')
     run:
         esfp.calc_functional_performance(it_df_loc = input[0], 
                                         sources = sources, 
@@ -90,8 +92,9 @@ rule generate_manuscript_figures:
         '04_analysis/fig/fig_6.pdf'
     shell:
         r"""
-        "C:\Users\ggorski\OneDrive - DOI\Documents\R\R-4.1.1\bin\Rscript.exe" 04_analysis\src\results.R
+        "C:\Users\yourname\AppData\Local\R\R-41~1.1\bin\x64\Rscript.exe" 04_analysis\src\results.R
         """
+
 ##---------------------------------------------------------------------------------------##
 
 ###########################################################################################                        
