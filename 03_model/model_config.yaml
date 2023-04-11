@@ -1,17 +1,17 @@
-out_dir: '03_model/out'
+out_dir: '03_model\out'
 
-run_id: 'Run_Manuscript_Results'  
+run_id: 'Test_Run'
 
-inputs: ['discharge_01463500', 
+inputs: ['discharge_01463500',
                 #'specific_conductance_01463500',
-                'discharge_01474500', 
-                #'specific_conductance_01474500', 
+                'discharge_01474500',
+                #'specific_conductance_01474500',
                 'wl_range_8557380','wl_max_8557380','wl_obs_pred_8557380','wl_filtered_8557380',
-                'air_pressure_delsjmet', 
+                'air_pressure_delsjmet',
                 'temperature_delsjmet',
                 #'precipitation_delsjmet',
                 'wind_direction_delsjmet',
-                'wind_speed_delsjmet']#,'wind_speed_direction_delsjmet']                    
+                'wind_speed_delsjmet']#,'wind_speed_direction_delsjmet']
 
 
 #the sinks to be analyzed, this will likely be the salt front location
@@ -55,8 +55,3 @@ learn_rate: 0.003
 recur_dropout: 0.3
 dropout: 0.1
 n_epochs: 500
-
-
-
-
-
