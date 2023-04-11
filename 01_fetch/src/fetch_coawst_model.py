@@ -8,6 +8,8 @@ import dask.array as da
 import os
 from dask.distributed import Client
 import yaml
+import sys
+sys.path.insert(0, os.path.join('01_fetch', 'src'))
 import utils
 
 #client = Client()

@@ -4,8 +4,10 @@ import urllib
 import datetime
 from dateutil.relativedelta import relativedelta
 import requests, json
-import utils
 import yaml
+import sys
+sys.path.insert(0, os.path.join('01_fetch', 'src'))
+import utils
 
 # import config
 with open("01_fetch/params_config_fetch_noaa_nos.yaml", 'r') as stream:

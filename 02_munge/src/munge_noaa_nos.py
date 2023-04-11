@@ -3,8 +3,10 @@ import numpy as np
 import pandas as pd
 import boto3
 import yaml
-import utils
 from scipy import signal
+import sys
+sys.path.insert(0, os.path.join('01_fetch', 'src'))
+import utils
 
 # import config
 with open("02_munge/params_config_munge_noaa_nos.yaml", 'r') as stream:
