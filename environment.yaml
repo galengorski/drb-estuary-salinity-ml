@@ -1,43 +1,42 @@
 name: drb_estuary_salinity
 channels:
-  - defaults
+  - conda-forge
   - bioconda
   - pytorch
   - plotly
-  - conda-forge
   - pypi
+  - defaults
 dependencies:
-  - numpy
-  - pandas
-  - python=3.8
-  - joblib
-  - matplotlib
-  - yaml
-  - boto3
-  - tqdm
-  - snakemake-minimal
-  - ca-certificates
-  - certifi
-  - openssl
-  - xarray
-  - torchvision
-  - pytorch
+  - boto3=1.26.110
+  - ca-certificates=2022.12.7
+  - certifi=2022.12.7
   - cudatoolkit=10.2
-  - torchaudio
-  - ipympl
-  - plotly=5.5.0
-  - spyder
-  - scipy
-  - zarr
-  - lz4
-  - seaborn
-  - dask
-  - scikit-learn
+  - dask=2023.3.2
+  - ipympl=0.9.3
+  - joblib=1.2.0
+  - lz4=4.3.2
+  - matplotlib=3.7.1
+  - numpy=1.24.2
+  - openssl=3.1.0
+  - pandas=1.4.2
   - pip=21.2.2
+  - plotly=5.5.0
+  - python=3.8
+  - pytorch=2.0.0
+  - scikit-learn=1.2.2
+  - scipy=1.10.1
+  - seaborn=0.12.2
+  - snakemake-minimal=7.25.0
+  - spyder=5.4.3
+  - torchaudio=2.0.0
+  - torchvision=0.15.0
+  - tqdm=4.65.0
+  - xarray=2023.1.0
+  - yaml=0.2.5
+  - zarr=2.13.3
   - pip:
-      - pypi_install
-      - sciencebasepy
-  - scikit-learn
+      - pypi_install=0.0.5
+      - sciencebasepy=2.0.12
 
 
 

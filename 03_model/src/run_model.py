@@ -15,10 +15,13 @@ import os
 import pandas as pd
 import pickle
 import random
-from river_dl.preproc_utils import separate_trn_tst, scale, split_into_batches
 import shutil
 import torch
 import yaml
+
+import sys
+sys.path.insert(0, os.path.join('03_model', 'src'))
+from river_dl.preproc_utils import separate_trn_tst, scale, split_into_batches
 
 
 
