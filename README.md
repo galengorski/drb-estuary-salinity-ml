@@ -15,7 +15,7 @@ To retrain a new model run all steps below (1-8). If you only want to analyze re
 ## To train the model:  
 
 4) Run `snakemake -s Snakefile_fetch_munge -j` (-j runs the job on the available number of cpus cores, use -j 2 for fewer) to fetch and munge the data inputs used in the model. You might have to rerun the same command if an error that pops up, this is because snakemake doesn't run rules in the necessary order sometimes.
-5) Open the file `03_model/model_config.yaml` and adjust modeling parameters. Change the run_id to whatever you want to name your run of the model (e.g. Test_Run).
+5) Open the file `03_model/model_config.yaml` and adjust modeling parameters. Change the run_id to whatever you want to name your run of the model (e.g. Test_Run). **Note**: If you do not change the `run_id` to something other than 'Run_Manuscript_Results', the manuscript results will be overwritten in the next step.
 6) Run `snakemake -s Snakefile_run_ml_model run_replicates -j` to train your model. Your model results will be written to `03_model/out/{run_id}/` where `{run_id}` is the run_id specified in `03_model/model_config.yaml`.
 
 ## To analyze model output and produce figures:
