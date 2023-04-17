@@ -4,10 +4,12 @@ Created on Wed Aug 31 17:53:10 2022
 
 @author: ggorski
 """
+import os
+import sys
+sys.path.insert(0, os.path.join('03_model', 'src'))
 from LSTMDA_torch import LSTMDA, rmse_masked
 from matplotlib import pyplot as plt, dates
 import numpy as np
-import os
 import pandas as pd
 import pickle
 import seaborn as sns

@@ -9,6 +9,38 @@
 
 #===================================================================================#
 #####INSTALL PACKAGES#####
+pkgLoad <- function( packages = "favourites" ) {
+
+    if( length( packages ) == 1L && packages == "favourites" ) {
+        packages <- c( "cowplot", "ggplot2", "gridExtra", "hexbin", "hydroGOF",
+                       "lubridate", "ModelMetrics", "scales", "tidyverse", 
+                       "patchwork", "viridis"
+        )
+    }
+
+    packagecheck <- match( packages, utils::installed.packages()[,1] )
+
+    packagestoinstall <- packages[ is.na( packagecheck ) ]
+
+    if( length( packagestoinstall ) > 0L ) {
+        utils::install.packages( packagestoinstall,
+                             repos = "http://cran.csiro.au"
+        )
+    } else {
+        print( "All requested packages already installed" )
+    }
+
+    for( package in packages ) {
+        suppressPackageStartupMessages(
+            library( package, character.only = TRUE, quietly = TRUE )
+        )
+    }
+
+}
+
+pkgLoad()
+
+
 # install.packages('cowplot')
 library(cowplot)
 # install.packages('ggplot2')
@@ -21,7 +53,7 @@ library(hexbin)
 library(hydroGOF)
 # intstall.packages('lubridate')
 library(lubridate)
-# install.packages('ModelMetrics)
+# install.packages('ModelMetrics')
 library(ModelMetrics)
 #install.packages("scales")
 library(scales)
@@ -31,7 +63,6 @@ library(tidyverse)
 library(patchwork)
 #install.packages("viridis")
 library(viridis)
-
 
 #load plotting functions
 source('04_analysis/src/results_functions.R')

@@ -3,6 +3,8 @@ import urllib
 import yaml
 import datetime
 import pandas as pd
+import sys
+sys.path.insert(0, os.path.join('01_fetch', 'src'))
 import utils
 
 # import config

@@ -1,9 +1,12 @@
 import os
-import utils
 import yaml
 import glob
 from zipfile import ZipFile
 import shutil
+import sys
+sys.path.insert(0, os.path.join('01_fetch', 'src'))
+import utils
+
 
 # import config
 with open("01_fetch/params_config_fetch_noaa_nerrs.yaml", 'r') as stream:

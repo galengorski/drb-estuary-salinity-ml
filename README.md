@@ -1,29 +1,30 @@
 # drb-estuary-salinity-ml
 
-Code repo for Delaware River Basin information theory code and machine learning models that predict estuary salinity
+This model archive contains code used for deep learning and hydrodynamic modeling aimed at understanding and simulating salinity dynamics in the Delaware Bay. The steps for reproducing the results from the manuscript are detailed below.
 
-The steps for reproducing the results from the manuscript are detailed below. To retrain a new model use all steps. To analyze results from the manuscript run steps 1-3, then use steps 9-10 for analysis. Model ouptut used for the manuscript is located in `03_model/out/Manuscript_Results` 
+You will need to have [Anaconda](https://docs.anaconda.com/anaconda/install/index.html), [R](https://cran.r-project.org/), and [mamba](https://mamba.readthedocs.io/en/latest/installation.html) installed on your computer to run this pipeline.
 
-#### Steps for reproducibility:
+To retrain a new model run all steps below (1-8). If you only want to analyze results from the manuscript, run steps 1-3, then use steps 7-8 for analysis. Model ouptut used for the manuscript is located in `03_model/out/Manuscript_Results`.
 
-1) clone this repo using `git clone git@github.com:USGS-R/drb-estuary-salinity-ml.git --recurse-submodules`, the `--recurse-submodules` command initiates and updates the `river-dl` submodule housed in `03_model/src/` directory 
-2) from within the github cloned directory create the environment using `conda env create -f environment.yaml` or `conda env update --file environment.yaml –prune` if you have already created the environment and just need to update it
-3) activate your conda environment with `conda activate drb_estuary_salinity`
+## Prepare your environment
 
-#### To (re)train the model:  
+1) Download the model archive and unzip its contents.
+2) Navigate into the root directory of the archive and use [mamba](https://mamba.readthedocs.io/en/latest/installation.html) to create the environment using `mamba env create -f environment.yaml`.
+3) Activate your conda environment with `conda activate drb_estuary_salinity`.
 
-4) run `snakemake -s Snakefile_fetch_munge -j` (-j runs the job on the available number of cpus cores, use -j 2 for fewer)
-5) you might have to rerun the same command if there is an error that pops up, this is because snakemake doesn't run rules in order and some directories need to be created
-6) now open the file `03_model/model_config.yaml` and adjust modeling parameters, and change the run_id to whatever you want to name the test run, say Test_Run
-7) run `snakemake -s Snakefile_run_ml_model run_replicates -j`, you should see the training progress in the command window and you should have model results written to `03_model/out/Test_Run/`
+## To train the model:  
 
-#### To analyze model output and (re)produce figures:
+4) Run `snakemake -s Snakefile_fetch_munge -j` (-j runs the job on the available number of cpus cores, use -j 2 for fewer) to fetch and munge the data inputs used in the model. You might have to rerun the same command if an error that pops up, this is because snakemake doesn't run rules in the necessary order sometimes.
+5) Open the file `03_model/model_config.yaml` and adjust modeling parameters. Change the run_id to whatever you want to name your run of the model (e.g. Test_Run). **Note**: If you do not change the `run_id` to something other than 'Run_Manuscript_Results', the manuscript results will be overwritten in the next step.
+6) Run `snakemake -s Snakefile_run_ml_model run_replicates -j` to train your model. Your model results will be written to `03_model/out/{run_id}/` where `{run_id}` is the run_id specified in `03_model/model_config.yaml`.
 
-8) To calculate functional performance for model output:
-    - ensure that COAWST model output are in `03_model/in/COAWST_model_runs/processed`
-    - make sure that the parameters in `Snakefile_model_analysis` lines 9-13 describe the desired model run, sources, sinks, and years for analysis. Note: functional performance is calculated on an annual basis
-    - run `snakemake -s Snakefile_model_analysis calc_functional_performance_wrapper -j` and the results should be written to `04_analysis/out/"run_id"`
-9) To reproduce manuscript figures:
-    - make sure that the `run_id` parameter in `Snakefile_model_analysis` and `04_analysis/src/results.R` describe the correct model run
+## To analyze model output and produce figures:
+
+7) To calculate functional performance for model output:
+    - make sure that the parameters in `Snakefile_model_analysis` lines 9-13 describe the desired model run, sources, sinks, and years for analysis (note: functional performance is calculated on an annual basis).
+    - run `snakemake -s Snakefile_model_analysis calc_functional_performance_wrapper -j` and the results should be written to two csv files starting with `04_analysis/out/{run_id}_` where `{run_id}` is the run_id specified in `03_model/model_config.yaml`.
+8) To reproduce manuscript figures:
+    - make sure that the `run_id` parameter in `04_analysis/src/results.R` describes the correct model run (it should probably match the run_id you specifed in `03_model/model_config.yaml`)
+    - check that the correct filepath for your RScript.exe is inserted in `rule generate_manuscript_figures` in `Snakefile_model_analysis`
     - run `snakemake -s Snakefile_model_analysis generate_manuscript_figures -j`
-    - run `snakemake -s generate_expected_gradient_figure -j`
+    - run `snakemake -s Snakefile_model_analysis generate_expected_gradient_figure -j`; note that this job may fail due to filesystem latency, but if you check in the `04_analysis/fig` folder you will see the output `fig_7_2019.pdf` has been generated
