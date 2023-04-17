@@ -63,7 +63,7 @@ def create_cleaned_io_file(run_id):
     ml_sf = ml_sf[['saltfront_obs','ml_pred','train/val']]
 
     # read in observations
-    inputs = xr.open_zarr(os.path.join('03_model/out/inputs.zarr'), consolidated=False)
+    inputs = xr.open_zarr(os.path.join(f'03_model/out/{run_id}/inputs.zarr'), consolidated=False)
     inputs_df = inputs.to_dataframe()
     
     #join ml and inputs
