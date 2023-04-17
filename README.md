@@ -27,4 +27,4 @@ To retrain a new model run all steps below (1-8). If you only want to analyze re
     - make sure that the `run_id` parameter in `04_analysis/src/results.R` describes the correct model run (it should probably match the run_id you specifed in `03_model/model_config.yaml`)
     - check that the correct filepath for your RScript.exe is inserted in `rule generate_manuscript_figures` in `Snakefile_model_analysis`
     - run `snakemake -s Snakefile_model_analysis generate_manuscript_figures -j`
-    - run `snakemake -s Snakefile_model_analysis generate_expected_gradient_figure -j`; note that this job may fail due to filsystem latency, but if you check in the `04_analysis/fig` folder you will see the output `fig_7_201.pdf` has been generated
+    - run `snakemake -s Snakefile_model_analysis generate_expected_gradient_figure -j`; note that this job may fail due to filesystem latency, but if you check in the `04_analysis/fig` folder you will see the output `fig_7_2019.pdf` has been generated
