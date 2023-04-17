@@ -4,7 +4,7 @@ This model archive contains code used for deep learning and hydrodynamic modelin
 
 You will need to have [Anaconda](https://docs.anaconda.com/anaconda/install/index.html), [R](https://cran.r-project.org/), and [mamba](https://mamba.readthedocs.io/en/latest/installation.html) installed on your computer to run this pipeline.
 
-To retrain a new model run all steps below (1-8). If you only want to analyze results from the manuscript, run steps 1-3, then use steps 7-8 for analysis. Model ouptut used for the manuscript is located in `03_model/out/Manuscript_Results`.
+To retrain a new model run all steps below (1-8). If you only want to analyze results from the manuscript, run steps 1-4, then use steps 7-8 for analysis. Model ouptut used for the manuscript is located in `03_model/out/Manuscript_Results`.
 
 ## Prepare your environment
 
