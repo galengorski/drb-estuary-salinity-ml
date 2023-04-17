@@ -85,7 +85,7 @@ rule generate_manuscript_figures:
         '04_analysis/fig/fig_6.pdf'
     shell:
         r"""
-        "C:\Users\asnyder\AppData\Local\R\R-41~1.1\bin\x64\Rscript.exe" 04_analysis\src\results.R
+        "C:\Users\yourname\AppData\Local\R\R-41~1.1\bin\x64\Rscript.exe" 04_analysis\src\results.R
         """
 
 ##---------------------------------------------------------------------------------------##
