@@ -22,7 +22,8 @@ If you would like to analyze the results of your own model run that you produced
 5) Open the file `03_model/model_config.yaml` and adjust modeling parameters. Change the run_id to whatever you want to name your run of the model (e.g. Test_Run).
 6) Run `snakemake -s Snakefile_run_ml_model run_replicates -j` to train your model. Your model results will be written to `03_model/out/{run_id}/` where `{run_id}` is the run_id specified in `03_model/model_config.yaml`.
 
-## To analyze model output and produce figures for the modeling run used in the associated manuscript (contained in 03_model\out\Run_Manuscript_Results):
+## To analyze model output and produce figures:
+To reproduce figures in the associated manuscript, complete steps 7 and 8 with `{run_id}` in `model_config_Run_Manuscript_Results.yaml` set to `Run_Manuscript_Results`. To produce figures for a newly trained model, complete steps 7 and 8 with `{run_id}` set to the name of the new model run directory. You will also need to manually review the scripts used in the Snakefiles listed below to reflect certain modeling configuration decisions you have made (such as the number of replicates).
 
 7) To calculate functional performance for model output:
     - run `snakemake -s Snakefile_model_analysis calc_functional_performance_wrapper -j` and the results should be written to two csv files starting with `04_analysis/out/{run_id}_` where `{run_id}` is the run_id specified in `03_model/model_config.yaml`.
