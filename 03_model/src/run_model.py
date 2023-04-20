@@ -611,7 +611,7 @@ def run_replicates(n_reps, prepped_model_io_data_file):
         plot_save_predictions(predictions, out_dir, run_id)
         
 
-def test_hyperparameters():
+def test_hyperparameters(run_id=run_id):
     '''
     using grid search test a set of hyperparamters listed in the hyperparameter_config.yaml file
 

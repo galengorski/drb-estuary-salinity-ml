@@ -78,7 +78,7 @@ rule hyperparameter_testing:
     input:
         "03_model/hyperparameter_config.yaml"
     run:
-        run_model.test_hyperparameters()
+        run_model.test_hyperparameters(run_id=config['run_id'])
         
 
 ##---------------------------------------------------------------------------------------##  
