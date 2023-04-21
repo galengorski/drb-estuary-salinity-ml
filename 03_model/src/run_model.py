@@ -142,13 +142,13 @@ def select_inputs_targets(inputs, target, train_start_date, test_end_date, out_d
     inputs_xarray = inputs_df.to_xarray()
     target_xarray = target_df_c.to_xarray()
     
-    if os.path.exists(os.path.join(out_dir,'inputs.zarr')):
-        shutil.rmtree(os.path.join(out_dir,'inputs.zarr'))
-    if os.path.exists(os.path.join(out_dir, 'target.zarr')):
-        shutil.rmtree(os.path.join(out_dir, 'target.zarr'))
+    if os.path.exists(os.path.join(out_dir, run_id, 'inputs.zarr')):
+        shutil.rmtree(os.path.join(out_dir, run_id, 'inputs.zarr'))
+    if os.path.exists(os.path.join(out_dir, run_id, 'target.zarr')):
+        shutil.rmtree(os.path.join(out_dir, run_id, 'target.zarr'))
     
-    inputs_xarray.to_zarr(os.path.join(out_dir,'inputs.zarr'))
-    target_xarray.to_zarr(os.path.join(out_dir,'target.zarr'))
+    inputs_xarray.to_zarr(os.path.join(out_dir, run_id,'inputs.zarr'))
+    target_xarray.to_zarr(os.path.join(out_dir, run_id,'target.zarr'))
     
     return inputs_xarray, target_xarray
 
@@ -265,7 +265,7 @@ def prep_input_target_data(inputs_xarray, target_xarray,
                              'test_features':test_features, 'test_targets':test_targets,
                              'means_stds':means_stds}
     
-    with open(os.path.join(out_dir,'prepped_model_io_data'), 'wb') as handle:
+    with open(os.path.join(out_dir, run_id, 'prepped_model_io_data'), 'wb') as handle:
         pickle.dump(prepped_model_io_data, handle)
 
 def write_model_params(out_dir, run_id, inputs, n_epochs,
@@ -611,7 +611,7 @@ def run_replicates(n_reps, prepped_model_io_data_file):
         plot_save_predictions(predictions, out_dir, run_id)
         
 
-def test_hyperparameters():
+def test_hyperparameters(run_id=run_id):
     '''
     using grid search test a set of hyperparamters listed in the hyperparameter_config.yaml file
 
@@ -674,8 +674,8 @@ def test_hyperparameters():
                                val_start_date, val_end_date, test_start_date, test_end_date, 
                                seq_len, offset, out_dir)
         
-        if os.path.exists(os.path.join(out_dir,'prepped_model_io_data')):
-           prepped_model_io_data_file = os.path.join(out_dir,'prepped_model_io_data')
+        if os.path.exists(os.path.join(out_dir, run_id, 'prepped_model_io_data')):
+           prepped_model_io_data_file = os.path.join(out_dir, run_id,'prepped_model_io_data')
         
         for i in range(hp_config['replicates']):
             now = datetime.now()
@@ -725,8 +725,8 @@ def main():
                            val_start_date, val_end_date, test_start_date, test_end_date, 
                            seq_len, offset, out_dir)
     
-    if os.path.exists(os.path.join(out_dir,'prepped_model_io_data')):
-       prepped_model_io_data_file = os.path.join(out_dir,'prepped_model_io_data')
+    if os.path.exists(os.path.join(out_dir, run_id,'prepped_model_io_data')):
+       prepped_model_io_data_file = os.path.join(out_dir, run_id,'prepped_model_io_data')
     
     
     train_model(prepped_model_io_data_file, inputs, seq_len,

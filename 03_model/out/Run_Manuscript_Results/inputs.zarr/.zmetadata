@@ -1,0 +1,286 @@
+{
+    "metadata": {
+        ".zattrs": {},
+        ".zgroup": {
+            "zarr_format": 2
+        },
+        "air_pressure_delsjmet/.zarray": {
+            "chunks": [
+                7486
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                7486
+            ],
+            "zarr_format": 2
+        },
+        "air_pressure_delsjmet/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "datetime"
+            ]
+        },
+        "datetime/.zarray": {
+            "chunks": [
+                7486
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<i8",
+            "fill_value": null,
+            "filters": null,
+            "order": "C",
+            "shape": [
+                7486
+            ],
+            "zarr_format": 2
+        },
+        "datetime/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "datetime"
+            ],
+            "calendar": "proleptic_gregorian",
+            "units": "days since 2001-01-01 00:00:00"
+        },
+        "discharge_01463500/.zarray": {
+            "chunks": [
+                7486
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                7486
+            ],
+            "zarr_format": 2
+        },
+        "discharge_01463500/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "datetime"
+            ]
+        },
+        "discharge_01474500/.zarray": {
+            "chunks": [
+                7486
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                7486
+            ],
+            "zarr_format": 2
+        },
+        "discharge_01474500/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "datetime"
+            ]
+        },
+        "temperature_delsjmet/.zarray": {
+            "chunks": [
+                7486
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                7486
+            ],
+            "zarr_format": 2
+        },
+        "temperature_delsjmet/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "datetime"
+            ]
+        },
+        "wind_direction_delsjmet/.zarray": {
+            "chunks": [
+                7486
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                7486
+            ],
+            "zarr_format": 2
+        },
+        "wind_direction_delsjmet/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "datetime"
+            ]
+        },
+        "wind_speed_delsjmet/.zarray": {
+            "chunks": [
+                7486
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                7486
+            ],
+            "zarr_format": 2
+        },
+        "wind_speed_delsjmet/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "datetime"
+            ]
+        },
+        "wl_filtered_8557380/.zarray": {
+            "chunks": [
+                7486
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                7486
+            ],
+            "zarr_format": 2
+        },
+        "wl_filtered_8557380/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "datetime"
+            ]
+        },
+        "wl_max_8557380/.zarray": {
+            "chunks": [
+                7486
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                7486
+            ],
+            "zarr_format": 2
+        },
+        "wl_max_8557380/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "datetime"
+            ]
+        },
+        "wl_obs_pred_8557380/.zarray": {
+            "chunks": [
+                7486
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                7486
+            ],
+            "zarr_format": 2
+        },
+        "wl_obs_pred_8557380/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "datetime"
+            ]
+        },
+        "wl_range_8557380/.zarray": {
+            "chunks": [
+                7486
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                7486
+            ],
+            "zarr_format": 2
+        },
+        "wl_range_8557380/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "datetime"
+            ]
+        }
+    },
+    "zarr_consolidated_format": 1
+}

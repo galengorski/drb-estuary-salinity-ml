@@ -28,9 +28,9 @@ rule all_ml_model:
         expand("02_munge/out/D/usgs_nwis_{usgs_nwis_site}.csv", usgs_nwis_site = usgs_nwis_sites),
         expand("02_munge/out/daily_summaries/noaa_nos_{noaa_nos_site}.csv", noaa_nos_site = noaa_nos_sites),
         expand("02_munge/out/D/noaa_nerrs_{noaa_nerr_site}.csv", noaa_nerr_site = noaa_nerr_site),
-        "03_model/out/inputs.zarr",
-        "03_model/out/target.zarr",
-        "03_model/out/prepped_model_io_data",
+        os.path.join("03_model", "out", config['run_id'], "inputs.zarr"),
+        os.path.join("03_model", "out", config['run_id'], "target.zarr"),
+        os.path.join("03_model", "out", config['run_id'], "prepped_model_io_data"),
         os.path.join(config['out_dir'], config['run_id'], 'model_param_output.txt'),
         os.path.join(config['out_dir'], config['run_id'], 'losses.png'),
         os.path.join(config['out_dir'], config['run_id'], 'weights.pt'),
@@ -49,9 +49,9 @@ rule prepare_inputs_targets:
         expand("02_munge/out/daily_summaries/noaa_nos_{noaa_nos_site}.csv", noaa_nos_site = noaa_nos_sites),
         expand("02_munge/out/D/noaa_nerrs_{noaa_nerr_site}.csv", noaa_nerr_site = noaa_nerr_site)
     output:
-        directory("03_model/out/inputs.zarr"),
-        directory("03_model/out/target.zarr"),
-        "03_model/out/prepped_model_io_data"
+        directory(os.path.join("03_model", "out", config['run_id'], "inputs.zarr")),
+        directory(os.path.join("03_model", "out", config['run_id'], "target.zarr")),
+        os.path.join("03_model", "out", config['run_id'], "prepped_model_io_data"),
     run:
         inputs_xarray, target_xarray = run_model.select_inputs_targets(inputs = config['inputs'], 
                                                                 target = config['target'], 
@@ -78,7 +78,7 @@ rule hyperparameter_testing:
     input:
         "03_model/hyperparameter_config.yaml"
     run:
-        run_model.test_hyperparameters()
+        run_model.test_hyperparameters(run_id=config['run_id'])
         
 
 ##---------------------------------------------------------------------------------------##  
@@ -89,12 +89,12 @@ rule hyperparameter_testing:
 rule run_replicates:
     input:
         "03_model/model_config.yaml", 
-        os.path.join(config['out_dir'],'prepped_model_io_data')
+        os.path.join(config['out_dir'], config['run_id'], 'prepped_model_io_data')
     output:
         expand(os.path.join(config['out_dir'], config['run_id'], '{rep}/model_param_output.txt'), rep = replicates),
         expand(os.path.join(config['out_dir'], config['run_id'], '{rep}/losses.png'), rep = replicates),
         expand(os.path.join(config['out_dir'], config['run_id'], '{rep}/weights.pt'), rep = replicates)
     run:
-        run_model.run_replicates(config['replicates'], os.path.join(config['out_dir'],'prepped_model_io_data'))
+        run_model.run_replicates(config['replicates'], os.path.join(config['out_dir'], config['run_id'],'prepped_model_io_data'))
         
 ##---------------------------------------------------------------------------------------##

@@ -1,0 +1,61 @@
+{
+    "metadata": {
+        ".zattrs": {},
+        ".zgroup": {
+            "zarr_format": 2
+        },
+        "datetime/.zarray": {
+            "chunks": [
+                7486
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<i8",
+            "fill_value": null,
+            "filters": null,
+            "order": "C",
+            "shape": [
+                7486
+            ],
+            "zarr_format": 2
+        },
+        "datetime/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "datetime"
+            ],
+            "calendar": "proleptic_gregorian",
+            "units": "days since 2001-01-01 00:00:00"
+        },
+        "saltfront7_weekly/.zarray": {
+            "chunks": [
+                7486
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                7486
+            ],
+            "zarr_format": 2
+        },
+        "saltfront7_weekly/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "datetime"
+            ]
+        }
+    },
+    "zarr_consolidated_format": 1
+}
